@@ -1,0 +1,3 @@
+import 'package:flutter/material.dart';
+import '../../data/models/shift_model.dart';
+class ShiftsTable extends StatelessWidget { const ShiftsTable({required this.shifts, super.key}); final List<ShiftModel> shifts; @override Widget build(BuildContext context) => Card(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: DataTable(columns: const [DataColumn(label: Text('Staff')), DataColumn(label: Text('Branch')), DataColumn(label: Text('Date')), DataColumn(label: Text('Time')), DataColumn(label: Text('Status'))], rows: shifts.map((s) => DataRow(cells: [DataCell(Text(s.staffName ?? '')), DataCell(Text(s.branchName ?? '')), DataCell(Text(s.date)), DataCell(Text('${s.startTime} - ${s.endTime}')), DataCell(Chip(label: Text(s.status)))])).toList()))); }

@@ -1,0 +1,3 @@
+import 'package:flutter/material.dart';
+import '../../data/models/shift_model.dart';
+class ShiftCard extends StatelessWidget { const ShiftCard({required this.shift, required this.onTap, super.key}); final ShiftModel shift; final VoidCallback onTap; @override Widget build(BuildContext context) => InkWell(onTap: onTap, child: Card(child: Padding(padding: const EdgeInsets.all(8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(shift.staffName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)), Text('${shift.startTime} - ${shift.endTime}', style: const TextStyle(fontSize: 12)), Chip(label: Text(shift.status))])))); }

@@ -1,0 +1,3 @@
+import 'package:flutter/material.dart';
+import '../../../branches/data/models/branch_model.dart';
+class ReportsBranchFilter extends StatelessWidget { const ReportsBranchFilter({required this.branches, required this.value, required this.onChanged, super.key}); final List<BranchModel> branches; final String value; final ValueChanged<String> onChanged; @override Widget build(BuildContext context) => SizedBox(width: 190, child: DropdownButtonFormField<String>(value: value, items: [const DropdownMenuItem(value: 'all', child: Text('All Branches')), ...branches.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name)))], onChanged: (v) { if (v != null) onChanged(v); })); }
