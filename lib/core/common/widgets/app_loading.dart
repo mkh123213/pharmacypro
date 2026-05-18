@@ -21,7 +21,7 @@ class AppLoading extends StatelessWidget {
               height: 34.w,
               child: const CircularProgressIndicator(
                 strokeWidth: 3,
-                color: AppColors.primary,
+                color: MyColors.primary,
               ),
             ),
             if (message != null) ...[

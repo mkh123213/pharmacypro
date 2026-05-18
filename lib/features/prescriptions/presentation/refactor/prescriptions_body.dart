@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../../core/common/toast/show_toast.dart';
+import '../../../../core/common/widgets/app_empty_state.dart';
+import '../../../../core/common/widgets/app_loading.dart';
+import '../../../../core/common/widgets/app_page_header.dart';
+import '../../../../core/common/widgets/app_primary_button.dart';
+import '../../../../core/common/widgets/text_app.dart';
+import '../../../../core/extensions/context_extension.dart';
+import '../../../../core/language/lang_keys.dart';
+import '../../data/models/prescription_model.dart';
 import '../cubit/prescriptions_cubit.dart';
 import '../cubit/prescriptions_state.dart';
 import '../widgets/prescription_details_bottom_sheet.dart';
@@ -9,21 +20,281 @@ import 'prescriptions_constants.dart';
 
 class PrescriptionsBody extends StatelessWidget {
   const PrescriptionsBody({super.key});
+
+  void _openForm(BuildContext context, PrescriptionsLoaded state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return BlocProvider.value(
+          value: context.read<PrescriptionsCubit>(),
+          child: PrescriptionFormBottomSheet(branches: state.branches),
+        );
+      },
+    );
+  }
+
+  Future<void> _updatePrescriptionStatus({
+    required BuildContext context,
+    required PrescriptionModel prescription,
+    required String status,
+  }) async {
+    final success = await context.read<PrescriptionsCubit>().updateStatus(
+      prescription.id,
+      status,
+    );
+
+    if (!context.mounted) return;
+
+    if (!success) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.couldNotUpdatePrescriptionStatus),
+      );
+      return;
+    }
+
+    String message;
+
+    switch (status) {
+      case 'verified':
+        message = context.translate(LangKeys.prescriptionVerifiedSuccessfully);
+        break;
+      case 'dispensed':
+        message = context.translate(LangKeys.prescriptionDispensedSuccessfully);
+        break;
+      case 'rejected':
+        message = context.translate(LangKeys.prescriptionRejected);
+        break;
+      default:
+        message = context.translate(
+          LangKeys.prescriptionStatusUpdatedSuccessfully,
+        );
+    }
+
+    ShowToast.showToastSuccessTop(message: message);
+  }
+
   @override
-  Widget build(BuildContext context) => BlocBuilder<PrescriptionsCubit, PrescriptionsState>(builder: (context, state) {
-    if (state is PrescriptionsLoading) return const Center(child: CircularProgressIndicator());
-    if (state is PrescriptionsFailure) return Center(child: Text(state.message));
-    if (state is! PrescriptionsLoaded) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_FeatureHeader(title: 'Prescriptions', subtitle: 'Manage and verify patient prescriptions', action: ElevatedButton.icon(onPressed: () => showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => BlocProvider.value(value: context.read<PrescriptionsCubit>(), child: PrescriptionFormBottomSheet(branches: state.branches))), icon: const Icon(Icons.add), label: const Text('New Prescription'))), const SizedBox(height: 14), Row(children: [Expanded(child: TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search patient, doctor, number...'), onChanged: context.read<PrescriptionsCubit>().updateSearchQuery)), const SizedBox(width: 12), SizedBox(width: 170, child: DropdownButtonFormField<String>(value: state.selectedStatus, items: prescriptionStatuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(), onChanged: (v) => context.read<PrescriptionsCubit>().updateSelectedStatus(v ?? 'all')))]), const SizedBox(height: 14), Expanded(child: state.prescriptions.isEmpty ? const Center(child: Text('No prescriptions found')) : PrescriptionsTable(prescriptions: state.prescriptions, onView: (p) => showPrescriptionDetailsBottomSheet(context, p), onVerify: (p) => context.read<PrescriptionsCubit>().updateStatus(p.id, 'verified'), onReject: (p) => context.read<PrescriptionsCubit>().updateStatus(p.id, 'rejected'), onDispense: (p) => context.read<PrescriptionsCubit>().updateStatus(p.id, 'dispensed')))]);
-  });
+  Widget build(BuildContext context) {
+    return BlocListener<PrescriptionsCubit, PrescriptionsState>(
+      listenWhen: (previous, current) => current is PrescriptionsFailure,
+      listener: (context, state) {
+        if (state is PrescriptionsFailure) {
+          ShowToast.showToastErrorTop(
+            message: context.translate(state.message),
+          );
+        }
+      },
+      child: BlocBuilder<PrescriptionsCubit, PrescriptionsState>(
+        builder: (context, state) {
+          if (state is PrescriptionsLoading) {
+            return const AppLoading();
+          }
+
+          if (state is PrescriptionsFailure) {
+            return _PrescriptionsErrorView(
+              message: context.translate(state.message),
+              onRetry: () {
+                context.read<PrescriptionsCubit>().getPrescriptionsData();
+              },
+            );
+          }
+
+          if (state is! PrescriptionsLoaded) {
+            return const SizedBox.shrink();
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppPageHeader(
+                title: context.translate(LangKeys.prescriptions),
+                subtitle: context.translate(
+                  LangKeys.manageAndVerifyPatientPrescriptions,
+                ),
+                action: AppPrimaryButton(
+                  text: context.translate(LangKeys.newPrescription),
+                  icon: Icons.add,
+                  onPressed: state.isSubmitting
+                      ? null
+                      : () {
+                          _openForm(context, state);
+                        },
+                ),
+              ),
+              SizedBox(height: 14.h),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final wide = constraints.maxWidth >= 700;
+
+                  if (wide) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.search),
+                              hintText: context.translate(
+                                LangKeys.searchPrescriptions,
+                              ),
+                            ),
+                            onChanged: context
+                                .read<PrescriptionsCubit>()
+                                .updateSearchQuery,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        SizedBox(
+                          width: 190.w,
+                          child: _StatusDropdown(
+                            selectedStatus: state.selectedStatus,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.search),
+                          hintText: context.translate(
+                            LangKeys.searchPrescriptions,
+                          ),
+                        ),
+                        onChanged: context
+                            .read<PrescriptionsCubit>()
+                            .updateSearchQuery,
+                      ),
+                      SizedBox(height: 12.h),
+                      _StatusDropdown(selectedStatus: state.selectedStatus),
+                    ],
+                  );
+                },
+              ),
+              SizedBox(height: 14.h),
+              Expanded(
+                child: state.prescriptions.isEmpty
+                    ? AppEmptyState(
+                        title: context.translate(LangKeys.noPrescriptionsFound),
+                        message:
+                            state.searchQuery.trim().isEmpty &&
+                                state.selectedStatus ==
+                                    allPrescriptionStatusesValue
+                            ? context.translate(
+                                LangKeys.createYourFirstPrescription,
+                              )
+                            : context.translate(
+                                LangKeys.noPrescriptionsMatchYourFilters,
+                              ),
+                        icon: Icons.receipt_long_outlined,
+                      )
+                    : PrescriptionsTable(
+                        prescriptions: state.prescriptions,
+                        isSubmitting: state.isSubmitting,
+                        onView: (prescription) {
+                          showPrescriptionDetailsBottomSheet(
+                            context,
+                            prescription,
+                          );
+                        },
+                        onVerify: (prescription) {
+                          _updatePrescriptionStatus(
+                            context: context,
+                            prescription: prescription,
+                            status: 'verified',
+                          );
+                        },
+                        onReject: (prescription) {
+                          _updatePrescriptionStatus(
+                            context: context,
+                            prescription: prescription,
+                            status: 'rejected',
+                          );
+                        },
+                        onDispense: (prescription) {
+                          _updatePrescriptionStatus(
+                            context: context,
+                            prescription: prescription,
+                            status: 'dispensed',
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
+class _StatusDropdown extends StatelessWidget {
+  const _StatusDropdown({required this.selectedStatus});
 
-class _FeatureHeader extends StatelessWidget {
-  const _FeatureHeader({required this.title, required this.subtitle, this.action});
-  final String title;
-  final String subtitle;
-  final Widget? action;
+  final String selectedStatus;
+
   @override
-  Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)), const SizedBox(height: 4), Text(subtitle, style: TextStyle(color: Colors.grey.shade600))])), if (action != null) action!]);
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      initialValue: selectedStatus,
+      decoration: InputDecoration(
+        labelText: context.translate(LangKeys.status),
+      ),
+      items: prescriptionStatuses.map((status) {
+        return DropdownMenuItem<String>(
+          value: status,
+          child: TextApp(
+            text: prescriptionStatusLabel(context, status),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            theme: context.textStyle,
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        context.read<PrescriptionsCubit>().updateSelectedStatus(
+          value ?? allPrescriptionStatusesValue,
+        );
+      },
+    );
+  }
+}
+
+class _PrescriptionsErrorView extends StatelessWidget {
+  const _PrescriptionsErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 48.sp, color: Colors.red.shade400),
+            SizedBox(height: 12.h),
+            TextApp(
+              text: message,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              theme: context.textStyle,
+            ),
+            SizedBox(height: 16.h),
+            AppPrimaryButton(
+              text: context.translate(LangKeys.retry),
+              icon: Icons.refresh,
+              onPressed: onRetry,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

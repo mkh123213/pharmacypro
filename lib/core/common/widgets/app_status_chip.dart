@@ -22,17 +22,17 @@ class AppStatusChip extends StatelessWidget {
 
     switch (type) {
       case AppStatusChipType.success:
-        return AppColors.success;
+        return MyColors.success;
       case AppStatusChipType.error:
-        return AppColors.error;
+        return MyColors.error;
       case AppStatusChipType.warning:
-        return AppColors.warning;
+        return MyColors.warning;
       case AppStatusChipType.info:
-        return AppColors.info;
+        return MyColors.info;
       case AppStatusChipType.primary:
-        return AppColors.primary;
+        return MyColors.primary;
       case AppStatusChipType.neutral:
-        return AppColors.textSecondary;
+        return MyColors.textSecondary;
     }
   }
 

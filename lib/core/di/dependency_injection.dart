@@ -1,53 +1,44 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:pharmacypro/core/app/app_cubit/app_cubit.dart';
 
 import '../../features/branches/data/data_source/branches_remote_data_source.dart';
 import '../../features/branches/data/repos/branches_repo.dart';
 import '../../features/branches/presentation/cubit/branches_cubit.dart';
-
-import '../../features/suppliers/data/data_source/suppliers_remote_data_source.dart';
-import '../../features/suppliers/data/repos/suppliers_repo.dart';
-import '../../features/suppliers/presentation/cubit/suppliers_cubit.dart';
-
-import '../../features/staff/data/data_source/staff_remote_data_source.dart';
-import '../../features/staff/data/repos/staff_repo.dart';
-import '../../features/staff/presentation/cubit/staff_cubit.dart';
-
-import '../../features/medications/data/data_source/medications_remote_data_source.dart';
-import '../../features/medications/data/repos/medications_repo.dart';
-import '../../features/medications/presentation/cubit/medications_cubit.dart';
-
-import '../../features/inventory/data/data_source/inventory_remote_data_source.dart';
-import '../../features/inventory/data/repos/inventory_repo.dart';
-import '../../features/inventory/presentation/cubit/inventory_cubit.dart';
-
-import '../../features/sales/data/data_source/sales_remote_data_source.dart';
-import '../../features/sales/data/repos/sales_repo.dart';
-import '../../features/sales/presentation/cubit/sales_cubit.dart';
-
 import '../../features/customer_orders/data/data_source/customer_orders_remote_data_source.dart';
 import '../../features/customer_orders/data/repos/customer_orders_repo.dart';
 import '../../features/customer_orders/presentation/cubit/customer_orders_cubit.dart';
-
-import '../../features/prescriptions/data/data_source/prescriptions_remote_data_source.dart';
-import '../../features/prescriptions/data/repos/prescriptions_repo.dart';
-import '../../features/prescriptions/presentation/cubit/prescriptions_cubit.dart';
-
-import '../../features/purchase_orders/data/data_source/purchase_orders_remote_data_source.dart';
-import '../../features/purchase_orders/data/repos/purchase_orders_repo.dart';
-import '../../features/purchase_orders/presentation/cubit/purchase_orders_cubit.dart';
-
-import '../../features/shifts/data/data_source/shifts_remote_data_source.dart';
-import '../../features/shifts/data/repos/shifts_repo.dart';
-import '../../features/shifts/presentation/cubit/shifts_cubit.dart';
-
 import '../../features/dashboard/data/data_source/dashboard_remote_data_source.dart';
 import '../../features/dashboard/data/repos/dashboard_repo.dart';
 import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
-
+import '../../features/inventory/data/data_source/inventory_remote_data_source.dart';
+import '../../features/inventory/data/repos/inventory_repo.dart';
+import '../../features/inventory/presentation/cubit/inventory_cubit.dart';
+import '../../features/medications/data/data_source/medications_remote_data_source.dart';
+import '../../features/medications/data/repos/medications_repo.dart';
+import '../../features/medications/presentation/cubit/medications_cubit.dart';
+import '../../features/prescriptions/data/data_source/prescriptions_remote_data_source.dart';
+import '../../features/prescriptions/data/repos/prescriptions_repo.dart';
+import '../../features/prescriptions/presentation/cubit/prescriptions_cubit.dart';
+import '../../features/purchase_orders/data/data_source/purchase_orders_remote_data_source.dart';
+import '../../features/purchase_orders/data/repos/purchase_orders_repo.dart';
+import '../../features/purchase_orders/presentation/cubit/purchase_orders_cubit.dart';
 import '../../features/reports/data/data_source/reports_remote_data_source.dart';
 import '../../features/reports/data/repos/reports_repo.dart';
 import '../../features/reports/presentation/cubit/reports_cubit.dart';
+import '../../features/sales/data/data_source/sales_remote_data_source.dart';
+import '../../features/sales/data/repos/sales_repo.dart';
+import '../../features/sales/presentation/cubit/sales_cubit.dart';
+import '../../features/shifts/data/data_source/shifts_remote_data_source.dart';
+import '../../features/shifts/data/repos/shifts_repo.dart';
+import '../../features/shifts/presentation/cubit/shifts_cubit.dart';
+import '../../features/staff/data/data_source/staff_remote_data_source.dart';
+import '../../features/staff/data/repos/staff_repo.dart';
+import '../../features/staff/presentation/cubit/staff_cubit.dart';
+import '../../features/suppliers/data/data_source/suppliers_remote_data_source.dart';
+import '../../features/suppliers/data/repos/suppliers_repo.dart';
+import '../../features/suppliers/presentation/cubit/suppliers_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -58,6 +49,7 @@ void setupDependencies() {
     );
   }
 
+  _registerCore();
   _registerBranches();
   _registerSuppliers();
   _registerStaff();
@@ -70,6 +62,14 @@ void setupDependencies() {
   _registerShifts();
   _registerDashboard();
   _registerReports();
+}
+
+void _registerCore() {
+  final navigatorKey = GlobalKey<NavigatorState>();
+
+  getIt
+    ..registerFactory(AppCubit.new)
+    ..registerSingleton<GlobalKey<NavigatorState>>(navigatorKey);
 }
 
 void _registerBranches() {

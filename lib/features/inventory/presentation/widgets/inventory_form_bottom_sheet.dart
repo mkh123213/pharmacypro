@@ -1,41 +1,278 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../../core/common/toast/show_toast.dart';
+import '../../../../core/common/widgets/app_date_field.dart';
+import '../../../../core/common/widgets/app_dropdown_field.dart';
+import '../../../../core/common/widgets/app_primary_button.dart';
+import '../../../../core/common/widgets/app_text_field.dart';
+import '../../../../core/common/widgets/text_app.dart';
+import '../../../../core/extensions/context_extension.dart';
+import '../../../../core/language/lang_keys.dart';
+import '../../../../core/utils/app_validators.dart';
 import '../../../branches/data/models/branch_model.dart';
 import '../../../medications/data/models/medication_model.dart';
 import '../../data/models/inventory_model.dart';
 import '../cubit/inventory_cubit.dart';
 
 class InventoryFormBottomSheet extends StatefulWidget {
-  const InventoryFormBottomSheet({required this.medications, required this.branches, this.item, super.key});
+  const InventoryFormBottomSheet({
+    required this.medications,
+    required this.branches,
+    this.item,
+    super.key,
+  });
+
   final List<MedicationModel> medications;
   final List<BranchModel> branches;
   final InventoryModel? item;
+
   @override
-  State<InventoryFormBottomSheet> createState() => _InventoryFormBottomSheetState();
+  State<InventoryFormBottomSheet> createState() =>
+      _InventoryFormBottomSheetState();
 }
+
 class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
-  late String? medicationId = widget.item?.medicationId ?? (widget.medications.isNotEmpty ? widget.medications.first.id : null);
-  late String? branchId = widget.item?.branchId ?? (widget.branches.isNotEmpty ? widget.branches.first.id : null);
-  late final quantity = TextEditingController(text: widget.item?.quantity.toString() ?? '0');
-  late final min = TextEditingController(text: widget.item?.minStockLevel.toString() ?? '10');
-  late final batch = TextEditingController(text: widget.item?.batchNumber ?? '');
-  late final expiry = TextEditingController(text: widget.item?.expiryDate ?? '');
-  late final location = TextEditingController(text: widget.item?.locationInStore ?? '');
-  Future<void> save() async {
-    if (medicationId == null || branchId == null) return;
-    final med = widget.medications.firstWhere((m) => m.id == medicationId);
-    final branch = widget.branches.firstWhere((b) => b.id == branchId);
-    final model = InventoryModel(id: widget.item?.id ?? '', medicationId: med.id, medicationName: med.name, branchId: branch.id, branchName: branch.name, quantity: int.tryParse(quantity.text) ?? 0, minStockLevel: int.tryParse(min.text) ?? 10, batchNumber: batch.text.trim(), expiryDate: expiry.text.trim(), locationInStore: location.text.trim());
-    if (widget.item == null) await context.read<InventoryCubit>().createInventory(model); else await context.read<InventoryCubit>().updateInventory(model);
-    if (mounted) Navigator.pop(context);
-  }
+  final _formKey = GlobalKey<FormState>();
+
+  late String? medicationId =
+      widget.item?.medicationId ??
+      (widget.medications.isNotEmpty ? widget.medications.first.id : null);
+
+  late String? branchId =
+      widget.item?.branchId ??
+      (widget.branches.isNotEmpty ? widget.branches.first.id : null);
+
+  late final TextEditingController quantity;
+  late final TextEditingController min;
+  late final TextEditingController batch;
+  late final TextEditingController expiry;
+  late final TextEditingController location;
+
+  bool _isSaving = false;
+
+  bool get _isEditing => widget.item != null;
+
   @override
-  Widget build(BuildContext context) => Padding(padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom), child: Material(borderRadius: const BorderRadius.vertical(top: Radius.circular(24)), child: SafeArea(top: false, child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, children: [
-    Text(widget.item == null ? 'Add Stock' : 'Edit Inventory', style: Theme.of(context).textTheme.titleLarge), const SizedBox(height: 16),
-    DropdownButtonFormField<String>(value: medicationId, items: widget.medications.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name))).toList(), onChanged: (v) => setState(() => medicationId = v), decoration: const InputDecoration(labelText: 'Medication')), const SizedBox(height: 10),
-    DropdownButtonFormField<String>(value: branchId, items: widget.branches.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(), onChanged: (v) => setState(() => branchId = v), decoration: const InputDecoration(labelText: 'Branch')), const SizedBox(height: 10),
-    TextField(controller: quantity, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Quantity')), const SizedBox(height: 10), TextField(controller: min, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Min Stock Level')), const SizedBox(height: 10),
-    TextField(controller: batch, decoration: const InputDecoration(labelText: 'Batch Number')), const SizedBox(height: 10), TextField(controller: expiry, decoration: const InputDecoration(labelText: 'Expiry Date')), const SizedBox(height: 10), TextField(controller: location, decoration: const InputDecoration(labelText: 'Location in Store')), const SizedBox(height: 16),
-    SizedBox(width: double.infinity, child: ElevatedButton(onPressed: save, child: const Text('Save'))),
-  ])))));
+  void initState() {
+    super.initState();
+
+    quantity = TextEditingController(
+      text: widget.item?.quantity.toString() ?? '0',
+    );
+    min = TextEditingController(
+      text: widget.item?.minStockLevel.toString() ?? '10',
+    );
+    batch = TextEditingController(text: widget.item?.batchNumber ?? '');
+    expiry = TextEditingController(text: widget.item?.expiryDate ?? '');
+    location = TextEditingController(text: widget.item?.locationInStore ?? '');
+  }
+
+  @override
+  void dispose() {
+    quantity.dispose();
+    min.dispose();
+    batch.dispose();
+    expiry.dispose();
+    location.dispose();
+    super.dispose();
+  }
+
+  Future<void> save() async {
+    if (_isSaving) return;
+    if (!_formKey.currentState!.validate()) return;
+
+    if (medicationId == null || branchId == null) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.pleaseSelectMedicationAndBranch),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    final medication = widget.medications.firstWhere(
+      (item) => item.id == medicationId,
+    );
+
+    final branch = widget.branches.firstWhere((item) => item.id == branchId);
+
+    final model = InventoryModel(
+      id: widget.item?.id ?? '',
+      medicationId: medication.id,
+      medicationName: medication.name,
+      branchId: branch.id,
+      branchName: branch.name,
+      quantity: int.tryParse(quantity.text.trim()) ?? 0,
+      minStockLevel: int.tryParse(min.text.trim()) ?? 10,
+      batchNumber: batch.text.trim().isEmpty ? null : batch.text.trim(),
+      expiryDate: expiry.text.trim().isEmpty ? null : expiry.text.trim(),
+      locationInStore: location.text.trim().isEmpty
+          ? null
+          : location.text.trim(),
+    );
+
+    final success = _isEditing
+        ? await context.read<InventoryCubit>().updateInventory(model)
+        : await context.read<InventoryCubit>().createInventory(model);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isSaving = false;
+    });
+
+    if (!success) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.couldNotSaveInventoryItem),
+      );
+      return;
+    }
+
+    ShowToast.showToastSuccessTop(
+      message: _isEditing
+          ? context.translate(LangKeys.inventoryItemUpdatedSuccessfully)
+          : context.translate(LangKeys.inventoryItemAddedSuccessfully),
+    );
+
+    if (model.quantity <= model.minStockLevel) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.itemBelowMinimumStockLevel),
+      );
+    }
+
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(999.r),
+                  ),
+                ),
+                SizedBox(height: 18.h),
+                TextApp(
+                  text: _isEditing
+                      ? context.translate(LangKeys.editInventoryItem)
+                      : context.translate(LangKeys.addInventoryItem),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  theme: context.textStyle,
+                ),
+                SizedBox(height: 16.h),
+                AppDropdownField<String>(
+                  value: medicationId,
+                  label: context.translate(LangKeys.medication),
+                  isRequired: true,
+                  items: widget.medications.map((medication) {
+                    return AppDropdownItem<String>(
+                      value: medication.id,
+                      label: medication.name,
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      medicationId = value;
+                    });
+                  },
+                  validator: AppValidators.required(
+                    context,
+                    fieldName: context.translate(LangKeys.medication),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AppDropdownField<String>(
+                  value: branchId,
+                  label: context.translate(LangKeys.branch),
+                  isRequired: true,
+                  items: widget.branches.map((branch) {
+                    return AppDropdownItem<String>(
+                      value: branch.id,
+                      label: branch.name,
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      branchId = value;
+                    });
+                  },
+                  validator: AppValidators.required(
+                    context,
+                    fieldName: context.translate(LangKeys.branch),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: quantity,
+                  label: context.translate(LangKeys.quantity),
+                  isRequired: true,
+                  keyboardType: TextInputType.number,
+                  validator: AppValidators.requiredNonNegativeNumber(
+                    context,
+                    fieldName: context.translate(LangKeys.quantity),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: min,
+                  label: context.translate(LangKeys.minStockLevel),
+                  isRequired: true,
+                  keyboardType: TextInputType.number,
+                  validator: AppValidators.requiredNonNegativeNumber(
+                    context,
+                    fieldName: context.translate(LangKeys.minStockLevel),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: batch,
+                  label: context.translate(LangKeys.batchNumber),
+                ),
+                SizedBox(height: 10.h),
+                AppDateField(
+                  controller: expiry,
+                  label: context.translate(LangKeys.expiryDate),
+                  validator: AppValidators.optionalDate(context),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: location,
+                  label: context.translate(LangKeys.locationInStore),
+                ),
+                SizedBox(height: 16.h),
+                AppPrimaryButton(
+                  text: context.translate(LangKeys.saveInventoryItem),
+                  onPressed: _isSaving ? null : save,
+                  isLoading: _isSaving,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

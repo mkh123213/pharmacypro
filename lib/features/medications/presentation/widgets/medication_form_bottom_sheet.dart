@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/common/toast/show_toast.dart';
+import '../../../../core/common/widgets/app_dropdown_field.dart';
 import '../../../../core/common/widgets/app_primary_button.dart';
+import '../../../../core/common/widgets/app_switch_field.dart';
+import '../../../../core/common/widgets/app_text_field.dart';
 import '../../../../core/common/widgets/text_app.dart';
+import '../../../../core/extensions/context_extension.dart';
+import '../../../../core/language/lang_keys.dart';
+import '../../../../core/utils/app_validators.dart';
 import '../../data/models/medication_model.dart';
 import '../cubit/medications_cubit.dart';
 import '../refactor/medications_constants.dart';
@@ -37,6 +44,7 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
 
   late bool _requiresPrescription;
   late bool _isActive;
+  bool _isSaving = false;
 
   bool get _isEditing => widget.medication != null;
 
@@ -91,7 +99,12 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
   }
 
   Future<void> _saveMedication() async {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isSaving = true;
+    });
 
     final medication = MedicationModel(
       id: widget.medication?.id ?? '',
@@ -126,13 +139,29 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
       updatedAt: widget.medication?.updatedAt,
     );
 
-    if (_isEditing) {
-      await context.read<MedicationsCubit>().updateMedication(medication);
-    } else {
-      await context.read<MedicationsCubit>().createMedication(medication);
-    }
+    final success = _isEditing
+        ? await context.read<MedicationsCubit>().updateMedication(medication)
+        : await context.read<MedicationsCubit>().createMedication(medication);
 
     if (!mounted) return;
+
+    setState(() {
+      _isSaving = false;
+    });
+
+    if (!success) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.couldNotSaveMedication),
+      );
+      return;
+    }
+
+    ShowToast.showToastSuccessTop(
+      message: _isEditing
+          ? context.translate(LangKeys.medicationUpdatedSuccessfully)
+          : context.translate(LangKeys.medicationAddedSuccessfully),
+    );
+
     Navigator.pop(context);
   }
 
@@ -141,12 +170,7 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Container(
-      padding: EdgeInsets.only(
-        left: 20.w,
-        right: 20.w,
-        top: 16.h,
-        bottom: bottomInset + 20.h,
-      ),
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
@@ -169,31 +193,36 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
                 ),
                 SizedBox(height: 18.h),
                 TextApp(
-                  text: _isEditing ? 'Edit Medication' : 'Add Medication',
-                  theme: Theme.of(context).textTheme.titleLarge,
+                  text: _isEditing
+                      ? context.translate(LangKeys.editMedication)
+                      : context.translate(LangKeys.addMedication),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  theme: context.textStyle,
                 ),
                 SizedBox(height: 20.h),
-
-                TextFormField(
+                AppTextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Name *'),
-                  validator: _requiredValidator,
+                  label: context.translate(LangKeys.name),
+                  isRequired: true,
+                  validator: AppValidators.required(
+                    context,
+                    fieldName: context.translate(LangKeys.name),
+                  ),
                 ),
                 SizedBox(height: 12.h),
-
-                TextFormField(
+                AppTextField(
                   controller: _genericNameController,
-                  decoration: const InputDecoration(labelText: 'Generic Name'),
+                  label: context.translate(LangKeys.genericName),
                 ),
                 SizedBox(height: 12.h),
-
-                DropdownButtonFormField<String>(
+                AppDropdownField<String>(
                   value: _category,
-                  decoration: const InputDecoration(labelText: 'Category'),
+                  label: context.translate(LangKeys.category),
                   items: medicationCategories.map((category) {
-                    return DropdownMenuItem<String>(
+                    return AppDropdownItem<String>(
                       value: category,
-                      child: Text(formatMedicationLabel(category)),
+                      label: medicationCategoryLabel(context, category),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -203,14 +232,13 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
                   },
                 ),
                 SizedBox(height: 12.h),
-
-                DropdownButtonFormField<String>(
+                AppDropdownField<String>(
                   value: _dosageForm,
-                  decoration: const InputDecoration(labelText: 'Dosage Form'),
+                  label: context.translate(LangKeys.dosageForm),
                   items: medicationForms.map((form) {
-                    return DropdownMenuItem<String>(
+                    return AppDropdownItem<String>(
                       value: form,
-                      child: Text(formatMedicationLabel(form)),
+                      label: medicationFormLabel(context, form),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -220,47 +248,45 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
                   },
                 ),
                 SizedBox(height: 12.h),
-
-                TextFormField(
+                AppTextField(
                   controller: _strengthController,
-                  decoration: const InputDecoration(
-                    labelText: 'Strength',
-                    hintText: 'e.g. 500mg',
-                  ),
+                  label: context.translate(LangKeys.strength),
+                  hintText: context.translate(LangKeys.strengthHint),
                 ),
                 SizedBox(height: 12.h),
-
-                TextFormField(
+                AppTextField(
                   controller: _manufacturerController,
-                  decoration: const InputDecoration(labelText: 'Manufacturer'),
+                  label: context.translate(LangKeys.manufacturer),
                 ),
                 SizedBox(height: 12.h),
-
-                TextFormField(
+                AppTextField(
                   controller: _priceController,
+                  label: context.translate(LangKeys.price),
+                  isRequired: true,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  decoration: const InputDecoration(labelText: 'Price *'),
-                  validator: _priceValidator,
+                  validator: AppValidators.requiredNonNegativeNumber(
+                    context,
+                    fieldName: context.translate(LangKeys.price),
+                  ),
                 ),
                 SizedBox(height: 12.h),
-
-                TextFormField(
+                AppTextField(
                   controller: _costPriceController,
+                  label: context.translate(LangKeys.costPrice),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  decoration: const InputDecoration(labelText: 'Cost Price'),
+                  validator: AppValidators.optionalNonNegativeNumber(context),
                 ),
                 SizedBox(height: 12.h),
-
                 Row(
                   children: [
                     Expanded(
-                      child: TextFormField(
+                      child: AppTextField(
                         controller: _barcodeController,
-                        decoration: const InputDecoration(labelText: 'Barcode'),
+                        label: context.translate(LangKeys.barcode),
                       ),
                     ),
                     SizedBox(width: 8.w),
@@ -269,52 +295,53 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
                         setState(() {
                           _barcodeController.text = code;
                         });
+
+                        ShowToast.showToastSuccessTop(
+                          message: context.translate(
+                            LangKeys.barcodeScannedSuccessfully,
+                          ),
+                        );
                       },
                     ),
                   ],
                 ),
                 SizedBox(height: 12.h),
-
-                TextFormField(
+                AppTextField(
                   controller: _descriptionController,
+                  label: context.translate(LangKeys.description),
                   maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'Description'),
                 ),
                 SizedBox(height: 12.h),
-
-                TextFormField(
+                AppTextField(
                   controller: _imageUrlController,
-                  decoration: const InputDecoration(labelText: 'Image URL'),
+                  label: context.translate(LangKeys.imageUrl),
+                  keyboardType: TextInputType.url,
+                  validator: AppValidators.optionalUrl(context),
                 ),
                 SizedBox(height: 12.h),
-
-                SwitchListTile(
+                AppSwitchField(
                   value: _requiresPrescription,
+                  title: context.translate(LangKeys.requiresPrescription),
                   onChanged: (value) {
                     setState(() {
                       _requiresPrescription = value;
                     });
                   },
-                  title: const Text('Requires Prescription'),
-                  contentPadding: EdgeInsets.zero,
                 ),
-
-                SwitchListTile(
+                AppSwitchField(
                   value: _isActive,
+                  title: context.translate(LangKeys.active),
                   onChanged: (value) {
                     setState(() {
                       _isActive = value;
                     });
                   },
-                  title: const Text('Active'),
-                  contentPadding: EdgeInsets.zero,
                 ),
-
                 SizedBox(height: 16.h),
-
                 AppPrimaryButton(
-                  text: 'Save Medication',
-                  onPressed: _saveMedication,
+                  text: context.translate(LangKeys.saveMedication),
+                  onPressed: _isSaving ? null : _saveMedication,
+                  isLoading: _isSaving,
                 ),
               ],
             ),
@@ -322,31 +349,5 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
         ),
       ),
     );
-  }
-
-  String? _requiredValidator(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Required';
-    }
-
-    return null;
-  }
-
-  String? _priceValidator(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Required';
-    }
-
-    final price = double.tryParse(value.trim());
-
-    if (price == null) {
-      return 'Enter a valid number';
-    }
-
-    if (price < 0) {
-      return 'Price cannot be negative';
-    }
-
-    return null;
   }
 }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/extensions/context_extension.dart';
+import 'package:pharmacypro/core/language/lang_keys.dart';
 
+import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_empty_state.dart';
 import '../../../../core/common/widgets/app_loading.dart';
 import '../../../../core/common/widgets/app_page_header.dart';
@@ -19,39 +22,238 @@ class StaffBody extends StatelessWidget {
 
   void _openForm(BuildContext context, {StaffModel? staff}) {
     final state = context.read<StaffCubit>().state;
-    state.whenOrNull(loaded: (items, branches, search, role, submitting) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => BlocProvider.value(value: context.read<StaffCubit>(), child: StaffFormBottomSheet(staff: staff, branches: branches)),
-      );
-    });
+
+    state.whenOrNull(
+      loaded: (items, branches, search, role, submitting) {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) {
+            return BlocProvider.value(
+              value: context.read<StaffCubit>(),
+              child: StaffFormBottomSheet(staff: staff, branches: branches),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<StaffCubit, StaffState>(builder: (context, state) => state.when(
-      initial: () => const SizedBox.shrink(),
-      loading: () => const AppLoading(),
-      failure: (message) => Center(child: TextApp(text: message)),
-      loaded: (staff, branches, searchQuery, selectedRole, isSubmitting) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        AppPageHeader(title: 'Staff', subtitle: 'Manage employees across all branches', action: AppPrimaryButton(text: 'Add Staff', icon: Icons.add, onPressed: () => _openForm(context))),
-        SizedBox(height: 16.h),
-        LayoutBuilder(builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 700;
-          return Flex(direction: wide ? Axis.horizontal : Axis.vertical, children: [
-            Expanded(flex: wide ? 1 : 0, child: TextField(onChanged: context.read<StaffCubit>().updateSearchQuery, decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search staff...'))),
-            SizedBox(width: wide ? 12.w : 0, height: wide ? 0 : 12.h),
-            SizedBox(width: wide ? 200.w : double.infinity, child: DropdownButtonFormField<String>(value: selectedRole, decoration: const InputDecoration(labelText: 'Role'), items: staffRoleOptions.map((r) => DropdownMenuItem(value: r, child: Text(formatStaffRole(r)))).toList(), onChanged: (v) { if (v != null) context.read<StaffCubit>().updateSelectedRole(v); })),
-          ]);
-        }),
-        SizedBox(height: 20.h),
-        Expanded(child: staff.isEmpty ? AppEmptyState(title: 'No staff found', message: 'Add your first staff member.', icon: Icons.people_outline) : LayoutBuilder(builder: (context, constraints) {
-          final count = constraints.maxWidth >= 1100 ? 3 : constraints.maxWidth >= 700 ? 2 : 1;
-          return GridView.builder(itemCount: staff.length, gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: count, crossAxisSpacing: 16.w, mainAxisSpacing: 16.h, childAspectRatio: count == 1 ? 1.65 : 1.25), itemBuilder: (_, index) => StaffCard(staff: staff[index], onEditPressed: () => _openForm(context, staff: staff[index])));
-        })),
-      ]),
-    ));
+    return BlocListener<StaffCubit, StaffState>(
+      listenWhen: (previous, current) => current is StaffFailure,
+      listener: (context, state) {
+        if (state is StaffFailure) {
+          ShowToast.showToastErrorTop(
+            message: context.translate(state.message),
+          );
+        }
+      },
+      child: BlocBuilder<StaffCubit, StaffState>(
+        builder: (context, state) {
+          return state.when(
+            initial: () {
+              return const SizedBox.shrink();
+            },
+            loading: () {
+              return const AppLoading();
+            },
+            failure: (message) {
+              return _StaffErrorView(
+                message: context.translate(message),
+                onRetry: () {
+                  context.read<StaffCubit>().getStaffData();
+                },
+              );
+            },
+            loaded: (staff, branches, searchQuery, selectedRole, isSubmitting) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppPageHeader(
+                    title: context.translate(LangKeys.staff),
+                    subtitle: context.translate(
+                      LangKeys.manageEmployeesAcrossAllBranches,
+                    ),
+                    action: AppPrimaryButton(
+                      text: context.translate(LangKeys.addStaff),
+                      icon: Icons.add,
+                      onPressed: isSubmitting
+                          ? null
+                          : () {
+                              _openForm(context);
+                            },
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final wide = constraints.maxWidth >= 700;
+
+                      if (wide) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                onChanged: context
+                                    .read<StaffCubit>()
+                                    .updateSearchQuery,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.search),
+                                  hintText: context.translate(
+                                    LangKeys.searchStaff,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            SizedBox(
+                              width: 200.w,
+                              child: _RoleDropdown(selectedRole: selectedRole),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Column(
+                        children: [
+                          TextField(
+                            onChanged: context
+                                .read<StaffCubit>()
+                                .updateSearchQuery,
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.search),
+                              hintText: context.translate(LangKeys.searchStaff),
+                            ),
+                          ),
+                          SizedBox(height: 12.h),
+                          _RoleDropdown(selectedRole: selectedRole),
+                        ],
+                      );
+                    },
+                  ),
+                  SizedBox(height: 20.h),
+                  Expanded(
+                    child: staff.isEmpty
+                        ? AppEmptyState(
+                            title: context.translate(LangKeys.noStaffFound),
+                            message:
+                                searchQuery.trim().isEmpty &&
+                                    selectedRole == allStaffRolesValue
+                                ? context.translate(
+                                    LangKeys.addYourFirstStaffMember,
+                                  )
+                                : context.translate(
+                                    LangKeys.noStaffMembersMatchYourFilters,
+                                  ),
+                            icon: Icons.people_outline,
+                          )
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              final count = constraints.maxWidth >= 1100
+                                  ? 3
+                                  : constraints.maxWidth >= 700
+                                  ? 2
+                                  : 1;
+
+                              return GridView.builder(
+                                itemCount: staff.length,
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: count,
+                                      crossAxisSpacing: 16.w,
+                                      mainAxisSpacing: 16.h,
+                                      childAspectRatio: count == 1
+                                          ? 1.55
+                                          : 1.15,
+                                    ),
+                                itemBuilder: (_, index) {
+                                  final staffMember = staff[index];
+
+                                  return StaffCard(
+                                    staff: staffMember,
+                                    onEditPressed: () {
+                                      _openForm(context, staff: staffMember);
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RoleDropdown extends StatelessWidget {
+  const _RoleDropdown({required this.selectedRole});
+
+  final String selectedRole;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      initialValue: selectedRole,
+      decoration: InputDecoration(labelText: context.translate(LangKeys.role)),
+      items: staffRoleOptions.map((role) {
+        return DropdownMenuItem<String>(
+          value: role,
+          child: TextApp(
+            text: formatStaffRole(context, role),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            theme: context.textStyle,
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        context.read<StaffCubit>().updateSelectedRole(value);
+      },
+    );
+  }
+}
+
+class _StaffErrorView extends StatelessWidget {
+  const _StaffErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 48.sp, color: Colors.red.shade400),
+            SizedBox(height: 12.h),
+            TextApp(
+              text: message,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              theme: context.textStyle,
+            ),
+            SizedBox(height: 16.h),
+            AppPrimaryButton(
+              text: context.translate(LangKeys.retry),
+              icon: Icons.refresh,
+              onPressed: onRetry,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

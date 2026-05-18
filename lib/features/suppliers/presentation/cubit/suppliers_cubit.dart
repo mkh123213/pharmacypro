@@ -6,20 +6,22 @@ import 'suppliers_state.dart';
 
 class SuppliersCubit extends Cubit<SuppliersState> {
   SuppliersCubit({required SuppliersRepo suppliersRepo})
-      : _suppliersRepo = suppliersRepo,
-        super(const SuppliersState.initial());
+    : _suppliersRepo = suppliersRepo,
+      super(const SuppliersState.initial());
 
   final SuppliersRepo _suppliersRepo;
+
   List<SupplierModel> _allSuppliers = [];
   String _searchQuery = '';
 
   Future<void> getSuppliers() async {
     emit(const SuppliersState.loading());
+
     try {
       _allSuppliers = await _suppliersRepo.getSuppliers();
       _emitLoaded();
     } catch (error) {
-      emit(SuppliersState.failure(message: error.toString()));
+      emit(const SuppliersState.failure(message: 'could_not_load_suppliers'));
     }
   }
 
@@ -28,34 +30,87 @@ class SuppliersCubit extends Cubit<SuppliersState> {
     _emitLoaded();
   }
 
-  Future<void> createSupplier(SupplierModel supplier) async {
-    if (state is SuppliersLoaded) emit((state as SuppliersLoaded).copyWith(isSubmitting: true));
+  Future<bool> createSupplier(SupplierModel supplier) async {
+    final oldSuppliers = List<SupplierModel>.from(_allSuppliers);
+
+    if (state is SuppliersLoaded) {
+      emit((state as SuppliersLoaded).copyWith(isSubmitting: true));
+    }
+
     try {
       final created = await _suppliersRepo.createSupplier(supplier);
-      _allSuppliers = [created, ..._allSuppliers];
+
+      _allSuppliers = [created, ...oldSuppliers];
+
       _emitLoaded();
+
+      return true;
     } catch (error) {
-      emit(SuppliersState.failure(message: error.toString()));
+      _allSuppliers = oldSuppliers;
+
+      emit(
+        SuppliersState.loaded(
+          suppliers: _getFilteredSuppliers(),
+          searchQuery: _searchQuery,
+        ),
+      );
+
+      emit(const SuppliersState.failure(message: 'could_not_save_supplier'));
+
+      return false;
     }
   }
 
-  Future<void> updateSupplier(SupplierModel supplier) async {
-    if (state is SuppliersLoaded) emit((state as SuppliersLoaded).copyWith(isSubmitting: true));
+  Future<bool> updateSupplier(SupplierModel supplier) async {
+    final oldSuppliers = List<SupplierModel>.from(_allSuppliers);
+
+    if (state is SuppliersLoaded) {
+      emit((state as SuppliersLoaded).copyWith(isSubmitting: true));
+    }
+
     try {
       final updated = await _suppliersRepo.updateSupplier(supplier);
-      _allSuppliers = _allSuppliers.map((item) => item.id == updated.id ? updated : item).toList();
+
+      _allSuppliers = oldSuppliers.map((item) {
+        return item.id == updated.id ? updated : item;
+      }).toList();
+
       _emitLoaded();
+
+      return true;
     } catch (error) {
-      emit(SuppliersState.failure(message: error.toString()));
+      _allSuppliers = oldSuppliers;
+
+      emit(
+        SuppliersState.loaded(
+          suppliers: _getFilteredSuppliers(),
+          searchQuery: _searchQuery,
+        ),
+      );
+
+      emit(const SuppliersState.failure(message: 'could_not_save_supplier'));
+
+      return false;
     }
   }
 
-  void _emitLoaded() {
-    final query = _searchQuery.toLowerCase();
-    final filtered = _allSuppliers.where((supplier) {
+  List<SupplierModel> _getFilteredSuppliers() {
+    final query = _searchQuery.toLowerCase().trim();
+
+    if (query.isEmpty) return _allSuppliers;
+
+    return _allSuppliers.where((supplier) {
       return supplier.name.toLowerCase().contains(query) ||
           (supplier.contactPerson?.toLowerCase().contains(query) ?? false);
     }).toList();
-    emit(SuppliersState.loaded(suppliers: filtered, searchQuery: _searchQuery));
+  }
+
+  void _emitLoaded() {
+    emit(
+      SuppliersState.loaded(
+        suppliers: _getFilteredSuppliers(),
+        searchQuery: _searchQuery,
+      ),
+    );
   }
 }

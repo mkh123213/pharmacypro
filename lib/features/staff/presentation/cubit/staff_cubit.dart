@@ -6,30 +6,36 @@ import 'staff_state.dart';
 
 class StaffCubit extends Cubit<StaffState> {
   StaffCubit({required StaffRepo staffRepo})
-      : _staffRepo = staffRepo,
-        super(const StaffState.initial());
+    : _staffRepo = staffRepo,
+      super(const StaffState.initial());
 
   final StaffRepo _staffRepo;
+
   List<StaffModel> _allStaff = [];
   String _searchQuery = '';
   String _selectedRole = 'all';
 
   Future<void> getStaffData() async {
     emit(const StaffState.loading());
+
     try {
       final results = await Future.wait([
         _staffRepo.getStaff(),
         _staffRepo.getBranches(),
       ]);
+
       _allStaff = results[0] as List<StaffModel>;
-      emit(StaffState.loaded(
-        staff: _filteredStaff,
-        branches: results[1] as dynamic,
-        searchQuery: _searchQuery,
-        selectedRole: _selectedRole,
-      ));
+
+      emit(
+        StaffState.loaded(
+          staff: _filteredStaff,
+          branches: results[1] as dynamic,
+          searchQuery: _searchQuery,
+          selectedRole: _selectedRole,
+        ),
+      );
     } catch (error) {
-      emit(StaffState.failure(message: error.toString()));
+      emit(const StaffState.failure(message: 'could_not_load_staff_data'));
     }
   }
 
@@ -43,46 +49,86 @@ class StaffCubit extends Cubit<StaffState> {
     _emitFromLoaded();
   }
 
-  Future<void> createStaff(StaffModel staff) async {
-    if (state is StaffLoaded) emit((state as StaffLoaded).copyWith(isSubmitting: true));
+  Future<bool> createStaff(StaffModel staff) async {
+    final current = state;
+
+    if (current is! StaffLoaded) return false;
+
+    final oldStaff = List<StaffModel>.from(_allStaff);
+
+    emit(current.copyWith(isSubmitting: true));
+
     try {
       final created = await _staffRepo.createStaff(staff);
-      _allStaff = [created, ..._allStaff];
+
+      _allStaff = [created, ...oldStaff];
+
       _emitFromLoaded();
+
+      return true;
     } catch (error) {
-      emit(StaffState.failure(message: error.toString()));
+      _allStaff = oldStaff;
+
+      emit(current.copyWith(staff: _filteredStaff, isSubmitting: false));
+
+      return false;
     }
   }
 
-  Future<void> updateStaff(StaffModel staff) async {
-    if (state is StaffLoaded) emit((state as StaffLoaded).copyWith(isSubmitting: true));
+  Future<bool> updateStaff(StaffModel staff) async {
+    final current = state;
+
+    if (current is! StaffLoaded) return false;
+
+    final oldStaff = List<StaffModel>.from(_allStaff);
+
+    emit(current.copyWith(isSubmitting: true));
+
     try {
       final updated = await _staffRepo.updateStaff(staff);
-      _allStaff = _allStaff.map((item) => item.id == updated.id ? updated : item).toList();
+
+      _allStaff = oldStaff.map((item) {
+        return item.id == updated.id ? updated : item;
+      }).toList();
+
       _emitFromLoaded();
+
+      return true;
     } catch (error) {
-      emit(StaffState.failure(message: error.toString()));
+      _allStaff = oldStaff;
+
+      emit(current.copyWith(staff: _filteredStaff, isSubmitting: false));
+
+      return false;
     }
   }
 
   List<StaffModel> get _filteredStaff {
-    final query = _searchQuery.toLowerCase();
+    final query = _searchQuery.toLowerCase().trim();
+
     return _allStaff.where((member) {
-      final matchSearch = member.fullName.toLowerCase().contains(query) || member.email.toLowerCase().contains(query);
+      final matchSearch =
+          member.fullName.toLowerCase().contains(query) ||
+          member.email.toLowerCase().contains(query);
+
       final matchRole = _selectedRole == 'all' || member.role == _selectedRole;
+
       return matchSearch && matchRole;
     }).toList();
   }
 
   void _emitFromLoaded() {
     final current = state;
+
     if (current is StaffLoaded) {
-      emit(current.copyWith(
-        staff: _filteredStaff,
-        searchQuery: _searchQuery,
-        selectedRole: _selectedRole,
-        isSubmitting: false,
-      ));
+      emit(
+        current.copyWith(
+          staff: _filteredStaff,
+          searchQuery: _searchQuery,
+          selectedRole: _selectedRole,
+          isSubmitting: false,
+        ),
+      );
     }
   }
 }

@@ -14,7 +14,7 @@ class AppTopBar extends StatelessWidget {
     return Container(
       height: 64.h,
       padding: EdgeInsets.symmetric(horizontal: 16.w),
-      color: AppColors.background,
+      color: MyColors.background,
       child: SafeArea(
         bottom: false,
         child: Row(
@@ -32,7 +32,7 @@ class AppTopBar extends StatelessWidget {
                 text: 'PharmaChain',
                 theme: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: MyColors.textPrimary,
                 ),
               ),
             ),
@@ -43,10 +43,10 @@ class AppTopBar extends StatelessWidget {
             SizedBox(width: 8.w),
             CircleAvatar(
               radius: 18.r,
-              backgroundColor: AppColors.primary.withOpacity(0.12),
+              backgroundColor: MyColors.primary.withOpacity(0.12),
               child: Icon(
                 Icons.person_outline,
-                color: AppColors.primary,
+                color: MyColors.primary,
                 size: 20.sp,
               ),
             ),

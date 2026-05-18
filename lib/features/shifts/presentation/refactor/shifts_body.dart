@@ -1,19 +1,227 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../../core/common/toast/show_toast.dart';
+import '../../../../core/common/widgets/app_loading.dart';
+import '../../../../core/common/widgets/app_page_header.dart';
+import '../../../../core/common/widgets/app_primary_button.dart';
+import '../../../../core/common/widgets/text_app.dart';
+import '../../../../core/extensions/context_extension.dart';
+import '../../../../core/language/lang_keys.dart';
+import '../../data/models/shift_model.dart';
 import '../cubit/shifts_cubit.dart';
 import '../cubit/shifts_state.dart';
 import '../widgets/shift_form_bottom_sheet.dart';
 import '../widgets/shift_week_view.dart';
 import '../widgets/shifts_table.dart';
+import 'shifts_constants.dart';
 
-class ShiftsBody extends StatelessWidget { const ShiftsBody({super.key}); @override Widget build(BuildContext context) => BlocBuilder<ShiftsCubit, ShiftsState>(builder: (context, state) { if (state is ShiftsLoading) return const Center(child: CircularProgressIndicator()); if (state is ShiftsFailure) return Center(child: Text(state.message)); if (state is! ShiftsLoaded) return const SizedBox.shrink(); return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_FeatureHeader(title: 'Shifts', subtitle: 'Schedule and track staff shifts', action: ElevatedButton.icon(onPressed: () => showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => BlocProvider.value(value: context.read<ShiftsCubit>(), child: ShiftFormBottomSheet(staff: state.staff, branches: state.branches))), icon: const Icon(Icons.add), label: const Text('Add Shift'))), const SizedBox(height: 14), Row(children: [OutlinedButton(onPressed: context.read<ShiftsCubit>().previousWeek, child: const Text('Prev Week')), const Spacer(), OutlinedButton(onPressed: context.read<ShiftsCubit>().nextWeek, child: const Text('Next Week'))]), const SizedBox(height: 14), SizedBox(height: 240, child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: SizedBox(width: 900, child: ShiftWeekView(weekStart: state.weekStart, shifts: state.shifts, onShiftTap: (s) { final next = s.status == 'scheduled' ? 'in_progress' : s.status == 'in_progress' ? 'completed' : s.status; context.read<ShiftsCubit>().updateStatus(s.id, next); })))), const SizedBox(height: 20), const Text('All Upcoming Shifts', style: TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 10), Expanded(child: ShiftsTable(shifts: state.shifts))]); }); }
+class ShiftsBody extends StatelessWidget {
+  const ShiftsBody({super.key});
 
+  void _openForm(BuildContext context, ShiftsLoaded state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return BlocProvider.value(
+          value: context.read<ShiftsCubit>(),
+          child: ShiftFormBottomSheet(
+            staff: state.staff,
+            branches: state.branches,
+          ),
+        );
+      },
+    );
+  }
 
-class _FeatureHeader extends StatelessWidget {
-  const _FeatureHeader({required this.title, required this.subtitle, this.action});
-  final String title;
-  final String subtitle;
-  final Widget? action;
+  Future<void> _updateShiftStatus({
+    required BuildContext context,
+    required ShiftModel shift,
+  }) async {
+    final nextStatus = nextShiftStatus(shift.status);
+
+    if (nextStatus == shift.status) return;
+
+    final success = await context.read<ShiftsCubit>().updateStatus(
+      shift.id,
+      nextStatus,
+    );
+
+    if (!context.mounted) return;
+
+    if (!success) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.couldNotUpdateShiftStatus),
+      );
+      return;
+    }
+
+    ShowToast.showToastSuccessTop(
+      message: context.translate(LangKeys.shiftStatusUpdatedSuccessfully),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)), const SizedBox(height: 4), Text(subtitle, style: TextStyle(color: Colors.grey.shade600))])), if (action != null) action!]);
+  Widget build(BuildContext context) {
+    return BlocListener<ShiftsCubit, ShiftsState>(
+      listenWhen: (previous, current) => current is ShiftsFailure,
+      listener: (context, state) {
+        if (state is ShiftsFailure) {
+          ShowToast.showToastErrorTop(
+            message: context.translate(state.message),
+          );
+        }
+      },
+      child: BlocBuilder<ShiftsCubit, ShiftsState>(
+        builder: (context, state) {
+          if (state is ShiftsLoading) {
+            return const AppLoading();
+          }
+
+          if (state is ShiftsFailure) {
+            return _ShiftsErrorView(
+              message: context.translate(state.message),
+              onRetry: () {
+                context.read<ShiftsCubit>().getShiftsData();
+              },
+            );
+          }
+
+          if (state is! ShiftsLoaded) {
+            return const SizedBox.shrink();
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppPageHeader(
+                title: context.translate(LangKeys.shifts),
+                subtitle: context.translate(
+                  LangKeys.scheduleAndTrackStaffShifts,
+                ),
+                action: AppPrimaryButton(
+                  text: context.translate(LangKeys.addShift),
+                  icon: Icons.add,
+                  onPressed: state.isSubmitting
+                      ? null
+                      : () {
+                          _openForm(context, state);
+                        },
+                ),
+              ),
+              SizedBox(height: 14.h),
+              Row(
+                children: [
+                  OutlinedButton(
+                    onPressed: context.read<ShiftsCubit>().previousWeek,
+                    child: TextApp(
+                      text: context.translate(LangKeys.prevWeek),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle,
+                    ),
+                  ),
+                  const Spacer(),
+                  OutlinedButton(
+                    onPressed: context.read<ShiftsCubit>().nextWeek,
+                    child: TextApp(
+                      text: context.translate(LangKeys.nextWeek),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 14.h),
+              SizedBox(
+                height: 240.h,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: 900.w,
+                    child: ShiftWeekView(
+                      weekStart: state.weekStart,
+                      shifts: state.shifts,
+                      isSubmitting: state.isSubmitting,
+                      onShiftTap: (shift) {
+                        _updateShiftStatus(context: context, shift: shift);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              TextApp(
+                text: context.translate(LangKeys.allUpcomingShifts),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle,
+              ),
+              SizedBox(height: 10.h),
+              Expanded(
+                child: state.shifts.isEmpty
+                    ? _EmptyShiftsView()
+                    : ShiftsTable(shifts: state.shifts),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _EmptyShiftsView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: TextApp(
+        text: context.translate(LangKeys.noShiftsFound),
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        theme: context.textStyle,
+      ),
+    );
+  }
+}
+
+class _ShiftsErrorView extends StatelessWidget {
+  const _ShiftsErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 48.sp, color: Colors.red.shade400),
+            SizedBox(height: 12.h),
+            TextApp(
+              text: message,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              theme: context.textStyle,
+            ),
+            SizedBox(height: 16.h),
+            AppPrimaryButton(
+              text: context.translate(LangKeys.retry),
+              icon: Icons.refresh,
+              onPressed: onRetry,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

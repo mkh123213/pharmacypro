@@ -8,48 +8,48 @@ class AppTheme {
   static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: AppColors.surface,
+      scaffoldBackgroundColor: MyColors.surface,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        surface: AppColors.surface,
+        seedColor: MyColors.primary,
+        surface: MyColors.surface,
       ),
       appBarTheme: const AppBarTheme(
         centerTitle: false,
         elevation: 0,
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: MyColors.background,
+        foregroundColor: MyColors.textPrimary,
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: AppColors.background,
+        color: MyColors.background,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border),
+          side: const BorderSide(color: MyColors.border),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.background,
+        fillColor: MyColors.background,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: MyColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: MyColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderSide: const BorderSide(color: MyColors.primary),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: MyColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -58,7 +58,7 @@ class AppTheme {
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: AppColors.divider,
+        color: MyColors.divider,
         thickness: 1,
       ),
     );

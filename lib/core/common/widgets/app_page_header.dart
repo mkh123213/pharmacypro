@@ -29,7 +29,7 @@ class AppPageHeader extends StatelessWidget {
                 text: title,
                 theme: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: MyColors.textPrimary,
                 ),
               ),
               if (subtitle != null && subtitle!.isNotEmpty) ...[
@@ -37,7 +37,7 @@ class AppPageHeader extends StatelessWidget {
                 TextApp(
                   text: subtitle!,
                   theme: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: MyColors.textSecondary,
                   ),
                 ),
               ],

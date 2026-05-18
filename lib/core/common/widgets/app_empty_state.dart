@@ -30,13 +30,13 @@ class AppEmptyState extends StatelessWidget {
               width: 64.w,
               height: 64.w,
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.08),
+                color: MyColors.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Icon(
                 icon ?? Icons.inbox_outlined,
                 size: 30.sp,
-                color: AppColors.primary,
+                color: MyColors.primary,
               ),
             ),
             SizedBox(height: 16.h),
@@ -53,7 +53,7 @@ class AppEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               theme: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              ).textTheme.bodySmall?.copyWith(color: MyColors.textSecondary),
             ),
             if (action != null) ...[SizedBox(height: 18.h), action!],
           ],

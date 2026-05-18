@@ -6,32 +6,42 @@ import 'customer_orders_state.dart';
 
 class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
   CustomerOrdersCubit({required CustomerOrdersRepo customerOrdersRepo})
-      : _customerOrdersRepo = customerOrdersRepo,
-        super(const CustomerOrdersState.initial());
+    : _customerOrdersRepo = customerOrdersRepo,
+      super(const CustomerOrdersState.initial());
 
   final CustomerOrdersRepo _customerOrdersRepo;
+
   List<CustomerOrderModel> _allOrders = [];
   String _searchQuery = '';
   String _selectedStatus = 'all';
 
   Future<void> getCustomerOrdersData() async {
     emit(const CustomerOrdersState.loading());
+
     try {
       final results = await Future.wait([
         _customerOrdersRepo.getCustomerOrders(),
         _customerOrdersRepo.getMedications(),
         _customerOrdersRepo.getBranches(),
       ]);
+
       _allOrders = results[0] as List<CustomerOrderModel>;
-      emit(CustomerOrdersState.loaded(
-        orders: _filteredOrders,
-        medications: results[1] as dynamic,
-        branches: results[2] as dynamic,
-        searchQuery: _searchQuery,
-        selectedStatus: _selectedStatus,
-      ));
+
+      emit(
+        CustomerOrdersState.loaded(
+          orders: _filteredOrders,
+          medications: results[1] as dynamic,
+          branches: results[2] as dynamic,
+          searchQuery: _searchQuery,
+          selectedStatus: _selectedStatus,
+        ),
+      );
     } catch (error) {
-      emit(CustomerOrdersState.failure(message: error.toString()));
+      emit(
+        const CustomerOrdersState.failure(
+          message: 'could_not_load_customer_orders',
+        ),
+      );
     }
   }
 
@@ -45,40 +55,96 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
     _emitFromLoaded();
   }
 
-  Future<void> createCustomerOrder(CustomerOrderModel order) async {
-    if (state is CustomerOrdersLoaded) emit((state as CustomerOrdersLoaded).copyWith(isSubmitting: true));
+  Future<bool> createCustomerOrder(CustomerOrderModel order) async {
+    final current = state;
+
+    if (current is! CustomerOrdersLoaded) return false;
+
+    final oldOrders = List<CustomerOrderModel>.from(_allOrders);
+
+    emit(current.copyWith(isSubmitting: true));
+
     try {
       final created = await _customerOrdersRepo.createCustomerOrder(order);
-      _allOrders = [created, ..._allOrders];
+
+      _allOrders = [created, ...oldOrders];
+
       _emitFromLoaded();
+
+      return true;
     } catch (error) {
-      emit(CustomerOrdersState.failure(message: error.toString()));
+      _allOrders = oldOrders;
+
+      emit(current.copyWith(orders: _filteredOrders, isSubmitting: false));
+
+      return false;
     }
   }
 
-  Future<void> updateStatus(String id, String status) async {
-    await _customerOrdersRepo.updateCustomerOrderFields(id, {'status': status});
-    _allOrders = _allOrders.map((order) {
-      if (order.id != id) return order;
-      return CustomerOrderModel.fromJson({...order.toJson(), 'status': status});
-    }).toList();
-    _emitFromLoaded();
+  Future<bool> updateStatus(String id, String status) async {
+    final current = state;
+
+    if (current is! CustomerOrdersLoaded) return false;
+
+    final oldOrders = List<CustomerOrderModel>.from(_allOrders);
+
+    emit(current.copyWith(isSubmitting: true));
+
+    try {
+      await _customerOrdersRepo.updateCustomerOrderFields(id, {
+        'status': status,
+      });
+
+      _allOrders = oldOrders.map((order) {
+        if (order.id != id) return order;
+
+        return CustomerOrderModel.fromJson({
+          ...order.toJson(),
+          'status': status,
+        });
+      }).toList();
+
+      _emitFromLoaded();
+
+      return true;
+    } catch (error) {
+      _allOrders = oldOrders;
+
+      emit(current.copyWith(orders: _filteredOrders, isSubmitting: false));
+
+      return false;
+    }
   }
 
   List<CustomerOrderModel> get _filteredOrders {
-    final query = _searchQuery.toLowerCase();
+    final query = _searchQuery.toLowerCase().trim();
+
     return _allOrders.where((order) {
-      final matchSearch = order.customerName.toLowerCase().contains(query) ||
+      final matchSearch =
+          order.customerName.toLowerCase().contains(query) ||
+          (order.customerPhone?.toLowerCase().contains(query) ?? false) ||
+          (order.branchName?.toLowerCase().contains(query) ?? false) ||
           (order.orderNumber?.toLowerCase().contains(query) ?? false);
-      final matchStatus = _selectedStatus == 'all' || order.status == _selectedStatus;
+
+      final matchStatus =
+          _selectedStatus == 'all' || order.status == _selectedStatus;
+
       return matchSearch && matchStatus;
     }).toList();
   }
 
   void _emitFromLoaded() {
     final current = state;
+
     if (current is CustomerOrdersLoaded) {
-      emit(current.copyWith(orders: _filteredOrders, searchQuery: _searchQuery, selectedStatus: _selectedStatus, isSubmitting: false));
+      emit(
+        current.copyWith(
+          orders: _filteredOrders,
+          searchQuery: _searchQuery,
+          selectedStatus: _selectedStatus,
+          isSubmitting: false,
+        ),
+      );
     }
   }
 }

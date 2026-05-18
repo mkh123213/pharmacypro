@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pharmacypro/core/routing/app_names_rour=tes.dart';
+import 'package:pharmacypro/core/routing/app_routes.dart';
 
-import '../../routing/app_routes.dart';
 import '../../theme/app_colors.dart';
 import 'app_sidebar_item.dart';
 import 'app_sidebar_logo.dart';
@@ -16,11 +15,11 @@ class AppSidebar extends StatelessWidget {
 
     return Container(
       width: 260,
-      color: AppColors.sidebarBg,
+      color: MyColors.sidebarBg,
       child: Column(
         children: [
           const AppSidebarLogo(),
-          const Divider(color: AppColors.sidebarActive, height: 1),
+          const Divider(color: MyColors.sidebarActive, height: 1),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),

@@ -42,6 +42,11 @@ dependencies:
   intl: ^0.20.2
   qr_flutter: ^4.1.0
   mobile_scanner: ^6.0.5
+  fluttertoast: ^9.0.0
+  flutter_localizations:
+    sdk: flutter
+  connectivity_plus: ^7.1.1
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
@@ -57,3 +62,5 @@ flutter:
 
   assets:
     - assets/icons/
+    - lang/en.json
+    - lang/ar.json

@@ -34,7 +34,7 @@ class AppSidebarItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            color: isActive ? AppColors.sidebarActive : Colors.transparent,
+            color: isActive ? MyColors.sidebarActive : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

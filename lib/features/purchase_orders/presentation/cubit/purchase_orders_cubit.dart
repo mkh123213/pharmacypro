@@ -6,15 +6,17 @@ import 'purchase_orders_state.dart';
 
 class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
   PurchaseOrdersCubit({required PurchaseOrdersRepo purchaseOrdersRepo})
-      : _purchaseOrdersRepo = purchaseOrdersRepo,
-        super(const PurchaseOrdersState.initial());
+    : _purchaseOrdersRepo = purchaseOrdersRepo,
+      super(const PurchaseOrdersState.initial());
 
   final PurchaseOrdersRepo _purchaseOrdersRepo;
+
   List<PurchaseOrderModel> _allPurchaseOrders = [];
   String _searchQuery = '';
 
   Future<void> getPurchaseOrdersData() async {
     emit(const PurchaseOrdersState.loading());
+
     try {
       final results = await Future.wait([
         _purchaseOrdersRepo.getPurchaseOrders(),
@@ -22,16 +24,24 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
         _purchaseOrdersRepo.getBranches(),
         _purchaseOrdersRepo.getMedications(),
       ]);
+
       _allPurchaseOrders = results[0] as List<PurchaseOrderModel>;
-      emit(PurchaseOrdersState.loaded(
-        purchaseOrders: _filteredPurchaseOrders,
-        suppliers: results[1] as dynamic,
-        branches: results[2] as dynamic,
-        medications: results[3] as dynamic,
-        searchQuery: _searchQuery,
-      ));
+
+      emit(
+        PurchaseOrdersState.loaded(
+          purchaseOrders: _filteredPurchaseOrders,
+          suppliers: results[1] as dynamic,
+          branches: results[2] as dynamic,
+          medications: results[3] as dynamic,
+          searchQuery: _searchQuery,
+        ),
+      );
     } catch (error) {
-      emit(PurchaseOrdersState.failure(message: error.toString()));
+      emit(
+        const PurchaseOrdersState.failure(
+          message: 'could_not_load_purchase_orders',
+        ),
+      );
     }
   }
 
@@ -40,38 +50,100 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
     _emitFromLoaded();
   }
 
-  Future<void> createPurchaseOrder(PurchaseOrderModel purchaseOrder) async {
-    if (state is PurchaseOrdersLoaded) emit((state as PurchaseOrdersLoaded).copyWith(isSubmitting: true));
+  Future<bool> createPurchaseOrder(PurchaseOrderModel purchaseOrder) async {
+    final current = state;
+
+    if (current is! PurchaseOrdersLoaded) return false;
+
+    final oldPurchaseOrders = List<PurchaseOrderModel>.from(_allPurchaseOrders);
+
+    emit(current.copyWith(isSubmitting: true));
+
     try {
-      final created = await _purchaseOrdersRepo.createPurchaseOrder(purchaseOrder);
-      _allPurchaseOrders = [created, ..._allPurchaseOrders];
+      final created = await _purchaseOrdersRepo.createPurchaseOrder(
+        purchaseOrder,
+      );
+
+      _allPurchaseOrders = [created, ...oldPurchaseOrders];
+
       _emitFromLoaded();
+
+      return true;
     } catch (error) {
-      emit(PurchaseOrdersState.failure(message: error.toString()));
+      _allPurchaseOrders = oldPurchaseOrders;
+
+      emit(
+        current.copyWith(
+          purchaseOrders: _filteredPurchaseOrders,
+          isSubmitting: false,
+        ),
+      );
+
+      return false;
     }
   }
 
-  Future<void> updateStatus(String id, String status) async {
-    await _purchaseOrdersRepo.updatePurchaseOrderFields(id, {'status': status});
-    _allPurchaseOrders = _allPurchaseOrders.map((order) {
-      if (order.id != id) return order;
-      return PurchaseOrderModel.fromJson({...order.toJson(), 'status': status});
-    }).toList();
-    _emitFromLoaded();
+  Future<bool> updateStatus(String id, String status) async {
+    final current = state;
+
+    if (current is! PurchaseOrdersLoaded) return false;
+
+    final oldPurchaseOrders = List<PurchaseOrderModel>.from(_allPurchaseOrders);
+
+    emit(current.copyWith(isSubmitting: true));
+
+    try {
+      await _purchaseOrdersRepo.updatePurchaseOrderFields(id, {
+        'status': status,
+      });
+
+      _allPurchaseOrders = oldPurchaseOrders.map((order) {
+        if (order.id != id) return order;
+
+        return PurchaseOrderModel.fromJson({
+          ...order.toJson(),
+          'status': status,
+        });
+      }).toList();
+
+      _emitFromLoaded();
+
+      return true;
+    } catch (error) {
+      _allPurchaseOrders = oldPurchaseOrders;
+
+      emit(
+        current.copyWith(
+          purchaseOrders: _filteredPurchaseOrders,
+          isSubmitting: false,
+        ),
+      );
+
+      return false;
+    }
   }
 
   List<PurchaseOrderModel> get _filteredPurchaseOrders {
-    final query = _searchQuery.toLowerCase();
+    final query = _searchQuery.toLowerCase().trim();
+
     return _allPurchaseOrders.where((order) {
       return (order.orderNumber?.toLowerCase().contains(query) ?? false) ||
-          (order.supplierName?.toLowerCase().contains(query) ?? false);
+          (order.supplierName?.toLowerCase().contains(query) ?? false) ||
+          (order.branchName?.toLowerCase().contains(query) ?? false);
     }).toList();
   }
 
   void _emitFromLoaded() {
     final current = state;
+
     if (current is PurchaseOrdersLoaded) {
-      emit(current.copyWith(purchaseOrders: _filteredPurchaseOrders, searchQuery: _searchQuery, isSubmitting: false));
+      emit(
+        current.copyWith(
+          purchaseOrders: _filteredPurchaseOrders,
+          searchQuery: _searchQuery,
+          isSubmitting: false,
+        ),
+      );
     }
   }
 }
