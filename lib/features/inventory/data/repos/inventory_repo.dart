@@ -1,3 +1,6 @@
+import 'package:pharmacypro/features/inventory/data/models/inventory_alert_model.dart';
+import 'package:pharmacypro/features/inventory/data/models/stock_movement_model.dart';
+
 import '../../../branches/data/models/branch_model.dart';
 import '../../../medications/data/models/medication_model.dart';
 import '../data_source/inventory_remote_data_source.dart';
@@ -29,6 +32,10 @@ class InventoryRepo {
     return _remoteDataSource.updateInventory(item);
   }
 
+  Future<List<StockMovementModel>> getStockMovements() {
+    return _remoteDataSource.getStockMovements();
+  }
+
   Future<InventoryModel> adjustInventoryStock({
     required InventoryModel item,
     required int quantityChange,
@@ -39,5 +46,9 @@ class InventoryRepo {
       quantityChange: quantityChange,
       reason: reason,
     );
+  }
+
+  Future<List<InventoryAlertModel>> getInventoryAlerts() {
+    return _remoteDataSource.getInventoryAlerts();
   }
 }

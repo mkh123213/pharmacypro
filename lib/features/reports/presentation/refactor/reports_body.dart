@@ -148,6 +148,23 @@ class ReportsBody extends StatelessWidget {
                             value: '${summary.prescriptionsCount}',
                             icon: Icons.receipt_long,
                           ),
+                          ReportsStatCard(
+                            title: context.translate(LangKeys.stockIn),
+                            value: '${summary.totalStockIn}',
+                            icon: Icons.trending_up,
+                          ),
+                          ReportsStatCard(
+                            title: context.translate(LangKeys.stockOut),
+                            value: '${summary.totalStockOut}',
+                            icon: Icons.trending_down,
+                          ),
+                          ReportsStatCard(
+                            title: context.translate(
+                              LangKeys.manualAdjustments,
+                            ),
+                            value: '${summary.manualAdjustmentsCount}',
+                            icon: Icons.tune,
+                          ),
                         ],
                       );
                     },
@@ -171,6 +188,16 @@ class ReportsBody extends StatelessWidget {
                   ReportsChartCard(
                     title: context.translate(LangKeys.orderStatusBreakdown),
                     data: summary.orderStatusBreakdown,
+                  ),
+                  SizedBox(height: 16.h),
+                  ReportsChartCard(
+                    title: context.translate(LangKeys.stockMovementByType),
+                    data: summary.stockMovementByType,
+                  ),
+                  SizedBox(height: 16.h),
+                  ReportsChartCard(
+                    title: context.translate(LangKeys.mostMovedMedications),
+                    data: summary.mostMovedMedications,
                   ),
                 ],
               ),

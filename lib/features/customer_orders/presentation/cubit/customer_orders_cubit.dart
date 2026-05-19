@@ -151,6 +151,16 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
       return 'not_enough_stock_for_medication|$medicationName';
     }
 
+    if (text.contains('expired_stock_for_medication:')) {
+      final medicationName = text
+          .split('expired_stock_for_medication:')
+          .last
+          .replaceAll(']', '')
+          .trim();
+
+      return 'expired_stock_for_medication|$medicationName';
+    }
+
     return 'could_not_update_order_status';
   }
 

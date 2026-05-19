@@ -128,6 +128,10 @@ class PrescriptionsRemoteDataSource {
         final inventoryDocument = inventoryQuery.docs.first;
         final inventoryData = inventoryDocument.data();
 
+        if (_isExpired(inventoryData['expiry_date'])) {
+          throw Exception('expired_stock_for_medication:$medicationName');
+        }
+
         final currentQuantity = _readInt(inventoryData['quantity']);
 
         if (currentQuantity < quantity) {
@@ -184,5 +188,23 @@ class PrescriptionsRemoteDataSource {
     if (value is String) return int.tryParse(value) ?? 0;
 
     return 0;
+  }
+
+  bool _isExpired(Object? value) {
+    if (value == null) return false;
+
+    final text = value.toString().trim();
+
+    if (text.isEmpty) return false;
+
+    final date = DateTime.tryParse(text);
+
+    if (date == null) return false;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final expiryDay = DateTime(date.year, date.month, date.day);
+
+    return expiryDay.isBefore(today);
   }
 }

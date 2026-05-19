@@ -100,6 +100,16 @@ class PrescriptionsBody extends StatelessWidget {
           .replaceAll('{medication}', medicationName);
     }
 
+    if (errorMessage.startsWith('expired_stock_for_medication|')) {
+      final medicationName = errorMessage
+          .replaceFirst('expired_stock_for_medication|', '')
+          .trim();
+
+      return context
+          .translate(LangKeys.expiredStockForMedication)
+          .replaceAll('{medication}', medicationName);
+    }
+
     switch (errorMessage) {
       case 'prescription_not_found':
         return context.translate(LangKeys.prescriptionNotFound);

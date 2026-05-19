@@ -487,4 +487,56 @@ class LangKeys {
   static const String lowStock = 'low_stock';
   static const String useAdjustStockToChangeQuantity =
       'use_adjust_stock_to_change_quantity';
+  static const String stockMovements = 'stock_movements';
+  static const String stockHistory = 'stock_history';
+  static const String trackAllStockMovements = 'track_all_stock_movements';
+  static const String searchStockMovements = 'search_stock_movements';
+  static const String noStockMovementsFound = 'no_stock_movements_found';
+  static const String noStockMovementsMatchYourFilters =
+      'no_stock_movements_match_your_filters';
+  static const String couldNotLoadStockMovements =
+      'could_not_load_stock_movements';
+  static const String movementType = 'movement_type';
+  static const String quantityBefore = 'quantity_before';
+  static const String quantityAfter = 'quantity_after';
+  static const String quantityChange = 'quantity_change';
+  static const String referenceType = 'reference_type';
+  static const String reason = 'reason';
+  static const String allTypes = 'all_types';
+  static const String sale = 'sale';
+  static const String purchaseReceived = 'purchase_received';
+  static const String customerOrderDelivered = 'customer_order_delivered';
+  static const String prescriptionDispensed = 'prescription_dispensed';
+  static const String manualAdjustment = 'manual_adjustment';
+  static const String recentStockMovements = 'recent_stock_movements';
+  static const String stockInToday = 'stock_in_today';
+  static const String stockOutToday = 'stock_out_today';
+  static const String manualAdjustmentsToday = 'manual_adjustments_today';
+  static const String itemsAddedToday = 'items_added_today';
+  static const String itemsRemovedToday = 'items_removed_today';
+  static const String adjustmentsToday = 'adjustments_today';
+  static const String pendingOrders = 'pending_orders';
+  static const String awaitingProcessing = 'awaiting_processing';
+
+  static const String stockIn = 'stock_in';
+  static const String stockOut = 'stock_out';
+  static const String manualAdjustments = 'manual_adjustments';
+  static const String stockMovementByType = 'stock_movement_by_type';
+  static const String mostMovedMedications = 'most_moved_medications';
+  static const String inventoryAlerts = 'inventory_alerts';
+  static const String monitorLowStockAndExpiryAlerts =
+      'monitor_low_stock_and_expiry_alerts';
+  static const String couldNotLoadInventoryAlerts =
+      'could_not_load_inventory_alerts';
+  static const String searchInventoryAlerts = 'search_inventory_alerts';
+  static const String alertType = 'alert_type';
+  static const String allAlerts = 'all_alerts';
+  static const String expiringSoon = 'expiring_soon';
+  static const String noInventoryAlertsFound = 'no_inventory_alerts_found';
+  static const String allInventoryLooksHealthy = 'all_inventory_looks_healthy';
+  static const String inventoryAlertsCount = 'inventory_alerts_count';
+  static const String noActiveInventoryAlerts = 'no_active_inventory_alerts';
+  static const String alerts = 'alerts';
+  static const String expiredStockForMedication =
+      'expired_stock_for_medication';
 }

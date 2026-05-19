@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pharmacypro/core/app/app_cubit/app_cubit.dart';
+import 'package:pharmacypro/features/inventory/presentation/cubit/inventory_alerts_cubit.dart';
+import 'package:pharmacypro/features/inventory/presentation/cubit/stock_movements_cubit.dart';
 
 import '../../features/branches/data/data_source/branches_remote_data_source.dart';
 import '../../features/branches/data/repos/branches_repo.dart';
@@ -137,6 +139,12 @@ void _registerInventory() {
 
   getIt.registerFactory<InventoryCubit>(
     () => InventoryCubit(inventoryRepo: getIt()),
+  );
+  getIt.registerFactory<StockMovementsCubit>(
+    () => StockMovementsCubit(inventoryRepo: getIt<InventoryRepo>()),
+  );
+  getIt.registerFactory<InventoryAlertsCubit>(
+    () => InventoryAlertsCubit(inventoryRepo: getIt<InventoryRepo>()),
   );
 }
 

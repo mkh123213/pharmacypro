@@ -53,9 +53,9 @@ class ReportsChartCard extends StatelessWidget {
                       child: Row(
                         children: [
                           SizedBox(
-                            width: constraints.maxWidth < 330 ? 72.w : 100.w,
+                            width: constraints.maxWidth < 330 ? 72.w : 120.w,
                             child: TextApp(
-                              text: item.label,
+                              text: _chartLabel(context, item.label),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               theme: context.textStyle,
@@ -88,5 +88,42 @@ class ReportsChartCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _chartLabel(BuildContext context, String value) {
+    switch (value) {
+      case 'cash':
+        return context.translate(LangKeys.cash);
+      case 'card':
+        return context.translate(LangKeys.card);
+      case 'insurance':
+        return context.translate(LangKeys.insurance);
+      case 'online':
+        return context.translate(LangKeys.online);
+      case 'pending':
+        return context.translate(LangKeys.pending);
+      case 'confirmed':
+        return context.translate(LangKeys.confirmed);
+      case 'processing':
+        return context.translate(LangKeys.processing);
+      case 'ready':
+        return context.translate(LangKeys.ready);
+      case 'delivered':
+        return context.translate(LangKeys.delivered);
+      case 'cancelled':
+        return context.translate(LangKeys.cancelled);
+      case 'sale':
+        return context.translate(LangKeys.sale);
+      case 'purchase_received':
+        return context.translate(LangKeys.purchaseReceived);
+      case 'customer_order_delivered':
+        return context.translate(LangKeys.customerOrderDelivered);
+      case 'prescription_dispensed':
+        return context.translate(LangKeys.prescriptionDispensed);
+      case 'manual_adjustment':
+        return context.translate(LangKeys.manualAdjustment);
+      default:
+        return value;
+    }
   }
 }

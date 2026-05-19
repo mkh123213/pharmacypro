@@ -92,6 +92,16 @@ class SalesCubit extends Cubit<SalesState> {
       return 'not_enough_stock_for_medication|$medicationName';
     }
 
+    if (text.contains('expired_stock_for_medication:')) {
+      final medicationName = text
+          .split('expired_stock_for_medication:')
+          .last
+          .replaceAll(']', '')
+          .trim();
+
+      return 'expired_stock_for_medication|$medicationName';
+    }
+
     return 'could_not_complete_sale';
   }
 

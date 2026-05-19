@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/features/dashboard/presentation/widgets/recent_stock_movements_card.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_loading.dart';
@@ -71,9 +72,9 @@ class DashboardBody extends StatelessWidget {
                   SizedBox(height: 14.h),
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      final count = constraints.maxWidth >= 1100
+                      final count = constraints.maxWidth >= 1200
                           ? 4
-                          : constraints.maxWidth >= 650
+                          : constraints.maxWidth >= 700
                           ? 2
                           : 1;
 
@@ -118,6 +119,40 @@ class DashboardBody extends StatelessWidget {
                             ),
                             icon: Icons.people,
                           ),
+                          DashboardStatCard(
+                            title: context.translate(LangKeys.stockInToday),
+                            value: '${summary.stockInToday}',
+                            subtitle: context.translate(
+                              LangKeys.itemsAddedToday,
+                            ),
+                            icon: Icons.trending_up,
+                          ),
+                          DashboardStatCard(
+                            title: context.translate(LangKeys.stockOutToday),
+                            value: '${summary.stockOutToday}',
+                            subtitle: context.translate(
+                              LangKeys.itemsRemovedToday,
+                            ),
+                            icon: Icons.trending_down,
+                          ),
+                          DashboardStatCard(
+                            title: context.translate(
+                              LangKeys.manualAdjustmentsToday,
+                            ),
+                            value: '${summary.manualAdjustmentsToday}',
+                            subtitle: context.translate(
+                              LangKeys.adjustmentsToday,
+                            ),
+                            icon: Icons.tune,
+                          ),
+                          DashboardStatCard(
+                            title: context.translate(LangKeys.pendingOrders),
+                            value: '${summary.pendingOrders}',
+                            subtitle: context.translate(
+                              LangKeys.awaitingProcessing,
+                            ),
+                            icon: Icons.shopping_bag_outlined,
+                          ),
                         ],
                       );
                     },
@@ -138,6 +173,16 @@ class DashboardBody extends StatelessWidget {
                   LowStockItemsCard(items: summary.lowStockItems),
                   SizedBox(height: 16.h),
                   RecentOrdersCard(orders: summary.orders),
+                  SizedBox(height: 16.h),
+                  RecentStockMovementsCard(
+                    movements: summary.recentStockMovements,
+                  ),
+                  SizedBox(height: 16.h),
+                  RecentOrdersCard(orders: summary.orders),
+                  SizedBox(height: 16.h),
+                  RecentStockMovementsCard(
+                    movements: summary.recentStockMovements,
+                  ),
                 ],
               ),
             ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:pharmacypro/core/routing/app_routes.dart';
 
 import '../../theme/app_colors.dart';
 import 'text_app.dart';
@@ -37,7 +39,9 @@ class AppTopBar extends StatelessWidget {
               ),
             ),
             IconButton(
-              onPressed: () {},
+              onPressed: () {
+                context.push(AppRoutes.inventoryAlerts);
+              },
               icon: const Icon(Icons.notifications_none_outlined),
             ),
             SizedBox(width: 8.w),

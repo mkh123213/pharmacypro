@@ -11,4 +11,6 @@ class AppRoutes {
   static const String shifts = '/shifts';
   static const String branches = '/branches';
   static const String reports = '/reports';
+  static const String stockHistory = '/stock-history';
+  static const String inventoryAlerts = '/inventory-alerts';
 }

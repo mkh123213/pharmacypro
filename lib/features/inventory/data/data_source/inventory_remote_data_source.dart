@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pharmacypro/features/inventory/data/models/inventory_alert_model.dart';
+import 'package:pharmacypro/features/inventory/data/models/stock_movement_model.dart';
 
 import '../../../branches/data/models/branch_model.dart';
 import '../../../medications/data/models/medication_model.dart';
@@ -114,5 +116,85 @@ class InventoryRemoteDataSource {
     });
 
     return InventoryModel.fromFirestore(await inventoryReference.get());
+  }
+
+  Future<List<StockMovementModel>> getStockMovements() async {
+    final snapshot = await _stockMovements
+        .orderBy('created_at', descending: true)
+        .limit(200)
+        .get();
+
+    return snapshot.docs.map(StockMovementModel.fromFirestore).toList();
+  }
+
+  Future<List<InventoryAlertModel>> getInventoryAlerts() async {
+    final inventory = await getInventory();
+
+    final alerts = <InventoryAlertModel>[];
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final soonLimit = today.add(const Duration(days: 30));
+
+    for (final item in inventory) {
+      if (item.quantity <= item.minStockLevel) {
+        alerts.add(
+          InventoryAlertModel(
+            id: '${item.id}_low_stock',
+            type: 'low_stock',
+            inventoryItem: item,
+            title: item.medicationName ?? '',
+            message: '${item.quantity} / ${item.minStockLevel}',
+            priority: 2,
+          ),
+        );
+      }
+
+      final expiryText = item.expiryDate;
+
+      if (expiryText == null || expiryText.trim().isEmpty) {
+        continue;
+      }
+
+      final expiryDate = DateTime.tryParse(expiryText.trim());
+
+      if (expiryDate == null) {
+        continue;
+      }
+
+      final expiryDay = DateTime(
+        expiryDate.year,
+        expiryDate.month,
+        expiryDate.day,
+      );
+
+      if (expiryDay.isBefore(today)) {
+        alerts.add(
+          InventoryAlertModel(
+            id: '${item.id}_expired',
+            type: 'expired',
+            inventoryItem: item,
+            title: item.medicationName ?? '',
+            message: expiryText,
+            priority: 3,
+          ),
+        );
+      } else if (!expiryDay.isAfter(soonLimit)) {
+        alerts.add(
+          InventoryAlertModel(
+            id: '${item.id}_expiring_soon',
+            type: 'expiring_soon',
+            inventoryItem: item,
+            title: item.medicationName ?? '',
+            message: expiryText,
+            priority: 1,
+          ),
+        );
+      }
+    }
+
+    alerts.sort((a, b) => b.priority.compareTo(a.priority));
+
+    return alerts;
   }
 }

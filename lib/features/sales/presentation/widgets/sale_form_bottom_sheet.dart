@@ -392,6 +392,16 @@ String _buildSaleErrorMessage(BuildContext context, String errorMessage) {
         .replaceAll('{medication}', medicationName);
   }
 
+  if (errorMessage.startsWith('expired_stock_for_medication|')) {
+    final medicationName = errorMessage
+        .replaceFirst('expired_stock_for_medication|', '')
+        .trim();
+
+    return context
+        .translate(LangKeys.expiredStockForMedication)
+        .replaceAll('{medication}', medicationName);
+  }
+
   return context.translate(LangKeys.couldNotCompleteSale);
 }
 
