@@ -141,6 +141,20 @@ class CustomerOrdersRemoteDataSource {
       });
 
       for (final item in order.items) {
+        final medicationSnapshot = await transaction.get(
+          _medications.doc(item.medicationId),
+        );
+
+        if (!medicationSnapshot.exists) {
+          throw Exception('medication_not_found:${item.medicationName}');
+        }
+
+        final medicationData = medicationSnapshot.data() ?? <String, dynamic>{};
+
+        if (!_readBool(medicationData['is_active'], defaultValue: true)) {
+          throw Exception('inactive_medication:${item.medicationName}');
+        }
+
         final inventoryDocument =
             inventoryDocumentsByMedicationId[item.medicationId]!;
 
@@ -197,4 +211,12 @@ class CustomerOrdersRemoteDataSource {
 
     return expiryDay.isBefore(today);
   }
+}
+
+bool _readBool(Object? value, {required bool defaultValue}) {
+  if (value is bool) return value;
+  if (value is String) return value.toLowerCase().trim() == 'true';
+  if (value is num) return value != 0;
+
+  return defaultValue;
 }

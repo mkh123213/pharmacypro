@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<MedicationModel> medications,  String searchQuery,  String selectedCategory,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<MedicationModel> medications,  String searchQuery,  String selectedCategory,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case MedicationsInitial() when initial != null:
 return initial();case MedicationsLoading() when loading != null:
 return loading();case MedicationsLoaded() when loaded != null:
-return loaded(_that.medications,_that.searchQuery,_that.selectedCategory,_that.isSubmitting);case MedicationsFailure() when failure != null:
+return loaded(_that.medications,_that.searchQuery,_that.selectedCategory,_that.isSubmitting,_that.errorMessage);case MedicationsFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<MedicationModel> medications,  String searchQuery,  String selectedCategory,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<MedicationModel> medications,  String searchQuery,  String selectedCategory,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case MedicationsInitial():
 return initial();case MedicationsLoading():
 return loading();case MedicationsLoaded():
-return loaded(_that.medications,_that.searchQuery,_that.selectedCategory,_that.isSubmitting);case MedicationsFailure():
+return loaded(_that.medications,_that.searchQuery,_that.selectedCategory,_that.isSubmitting,_that.errorMessage);case MedicationsFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<MedicationModel> medications,  String searchQuery,  String selectedCategory,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<MedicationModel> medications,  String searchQuery,  String selectedCategory,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case MedicationsInitial() when initial != null:
 return initial();case MedicationsLoading() when loading != null:
 return loading();case MedicationsLoaded() when loaded != null:
-return loaded(_that.medications,_that.searchQuery,_that.selectedCategory,_that.isSubmitting);case MedicationsFailure() when failure != null:
+return loaded(_that.medications,_that.searchQuery,_that.selectedCategory,_that.isSubmitting,_that.errorMessage);case MedicationsFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class MedicationsLoaded implements MedicationsState {
-  const MedicationsLoaded({required final  List<MedicationModel> medications, this.searchQuery = '', this.selectedCategory = 'all', this.isSubmitting = false}): _medications = medications;
+  const MedicationsLoaded({required final  List<MedicationModel> medications, this.searchQuery = '', this.selectedCategory = 'all', this.isSubmitting = false, this.errorMessage = null}): _medications = medications;
   
 
  final  List<MedicationModel> _medications;
@@ -270,6 +270,7 @@ class MedicationsLoaded implements MedicationsState {
 @JsonKey() final  String searchQuery;
 @JsonKey() final  String selectedCategory;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of MedicationsState
 /// with the given fields replaced by the non-null parameter values.
@@ -281,16 +282,16 @@ $MedicationsLoadedCopyWith<MedicationsLoaded> get copyWith => _$MedicationsLoade
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MedicationsLoaded&&const DeepCollectionEquality().equals(other._medications, _medications)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedCategory, selectedCategory) || other.selectedCategory == selectedCategory)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MedicationsLoaded&&const DeepCollectionEquality().equals(other._medications, _medications)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedCategory, selectedCategory) || other.selectedCategory == selectedCategory)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_medications),searchQuery,selectedCategory,isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_medications),searchQuery,selectedCategory,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'MedicationsState.loaded(medications: $medications, searchQuery: $searchQuery, selectedCategory: $selectedCategory, isSubmitting: $isSubmitting)';
+  return 'MedicationsState.loaded(medications: $medications, searchQuery: $searchQuery, selectedCategory: $selectedCategory, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -301,7 +302,7 @@ abstract mixin class $MedicationsLoadedCopyWith<$Res> implements $MedicationsSta
   factory $MedicationsLoadedCopyWith(MedicationsLoaded value, $Res Function(MedicationsLoaded) _then) = _$MedicationsLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<MedicationModel> medications, String searchQuery, String selectedCategory, bool isSubmitting
+ List<MedicationModel> medications, String searchQuery, String selectedCategory, bool isSubmitting, String? errorMessage
 });
 
 
@@ -318,13 +319,14 @@ class _$MedicationsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of MedicationsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? medications = null,Object? searchQuery = null,Object? selectedCategory = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? medications = null,Object? searchQuery = null,Object? selectedCategory = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(MedicationsLoaded(
 medications: null == medications ? _self._medications : medications // ignore: cast_nullable_to_non_nullable
 as List<MedicationModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
 as String,selectedCategory: null == selectedCategory ? _self.selectedCategory : selectedCategory // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

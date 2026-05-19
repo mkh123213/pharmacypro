@@ -2,6 +2,10 @@ import 'report_chart_model.dart';
 
 class ReportsSummaryModel {
   const ReportsSummaryModel({
+    required this.expiredItems,
+    required this.expiringSoonItems,
+    required this.healthyStockItems,
+    required this.inventoryHealthSummary,
     required this.totalRevenue,
     required this.totalOrders,
     required this.lowStockItems,
@@ -33,4 +37,8 @@ class ReportsSummaryModel {
 
   final List<ReportChartModel> stockMovementByType;
   final List<ReportChartModel> mostMovedMedications;
+  final int expiredItems;
+  final int expiringSoonItems;
+  final int healthyStockItems;
+  final List<ReportChartModel> inventoryHealthSummary;
 }

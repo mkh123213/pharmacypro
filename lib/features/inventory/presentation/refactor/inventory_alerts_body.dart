@@ -10,14 +10,33 @@ import '../../../../core/common/widgets/app_primary_button.dart';
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
+import '../../data/models/inventory_alert_model.dart';
 import '../cubit/inventory_alerts_cubit.dart';
 import '../cubit/inventory_alerts_state.dart';
 import '../widgets/inventory_alert_card.dart';
 import '../widgets/inventory_alert_filter_bar.dart';
 import '../widgets/inventory_alerts_table.dart';
+import '../widgets/remove_expired_stock_bottom_sheet.dart';
 
 class InventoryAlertsBody extends StatelessWidget {
   const InventoryAlertsBody({super.key});
+
+  void _openRemoveExpiredStockSheet(
+    BuildContext context,
+    InventoryAlertModel alert,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return BlocProvider.value(
+          value: context.read<InventoryAlertsCubit>(),
+          child: RemoveExpiredStockBottomSheet(item: alert.inventoryItem),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +79,13 @@ class InventoryAlertsBody extends StatelessWidget {
                 action: AppPrimaryButton(
                   text: context.translate(LangKeys.refresh),
                   icon: Icons.refresh,
-                  onPressed: () {
-                    context.read<InventoryAlertsCubit>().getInventoryAlerts();
-                  },
+                  onPressed: state.isSubmitting
+                      ? null
+                      : () {
+                          context
+                              .read<InventoryAlertsCubit>()
+                              .getInventoryAlerts();
+                        },
                 ),
               ),
               SizedBox(height: 14.h),
@@ -94,6 +117,9 @@ class InventoryAlertsBody extends StatelessWidget {
                           if (constraints.maxWidth >= 850) {
                             return InventoryAlertsTable(
                               alerts: state.filteredAlerts,
+                              onRemoveExpiredStock: (alert) {
+                                _openRemoveExpiredStockSheet(context, alert);
+                              },
                             );
                           }
 
@@ -101,8 +127,18 @@ class InventoryAlertsBody extends StatelessWidget {
                             itemCount: state.filteredAlerts.length,
                             separatorBuilder: (_, _) => SizedBox(height: 8.h),
                             itemBuilder: (context, index) {
+                              final alert = state.filteredAlerts[index];
+
                               return InventoryAlertCard(
-                                alert: state.filteredAlerts[index],
+                                alert: alert,
+                                onRemoveExpiredStock: alert.type == 'expired'
+                                    ? () {
+                                        _openRemoveExpiredStockSheet(
+                                          context,
+                                          alert,
+                                        );
+                                      }
+                                    : null,
                               );
                             },
                           );

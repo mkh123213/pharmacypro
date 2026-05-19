@@ -55,10 +55,38 @@ class SalesRemoteDataSource {
     final saleReference = _sales.doc();
 
     await _firestore.runTransaction((transaction) async {
+      final branchSnapshot = await transaction.get(
+        _branches.doc(item.branchId),
+      );
+
+      if (!branchSnapshot.exists) {
+        throw Exception('branch_not_found');
+      }
+
+      final branchData = branchSnapshot.data() ?? <String, dynamic>{};
+
+      if (!_readBool(branchData['is_active'], defaultValue: true)) {
+        throw Exception('inactive_branch');
+      }
+
       final inventoryDocumentsByMedicationId =
           <String, DocumentSnapshot<Map<String, dynamic>>>{};
 
       for (final saleItem in item.items) {
+        final medicationSnapshot = await transaction.get(
+          _medications.doc(saleItem.medicationId),
+        );
+
+        if (!medicationSnapshot.exists) {
+          throw Exception('medication_not_found:${saleItem.medicationName}');
+        }
+
+        final medicationData = medicationSnapshot.data() ?? <String, dynamic>{};
+
+        if (!_readBool(medicationData['is_active'], defaultValue: true)) {
+          throw Exception('inactive_medication:${saleItem.medicationName}');
+        }
+
         final inventoryQuery = await _inventory
             .where('branch_id', isEqualTo: item.branchId)
             .where('medication_id', isEqualTo: saleItem.medicationId)
@@ -138,6 +166,14 @@ class SalesRemoteDataSource {
     if (value is String) return int.tryParse(value) ?? 0;
 
     return 0;
+  }
+
+  bool _readBool(Object? value, {required bool defaultValue}) {
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase().trim() == 'true';
+    if (value is num) return value != 0;
+
+    return defaultValue;
   }
 
   bool _isExpired(Object? value) {

@@ -15,6 +15,8 @@ class InventoryAlertsState with _$InventoryAlertsState {
     required List<InventoryAlertModel> filteredAlerts,
     @Default('all') String selectedType,
     @Default('') String searchQuery,
+    @Default(false) bool isSubmitting,
+    @Default(null) String? errorMessage,
   }) = InventoryAlertsLoaded;
 
   const factory InventoryAlertsState.failure({required String message}) =

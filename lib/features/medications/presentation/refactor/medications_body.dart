@@ -62,36 +62,68 @@ class MedicationsBody extends StatelessWidget {
                 },
               );
             },
-            loaded: (medications, searchQuery, selectedCategory, isSubmitting) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppPageHeader(
-                    title: context.translate(LangKeys.medications),
-                    subtitle: context.translate(
-                      LangKeys.manageMedicationCatalog,
-                    ),
-                    action: AppPrimaryButton(
-                      text: context.translate(LangKeys.addMedication),
-                      icon: Icons.add,
-                      onPressed: isSubmitting
-                          ? null
-                          : () {
-                              _openForm(context);
-                            },
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final wide = constraints.maxWidth >= 700;
+            loaded:
+                (
+                  medications,
+                  searchQuery,
+                  selectedCategory,
+                  isSubmitting,
+                  errorMessage,
+                ) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppPageHeader(
+                        title: context.translate(LangKeys.medications),
+                        subtitle: context.translate(
+                          LangKeys.manageMedicationCatalog,
+                        ),
+                        action: AppPrimaryButton(
+                          text: context.translate(LangKeys.addMedication),
+                          icon: Icons.add,
+                          onPressed: isSubmitting
+                              ? null
+                              : () {
+                                  _openForm(context);
+                                },
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final wide = constraints.maxWidth >= 700;
 
-                      if (wide) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: TextField(
+                          if (wide) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    onChanged: context
+                                        .read<MedicationsCubit>()
+                                        .updateSearchQuery,
+                                    decoration: InputDecoration(
+                                      prefixIcon: const Icon(Icons.search),
+                                      hintText: context.translate(
+                                        LangKeys.searchMedication,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                SizedBox(
+                                  width: 220.w,
+                                  child: _CategoryDropdown(
+                                    selectedCategory: selectedCategory,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+
+                          return Column(
+                            children: [
+                              TextField(
                                 onChanged: context
                                     .read<MedicationsCubit>()
                                     .updateSearchQuery,
@@ -102,95 +134,74 @@ class MedicationsBody extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: 12.w),
-                            SizedBox(
-                              width: 220.w,
-                              child: _CategoryDropdown(
+                              SizedBox(height: 12.h),
+                              _CategoryDropdown(
                                 selectedCategory: selectedCategory,
                               ),
-                            ),
-                          ],
-                        );
-                      }
+                            ],
+                          );
+                        },
+                      ),
+                      SizedBox(height: 20.h),
+                      Expanded(
+                        child: medications.isEmpty
+                            ? AppEmptyState(
+                                title: context.translate(
+                                  LangKeys.noMedicationsFound,
+                                ),
+                                message:
+                                    searchQuery.trim().isEmpty &&
+                                        selectedCategory ==
+                                            allMedicationCategoriesValue
+                                    ? context.translate(
+                                        LangKeys.addYourFirstMedication,
+                                      )
+                                    : context.translate(
+                                        LangKeys.noMedicationsMatchYourFilters,
+                                      ),
+                                icon: Icons.medication_outlined,
+                              )
+                            : LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final count = constraints.maxWidth >= 1200
+                                      ? 4
+                                      : constraints.maxWidth >= 900
+                                      ? 3
+                                      : constraints.maxWidth >= 600
+                                      ? 2
+                                      : 1;
 
-                      return Column(
-                        children: [
-                          TextField(
-                            onChanged: context
-                                .read<MedicationsCubit>()
-                                .updateSearchQuery,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search),
-                              hintText: context.translate(
-                                LangKeys.searchMedication,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                          _CategoryDropdown(selectedCategory: selectedCategory),
-                        ],
-                      );
-                    },
-                  ),
-                  SizedBox(height: 20.h),
-                  Expanded(
-                    child: medications.isEmpty
-                        ? AppEmptyState(
-                            title: context.translate(
-                              LangKeys.noMedicationsFound,
-                            ),
-                            message:
-                                searchQuery.trim().isEmpty &&
-                                    selectedCategory ==
-                                        allMedicationCategoriesValue
-                                ? context.translate(
-                                    LangKeys.addYourFirstMedication,
-                                  )
-                                : context.translate(
-                                    LangKeys.noMedicationsMatchYourFilters,
-                                  ),
-                            icon: Icons.medication_outlined,
-                          )
-                        : LayoutBuilder(
-                            builder: (context, constraints) {
-                              final count = constraints.maxWidth >= 1200
-                                  ? 4
-                                  : constraints.maxWidth >= 900
-                                  ? 3
-                                  : constraints.maxWidth >= 600
-                                  ? 2
-                                  : 1;
+                                  return GridView.builder(
+                                    itemCount: medications.length,
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: count,
+                                          crossAxisSpacing: 14.w,
+                                          mainAxisSpacing: 14.h,
+                                          childAspectRatio: count == 1
+                                              ? 1.55
+                                              : .90,
+                                        ),
+                                    itemBuilder: (_, index) {
+                                      final medication = medications[index];
 
-                              return GridView.builder(
-                                itemCount: medications.length,
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: count,
-                                      crossAxisSpacing: 14.w,
-                                      mainAxisSpacing: 14.h,
-                                      childAspectRatio: count == 1 ? 1.55 : .90,
-                                    ),
-                                itemBuilder: (_, index) {
-                                  final medication = medications[index];
-
-                                  return MedicationCard(
-                                    medication: medication,
-                                    onEditPressed: () {
-                                      _openForm(
-                                        context,
+                                      return MedicationCard(
                                         medication: medication,
+                                        onEditPressed: () {
+                                          _openForm(
+                                            context,
+                                            medication: medication,
+                                          );
+                                        },
                                       );
                                     },
                                   );
                                 },
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              );
-            },
+                              ),
+                      ),
+                    ],
+                  );
+                },
           );
         },
       ),
@@ -223,6 +234,7 @@ class _CategoryDropdown extends StatelessWidget {
       }).toList(),
       onChanged: (value) {
         if (value == null) return;
+
         context.read<MedicationsCubit>().updateSelectedCategory(value);
       },
     );

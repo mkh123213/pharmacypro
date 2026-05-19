@@ -8,9 +8,14 @@ import '../../data/models/inventory_alert_model.dart';
 import 'inventory_alert_filter_bar.dart';
 
 class InventoryAlertsTable extends StatelessWidget {
-  const InventoryAlertsTable({required this.alerts, super.key});
+  const InventoryAlertsTable({
+    required this.alerts,
+    required this.onRemoveExpiredStock,
+    super.key,
+  });
 
   final List<InventoryAlertModel> alerts;
+  final ValueChanged<InventoryAlertModel> onRemoveExpiredStock;
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +80,14 @@ class InventoryAlertsTable extends StatelessWidget {
                 theme: context.textStyle,
               ),
             ),
+            DataColumn(
+              label: TextApp(
+                text: context.translate(LangKeys.actions),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle,
+              ),
+            ),
           ],
           rows: alerts.map((alert) {
             final item = alert.inventoryItem;
@@ -134,6 +147,24 @@ class InventoryAlertsTable extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     theme: context.textStyle,
                   ),
+                ),
+                DataCell(
+                  alert.type == 'expired'
+                      ? TextButton.icon(
+                          onPressed: () {
+                            onRemoveExpiredStock(alert);
+                          },
+                          icon: const Icon(Icons.delete_outline),
+                          label: TextApp(
+                            text: context.translate(
+                              LangKeys.removeExpiredStock,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            theme: context.textStyle,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ],
             );

@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<InventoryAlertModel> alerts,  List<InventoryAlertModel> filteredAlerts,  String selectedType,  String searchQuery)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<InventoryAlertModel> alerts,  List<InventoryAlertModel> filteredAlerts,  String selectedType,  String searchQuery,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case InventoryAlertsInitial() when initial != null:
 return initial();case InventoryAlertsLoading() when loading != null:
 return loading();case InventoryAlertsLoaded() when loaded != null:
-return loaded(_that.alerts,_that.filteredAlerts,_that.selectedType,_that.searchQuery);case InventoryAlertsFailure() when failure != null:
+return loaded(_that.alerts,_that.filteredAlerts,_that.selectedType,_that.searchQuery,_that.isSubmitting,_that.errorMessage);case InventoryAlertsFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<InventoryAlertModel> alerts,  List<InventoryAlertModel> filteredAlerts,  String selectedType,  String searchQuery)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<InventoryAlertModel> alerts,  List<InventoryAlertModel> filteredAlerts,  String selectedType,  String searchQuery,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case InventoryAlertsInitial():
 return initial();case InventoryAlertsLoading():
 return loading();case InventoryAlertsLoaded():
-return loaded(_that.alerts,_that.filteredAlerts,_that.selectedType,_that.searchQuery);case InventoryAlertsFailure():
+return loaded(_that.alerts,_that.filteredAlerts,_that.selectedType,_that.searchQuery,_that.isSubmitting,_that.errorMessage);case InventoryAlertsFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<InventoryAlertModel> alerts,  List<InventoryAlertModel> filteredAlerts,  String selectedType,  String searchQuery)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<InventoryAlertModel> alerts,  List<InventoryAlertModel> filteredAlerts,  String selectedType,  String searchQuery,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case InventoryAlertsInitial() when initial != null:
 return initial();case InventoryAlertsLoading() when loading != null:
 return loading();case InventoryAlertsLoaded() when loaded != null:
-return loaded(_that.alerts,_that.filteredAlerts,_that.selectedType,_that.searchQuery);case InventoryAlertsFailure() when failure != null:
+return loaded(_that.alerts,_that.filteredAlerts,_that.selectedType,_that.searchQuery,_that.isSubmitting,_that.errorMessage);case InventoryAlertsFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class InventoryAlertsLoaded implements InventoryAlertsState {
-  const InventoryAlertsLoaded({required final  List<InventoryAlertModel> alerts, required final  List<InventoryAlertModel> filteredAlerts, this.selectedType = 'all', this.searchQuery = ''}): _alerts = alerts,_filteredAlerts = filteredAlerts;
+  const InventoryAlertsLoaded({required final  List<InventoryAlertModel> alerts, required final  List<InventoryAlertModel> filteredAlerts, this.selectedType = 'all', this.searchQuery = '', this.isSubmitting = false, this.errorMessage = null}): _alerts = alerts,_filteredAlerts = filteredAlerts;
   
 
  final  List<InventoryAlertModel> _alerts;
@@ -276,6 +276,8 @@ class InventoryAlertsLoaded implements InventoryAlertsState {
 
 @JsonKey() final  String selectedType;
 @JsonKey() final  String searchQuery;
+@JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of InventoryAlertsState
 /// with the given fields replaced by the non-null parameter values.
@@ -287,16 +289,16 @@ $InventoryAlertsLoadedCopyWith<InventoryAlertsLoaded> get copyWith => _$Inventor
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InventoryAlertsLoaded&&const DeepCollectionEquality().equals(other._alerts, _alerts)&&const DeepCollectionEquality().equals(other._filteredAlerts, _filteredAlerts)&&(identical(other.selectedType, selectedType) || other.selectedType == selectedType)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InventoryAlertsLoaded&&const DeepCollectionEquality().equals(other._alerts, _alerts)&&const DeepCollectionEquality().equals(other._filteredAlerts, _filteredAlerts)&&(identical(other.selectedType, selectedType) || other.selectedType == selectedType)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_alerts),const DeepCollectionEquality().hash(_filteredAlerts),selectedType,searchQuery);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_alerts),const DeepCollectionEquality().hash(_filteredAlerts),selectedType,searchQuery,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'InventoryAlertsState.loaded(alerts: $alerts, filteredAlerts: $filteredAlerts, selectedType: $selectedType, searchQuery: $searchQuery)';
+  return 'InventoryAlertsState.loaded(alerts: $alerts, filteredAlerts: $filteredAlerts, selectedType: $selectedType, searchQuery: $searchQuery, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -307,7 +309,7 @@ abstract mixin class $InventoryAlertsLoadedCopyWith<$Res> implements $InventoryA
   factory $InventoryAlertsLoadedCopyWith(InventoryAlertsLoaded value, $Res Function(InventoryAlertsLoaded) _then) = _$InventoryAlertsLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<InventoryAlertModel> alerts, List<InventoryAlertModel> filteredAlerts, String selectedType, String searchQuery
+ List<InventoryAlertModel> alerts, List<InventoryAlertModel> filteredAlerts, String selectedType, String searchQuery, bool isSubmitting, String? errorMessage
 });
 
 
@@ -324,13 +326,15 @@ class _$InventoryAlertsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of InventoryAlertsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? alerts = null,Object? filteredAlerts = null,Object? selectedType = null,Object? searchQuery = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? alerts = null,Object? filteredAlerts = null,Object? selectedType = null,Object? searchQuery = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(InventoryAlertsLoaded(
 alerts: null == alerts ? _self._alerts : alerts // ignore: cast_nullable_to_non_nullable
 as List<InventoryAlertModel>,filteredAlerts: null == filteredAlerts ? _self._filteredAlerts : filteredAlerts // ignore: cast_nullable_to_non_nullable
 as List<InventoryAlertModel>,selectedType: null == selectedType ? _self.selectedType : selectedType // ignore: cast_nullable_to_non_nullable
 as String,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

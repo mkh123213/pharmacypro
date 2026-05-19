@@ -90,6 +90,34 @@ class PrescriptionsBody extends StatelessWidget {
     BuildContext context,
     String errorMessage,
   ) {
+    if (errorMessage == 'branch_not_found') {
+      return context.translate(LangKeys.branchNotFound);
+    }
+
+    if (errorMessage == 'inactive_branch') {
+      return context.translate(LangKeys.inactiveBranch);
+    }
+
+    if (errorMessage.startsWith('medication_not_found|')) {
+      final medicationName = errorMessage
+          .replaceFirst('medication_not_found|', '')
+          .trim();
+
+      return context
+          .translate(LangKeys.medicationNotFound)
+          .replaceAll('{medication}', medicationName);
+    }
+
+    if (errorMessage.startsWith('inactive_medication|')) {
+      final medicationName = errorMessage
+          .replaceFirst('inactive_medication|', '')
+          .trim();
+
+      return context
+          .translate(LangKeys.inactiveMedication)
+          .replaceAll('{medication}', medicationName);
+    }
+
     if (errorMessage.startsWith('not_enough_stock_for_medication|')) {
       final medicationName = errorMessage
           .replaceFirst('not_enough_stock_for_medication|', '')

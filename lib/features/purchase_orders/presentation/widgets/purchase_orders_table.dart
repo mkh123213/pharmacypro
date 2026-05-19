@@ -12,6 +12,7 @@ class PurchaseOrdersTable extends StatelessWidget {
     required this.orders,
     required this.onView,
     required this.onNextStatus,
+    required this.onCancel,
     this.isSubmitting = false,
     super.key,
   });
@@ -19,6 +20,7 @@ class PurchaseOrdersTable extends StatelessWidget {
   final List<PurchaseOrderModel> orders;
   final ValueChanged<PurchaseOrderModel> onView;
   final ValueChanged<PurchaseOrderModel> onNextStatus;
+  final ValueChanged<PurchaseOrderModel> onCancel;
   final bool isSubmitting;
 
   @override
@@ -82,6 +84,9 @@ class PurchaseOrdersTable extends StatelessWidget {
               order.status,
             );
 
+            final canCancel =
+                order.status != 'received' && order.status != 'cancelled';
+
             return DataRow(
               cells: [
                 DataCell(
@@ -124,8 +129,10 @@ class PurchaseOrdersTable extends StatelessWidget {
                 ),
                 DataCell(
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
+                        tooltip: context.translate(LangKeys.view),
                         onPressed: isSubmitting
                             ? null
                             : () {
@@ -145,6 +152,22 @@ class PurchaseOrdersTable extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             theme: context.textStyle,
+                          ),
+                        ),
+                      if (canCancel)
+                        TextButton(
+                          onPressed: isSubmitting
+                              ? null
+                              : () {
+                                  onCancel(order);
+                                },
+                          child: TextApp(
+                            text: context.translate(LangKeys.cancel),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            theme: context.textStyle.copyWith(
+                              color: Colors.red,
+                            ),
                           ),
                         ),
                     ],

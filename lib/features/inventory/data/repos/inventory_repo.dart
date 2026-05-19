@@ -51,4 +51,11 @@ class InventoryRepo {
   Future<List<InventoryAlertModel>> getInventoryAlerts() {
     return _remoteDataSource.getInventoryAlerts();
   }
+
+  Future<InventoryModel> removeExpiredStock({
+    required InventoryModel item,
+    required String reason,
+  }) {
+    return _remoteDataSource.removeExpiredStock(item: item, reason: reason);
+  }
 }

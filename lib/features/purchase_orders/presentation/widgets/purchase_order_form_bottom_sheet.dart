@@ -17,6 +17,7 @@ import '../../../suppliers/data/models/supplier_model.dart';
 import '../../data/models/purchase_order_item_model.dart';
 import '../../data/models/purchase_order_model.dart';
 import '../cubit/purchase_orders_cubit.dart';
+import '../cubit/purchase_orders_state.dart';
 
 class PurchaseOrderFormBottomSheet extends StatefulWidget {
   const PurchaseOrderFormBottomSheet({
@@ -50,6 +51,20 @@ class _PurchaseOrderFormBottomSheetState
 
   bool _isSaving = false;
 
+  List<SupplierModel> get _activeSuppliers {
+    return widget.suppliers.where((supplier) => supplier.isActive).toList();
+  }
+
+  List<BranchModel> get _activeBranches {
+    return widget.branches.where((branch) => branch.isActive).toList();
+  }
+
+  List<MedicationModel> get _activeMedications {
+    return widget.medications
+        .where((medication) => medication.isActive)
+        .toList();
+  }
+
   double get total {
     return items.fold<double>(0, (sum, item) => sum + item.total);
   }
@@ -62,26 +77,43 @@ class _PurchaseOrderFormBottomSheetState
     super.dispose();
   }
 
-  void addFirstMedication() {
-    if (widget.medications.isEmpty) {
+  Future<void> addPurchaseOrderItem() async {
+    final activeMedications = _activeMedications;
+
+    if (activeMedications.isEmpty) {
       ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.noMedicationsFound),
+        message: context.translate(LangKeys.noActiveMedicationsFound),
       );
       return;
     }
 
-    final medication = widget.medications.first;
-    final cost = medication.costPrice ?? medication.price;
+    final result = await showPurchaseOrderItemFormBottomSheet(
+      context: context,
+      medications: activeMedications,
+    );
+
+    if (result == null) return;
 
     setState(() {
-      items.add(
-        PurchaseOrderItemModel(
-          medicationId: medication.id,
-          medicationName: medication.name,
-          quantity: 1,
-          unitCost: cost,
-          total: cost,
-        ),
+      final existingIndex = items.indexWhere(
+        (item) => item.medicationId == result.medicationId,
+      );
+
+      if (existingIndex == -1) {
+        items.add(result);
+        return;
+      }
+
+      final existing = items[existingIndex];
+      final newQuantity = existing.quantity + result.quantity;
+      final newTotal = newQuantity * result.unitCost;
+
+      items[existingIndex] = PurchaseOrderItemModel(
+        medicationId: existing.medicationId,
+        medicationName: existing.medicationName,
+        quantity: newQuantity,
+        unitCost: result.unitCost,
+        total: newTotal,
       );
     });
 
@@ -99,6 +131,23 @@ class _PurchaseOrderFormBottomSheetState
   Future<void> save() async {
     if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
+
+    final activeSuppliers = _activeSuppliers;
+    final activeBranches = _activeBranches;
+
+    if (activeSuppliers.isEmpty) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.noActiveSuppliersFound),
+      );
+      return;
+    }
+
+    if (activeBranches.isEmpty) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.noActiveBranchesFound),
+      );
+      return;
+    }
 
     if (supplierId == null || branchId == null) {
       ShowToast.showToastErrorTop(
@@ -129,13 +178,11 @@ class _PurchaseOrderFormBottomSheetState
       _isSaving = true;
     });
 
-    final supplier = widget.suppliers.firstWhere(
+    final supplier = activeSuppliers.firstWhere(
       (supplier) => supplier.id == supplierId,
     );
 
-    final branch = widget.branches.firstWhere(
-      (branch) => branch.id == branchId,
-    );
+    final branch = activeBranches.firstWhere((branch) => branch.id == branchId);
 
     final order = PurchaseOrderModel(
       id: '',
@@ -165,9 +212,7 @@ class _PurchaseOrderFormBottomSheetState
     });
 
     if (!success) {
-      ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.couldNotSavePurchaseOrder),
-      );
+      ShowToast.showToastErrorTop(message: _failureMessage());
       return;
     }
 
@@ -178,9 +223,59 @@ class _PurchaseOrderFormBottomSheetState
     Navigator.pop(context);
   }
 
+  String _failureMessage() {
+    final state = context.read<PurchaseOrdersCubit>().state;
+
+    if (state is! PurchaseOrdersLoaded) {
+      return context.translate(LangKeys.couldNotSavePurchaseOrder);
+    }
+
+    final errorMessage = state.errorMessage;
+
+    if (errorMessage == null || errorMessage.trim().isEmpty) {
+      return context.translate(LangKeys.couldNotSavePurchaseOrder);
+    }
+
+    if (errorMessage == 'supplier_not_found') {
+      return context.translate(LangKeys.supplierNotFound);
+    }
+
+    if (errorMessage == 'inactive_supplier') {
+      return context.translate(LangKeys.inactiveSupplier);
+    }
+
+    if (errorMessage == 'branch_not_found') {
+      return context.translate(LangKeys.branchNotFound);
+    }
+
+    if (errorMessage == 'inactive_branch') {
+      return context.translate(LangKeys.inactiveBranch);
+    }
+
+    if (errorMessage.startsWith('medication_not_found|')) {
+      final medicationName = errorMessage.split('|').last;
+
+      return context
+          .translate(LangKeys.medicationNotFound)
+          .replaceAll('{medication}', medicationName);
+    }
+
+    if (errorMessage.startsWith('inactive_medication|')) {
+      final medicationName = errorMessage.split('|').last;
+
+      return context
+          .translate(LangKeys.inactiveMedication)
+          .replaceAll('{medication}', medicationName);
+    }
+
+    return context.translate(LangKeys.couldNotSavePurchaseOrder);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final activeSuppliers = _activeSuppliers;
+    final activeBranches = _activeBranches;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
@@ -216,43 +311,71 @@ class _PurchaseOrderFormBottomSheetState
                   value: supplierId,
                   label: context.translate(LangKeys.supplier),
                   isRequired: true,
-                  items: widget.suppliers.map((supplier) {
+                  items: activeSuppliers.map((supplier) {
                     return AppDropdownItem<String>(
                       value: supplier.id,
                       label: supplier.name,
                     );
                   }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      supplierId = value;
-                    });
-                  },
+                  onChanged: activeSuppliers.isEmpty
+                      ? null
+                      : (value) {
+                          setState(() {
+                            supplierId = value;
+                          });
+                        },
                   validator: AppValidators.required(
                     context,
                     fieldName: context.translate(LangKeys.supplier),
                   ),
                 ),
+                if (activeSuppliers.isEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextApp(
+                      text: context.translate(LangKeys.noActiveSuppliersFound),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(color: Colors.red),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 10.h),
                 AppDropdownField<String>(
                   value: branchId,
                   label: context.translate(LangKeys.branch),
                   isRequired: true,
-                  items: widget.branches.map((branch) {
+                  items: activeBranches.map((branch) {
                     return AppDropdownItem<String>(
                       value: branch.id,
                       label: branch.name,
                     );
                   }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      branchId = value;
-                    });
-                  },
+                  onChanged: activeBranches.isEmpty
+                      ? null
+                      : (value) {
+                          setState(() {
+                            branchId = value;
+                          });
+                        },
                   validator: AppValidators.required(
                     context,
                     fieldName: context.translate(LangKeys.branch),
                   ),
                 ),
+                if (activeBranches.isEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextApp(
+                      text: context.translate(LangKeys.noActiveBranchesFound),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(color: Colors.red),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 10.h),
                 AppDateField(
                   controller: orderDate,
@@ -277,7 +400,7 @@ class _PurchaseOrderFormBottomSheetState
                       ),
                     ),
                     OutlinedButton.icon(
-                      onPressed: addFirstMedication,
+                      onPressed: addPurchaseOrderItem,
                       icon: const Icon(Icons.add),
                       label: TextApp(
                         text: context.translate(LangKeys.add),
@@ -312,10 +435,10 @@ class _PurchaseOrderFormBottomSheetState
                         theme: context.textStyle,
                       ),
                       subtitle: TextApp(
-                        text: context
-                            .translate(LangKeys.qtyValue)
-                            .replaceAll('{qty}', item.quantity.toString()),
-                        maxLines: 1,
+                        text:
+                            '${context.translate(LangKeys.qty)}: ${item.quantity}'
+                            ' · ${context.translate(LangKeys.unitCost)}: \$${item.unitCost.toStringAsFixed(2)}',
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         theme: context.textStyle,
                       ),
@@ -367,6 +490,203 @@ class _PurchaseOrderFormBottomSheetState
                   text: context.translate(LangKeys.createPurchaseOrder),
                   onPressed: _isSaving ? null : save,
                   isLoading: _isSaving,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<PurchaseOrderItemModel?> showPurchaseOrderItemFormBottomSheet({
+  required BuildContext context,
+  required List<MedicationModel> medications,
+}) {
+  return showModalBottomSheet<PurchaseOrderItemModel>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) {
+      return _PurchaseOrderItemFormBottomSheet(medications: medications);
+    },
+  );
+}
+
+class _PurchaseOrderItemFormBottomSheet extends StatefulWidget {
+  const _PurchaseOrderItemFormBottomSheet({required this.medications});
+
+  final List<MedicationModel> medications;
+
+  @override
+  State<_PurchaseOrderItemFormBottomSheet> createState() {
+    return _PurchaseOrderItemFormBottomSheetState();
+  }
+}
+
+class _PurchaseOrderItemFormBottomSheetState
+    extends State<_PurchaseOrderItemFormBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+
+  final quantity = TextEditingController(text: '1');
+  final unitCost = TextEditingController();
+
+  String? medicationId;
+
+  @override
+  void initState() {
+    super.initState();
+
+    medicationId = widget.medications.isNotEmpty
+        ? widget.medications.first.id
+        : null;
+
+    final medication = _selectedMedication;
+
+    if (medication != null) {
+      final cost = medication.costPrice ?? medication.price;
+      unitCost.text = cost.toStringAsFixed(2);
+    }
+  }
+
+  MedicationModel? get _selectedMedication {
+    if (medicationId == null) return null;
+
+    for (final medication in widget.medications) {
+      if (medication.id == medicationId) {
+        return medication;
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  void dispose() {
+    quantity.dispose();
+    unitCost.dispose();
+    super.dispose();
+  }
+
+  void _onMedicationChanged(String? value) {
+    final medication = widget.medications.firstWhere(
+      (item) => item.id == value,
+    );
+
+    final cost = medication.costPrice ?? medication.price;
+
+    setState(() {
+      medicationId = value;
+      unitCost.text = cost.toStringAsFixed(2);
+    });
+  }
+
+  void _saveItem() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final medication = _selectedMedication;
+
+    if (medication == null) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.pleaseSelectMedication),
+      );
+      return;
+    }
+
+    final parsedQuantity = int.tryParse(quantity.text.trim()) ?? 1;
+    final parsedUnitCost = double.tryParse(unitCost.text.trim()) ?? 0;
+    final total = parsedQuantity * parsedUnitCost;
+
+    final item = PurchaseOrderItemModel(
+      medicationId: medication.id,
+      medicationName: medication.name,
+      quantity: parsedQuantity,
+      unitCost: parsedUnitCost,
+      total: total,
+    );
+
+    Navigator.pop(context, item);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(999.r),
+                  ),
+                ),
+                SizedBox(height: 18.h),
+                TextApp(
+                  text: context.translate(LangKeys.addItem),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  theme: context.textStyle,
+                ),
+                SizedBox(height: 16.h),
+                AppDropdownField<String>(
+                  value: medicationId,
+                  label: context.translate(LangKeys.medication),
+                  isRequired: true,
+                  items: widget.medications.map((medication) {
+                    return AppDropdownItem<String>(
+                      value: medication.id,
+                      label: medication.name,
+                    );
+                  }).toList(),
+                  onChanged: _onMedicationChanged,
+                  validator: AppValidators.required(
+                    context,
+                    fieldName: context.translate(LangKeys.medication),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: quantity,
+                  label: context.translate(LangKeys.quantity),
+                  isRequired: true,
+                  keyboardType: TextInputType.number,
+                  validator: AppValidators.requiredPositiveNumber(
+                    context,
+                    fieldName: context.translate(LangKeys.quantity),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: unitCost,
+                  label: context.translate(LangKeys.unitCost),
+                  isRequired: true,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: AppValidators.requiredPositiveNumber(
+                    context,
+                    fieldName: context.translate(LangKeys.unitCost),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                AppPrimaryButton(
+                  text: context.translate(LangKeys.addItem),
+                  onPressed: _saveItem,
                 ),
               ],
             ),

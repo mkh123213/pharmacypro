@@ -144,6 +144,21 @@ class ReportsBody extends StatelessWidget {
                             icon: Icons.inventory_2,
                           ),
                           ReportsStatCard(
+                            title: context.translate(LangKeys.expiringSoon),
+                            value: '${summary.expiringSoonItems}',
+                            icon: Icons.schedule,
+                          ),
+                          ReportsStatCard(
+                            title: context.translate(LangKeys.expiredItems),
+                            value: '${summary.expiredItems}',
+                            icon: Icons.error_outline,
+                          ),
+                          ReportsStatCard(
+                            title: context.translate(LangKeys.healthyStock),
+                            value: '${summary.healthyStockItems}',
+                            icon: Icons.check_circle_outline,
+                          ),
+                          ReportsStatCard(
                             title: context.translate(LangKeys.prescriptions),
                             value: '${summary.prescriptionsCount}',
                             icon: Icons.receipt_long,
@@ -168,6 +183,11 @@ class ReportsBody extends StatelessWidget {
                         ],
                       );
                     },
+                  ),
+                  SizedBox(height: 16.h),
+                  ReportsChartCard(
+                    title: context.translate(LangKeys.inventoryHealthSummary),
+                    data: summary.inventoryHealthSummary,
                   ),
                   SizedBox(height: 16.h),
                   ReportsChartCard(

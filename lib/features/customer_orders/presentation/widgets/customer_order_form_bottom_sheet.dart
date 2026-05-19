@@ -15,7 +15,7 @@ import '../../../medications/data/models/medication_model.dart';
 import '../../data/models/customer_order_item_model.dart';
 import '../../data/models/customer_order_model.dart';
 import '../cubit/customer_orders_cubit.dart';
-import '../refactor/customer_orders_constants.dart';
+import '../cubit/customer_orders_state.dart';
 
 class CustomerOrderFormBottomSheet extends StatefulWidget {
   const CustomerOrderFormBottomSheet({
@@ -28,8 +28,9 @@ class CustomerOrderFormBottomSheet extends StatefulWidget {
   final List<BranchModel> branches;
 
   @override
-  State<CustomerOrderFormBottomSheet> createState() =>
-      _CustomerOrderFormBottomSheetState();
+  State<CustomerOrderFormBottomSheet> createState() {
+    return _CustomerOrderFormBottomSheetState();
+  }
 }
 
 class _CustomerOrderFormBottomSheetState
@@ -48,6 +49,16 @@ class _CustomerOrderFormBottomSheetState
 
   bool _isSaving = false;
 
+  List<BranchModel> get activeBranches {
+    return widget.branches.where((branch) => branch.isActive).toList();
+  }
+
+  List<MedicationModel> get activeMedications {
+    return widget.medications
+        .where((medication) => medication.isActive)
+        .toList();
+  }
+
   double get total {
     return items.fold<double>(0, (sum, item) => sum + item.total);
   }
@@ -61,25 +72,44 @@ class _CustomerOrderFormBottomSheetState
   }
 
   void addFirstMedication() {
-    if (widget.medications.isEmpty) {
+    final availableMedications = activeMedications;
+
+    if (availableMedications.isEmpty) {
       ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.noMedicationsFound),
+        message: context.translate(LangKeys.noActiveMedicationsFound),
       );
       return;
     }
 
-    final medication = widget.medications.first;
+    final medication = availableMedications.first;
+
+    final existingIndex = items.indexWhere(
+      (item) => item.medicationId == medication.id,
+    );
 
     setState(() {
-      items.add(
-        CustomerOrderItemModel(
-          medicationId: medication.id,
-          medicationName: medication.name,
-          quantity: 1,
-          unitPrice: medication.price,
-          total: medication.price,
-        ),
-      );
+      if (existingIndex == -1) {
+        items.add(
+          CustomerOrderItemModel(
+            medicationId: medication.id,
+            medicationName: medication.name,
+            quantity: 1,
+            unitPrice: medication.price,
+            total: medication.price,
+          ),
+        );
+      } else {
+        final existing = items[existingIndex];
+        final newQuantity = existing.quantity + 1;
+
+        items[existingIndex] = CustomerOrderItemModel(
+          medicationId: existing.medicationId,
+          medicationName: existing.medicationName,
+          quantity: newQuantity,
+          unitPrice: existing.unitPrice,
+          total: existing.unitPrice * newQuantity,
+        );
+      }
     });
 
     ShowToast.showToastSuccessTop(
@@ -104,6 +134,17 @@ class _CustomerOrderFormBottomSheetState
       return;
     }
 
+    final selectedBranch = activeBranches.where(
+      (branch) => branch.id == branchId,
+    );
+
+    if (selectedBranch.isEmpty) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.inactiveBranch),
+      );
+      return;
+    }
+
     if (items.isEmpty) {
       ShowToast.showToastErrorTop(
         message: context.translate(LangKeys.pleaseAddAtLeastOneItem),
@@ -122,9 +163,7 @@ class _CustomerOrderFormBottomSheetState
       _isSaving = true;
     });
 
-    final branch = widget.branches.firstWhere(
-      (branch) => branch.id == branchId,
-    );
+    final branch = selectedBranch.first;
 
     final order = CustomerOrderModel(
       id: '',
@@ -152,9 +191,15 @@ class _CustomerOrderFormBottomSheetState
     });
 
     if (!success) {
-      ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.couldNotSaveOrder),
-      );
+      final state = context.read<CustomerOrdersCubit>().state;
+
+      String message = context.translate(LangKeys.couldNotCreateOrder);
+
+      if (state is CustomerOrdersLoaded && state.errorMessage != null) {
+        message = _buildCustomerOrderErrorMessage(context, state.errorMessage!);
+      }
+
+      ShowToast.showToastErrorTop(message: message);
       return;
     }
 
@@ -168,6 +213,7 @@ class _CustomerOrderFormBottomSheetState
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final availableBranches = activeBranches;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
@@ -193,10 +239,12 @@ class _CustomerOrderFormBottomSheetState
                 ),
                 SizedBox(height: 18.h),
                 TextApp(
-                  text: context.translate(LangKeys.newCustomerOrder),
+                  text: context.translate(LangKeys.newOrder),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
+                  theme: context.textStyle.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 SizedBox(height: 16.h),
                 AppTextField(
@@ -211,7 +259,7 @@ class _CustomerOrderFormBottomSheetState
                 SizedBox(height: 10.h),
                 AppTextField(
                   controller: phone,
-                  label: context.translate(LangKeys.phone),
+                  label: context.translate(LangKeys.customerPhone),
                   keyboardType: TextInputType.phone,
                   validator: AppValidators.optionalPhone(context),
                 ),
@@ -219,10 +267,10 @@ class _CustomerOrderFormBottomSheetState
                 AppDropdownField<String>(
                   value: orderType,
                   label: context.translate(LangKeys.orderType),
-                  items: customerOrderTypes.map((type) {
+                  items: orderTypes.map((type) {
                     return AppDropdownItem<String>(
                       value: type,
-                      label: customerOrderTypeLabel(context, type),
+                      label: orderTypeLabel(context, type),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -231,33 +279,13 @@ class _CustomerOrderFormBottomSheetState
                     });
                   },
                 ),
-                SizedBox(height: 10.h),
-                AppDropdownField<String>(
-                  value: branchId,
-                  label: context.translate(LangKeys.branch),
-                  isRequired: true,
-                  items: widget.branches.map((branch) {
-                    return AppDropdownItem<String>(
-                      value: branch.id,
-                      label: branch.name,
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      branchId = value;
-                    });
-                  },
-                  validator: AppValidators.required(
-                    context,
-                    fieldName: context.translate(LangKeys.branch),
-                  ),
-                ),
                 if (orderType == 'delivery') ...[
                   SizedBox(height: 10.h),
                   AppTextField(
                     controller: address,
                     label: context.translate(LangKeys.deliveryAddress),
                     isRequired: true,
+                    maxLines: 2,
                     validator: AppValidators.required(
                       context,
                       fieldName: context.translate(LangKeys.deliveryAddress),
@@ -265,13 +293,48 @@ class _CustomerOrderFormBottomSheetState
                   ),
                 ],
                 SizedBox(height: 10.h),
+                if (availableBranches.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 10.h),
+                    child: TextApp(
+                      text: context.translate(LangKeys.noActiveBranchesFound),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  AppDropdownField<String>(
+                    value: branchId,
+                    label: context.translate(LangKeys.branch),
+                    isRequired: true,
+                    items: availableBranches.map((branch) {
+                      return AppDropdownItem<String>(
+                        value: branch.id,
+                        label: branch.name,
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        branchId = value;
+                      });
+                    },
+                    validator: AppValidators.requiredDropdown<String>(
+                      context,
+                      fieldName: context.translate(LangKeys.branch),
+                    ),
+                  ),
+                SizedBox(height: 10.h),
                 AppDropdownField<String>(
                   value: paymentMethod,
                   label: context.translate(LangKeys.paymentMethod),
-                  items: customerOrderPaymentMethods.map((method) {
+                  items: paymentMethods.map((method) {
                     return AppDropdownItem<String>(
                       value: method,
-                      label: customerOrderPaymentMethodLabel(context, method),
+                      label: paymentMethodLabel(context, method),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -281,28 +344,39 @@ class _CustomerOrderFormBottomSheetState
                   },
                 ),
                 SizedBox(height: 12.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextApp(
-                        text: context.translate(LangKeys.items),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        theme: context.textStyle,
-                      ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    onPressed: activeMedications.isEmpty
+                        ? null
+                        : addFirstMedication,
+                    icon: const Icon(Icons.add),
+                    label: TextApp(
+                      text: context.translate(LangKeys.addItem),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle,
                     ),
-                    OutlinedButton.icon(
-                      onPressed: addFirstMedication,
-                      icon: const Icon(Icons.add),
-                      label: TextApp(
-                        text: context.translate(LangKeys.add),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        theme: context.textStyle,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+                if (activeMedications.isEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextApp(
+                      text: context.translate(
+                        LangKeys.noActiveMedicationsFound,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+                SizedBox(height: 8.h),
                 if (items.isEmpty)
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -327,9 +401,8 @@ class _CustomerOrderFormBottomSheetState
                         theme: context.textStyle,
                       ),
                       subtitle: TextApp(
-                        text: context
-                            .translate(LangKeys.qtyValue)
-                            .replaceAll('{qty}', item.quantity.toString()),
+                        text:
+                            '${item.quantity} x \$${item.unitPrice.toStringAsFixed(2)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         theme: context.textStyle,
@@ -347,35 +420,20 @@ class _CustomerOrderFormBottomSheetState
                             onPressed: () {
                               removeItem(index);
                             },
-                            icon: const Icon(Icons.delete_outline),
+                            icon: Icon(Icons.close, size: 18.sp),
                           ),
                         ],
                       ),
                     );
                   }),
-                Divider(height: 24.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextApp(
-                        text: context.translate(LangKeys.total),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        theme: context.textStyle,
-                      ),
-                    ),
-                    TextApp(
-                      text: '\$${total.toStringAsFixed(2)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      theme: context.textStyle,
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16.h),
+                SizedBox(height: 12.h),
+                _OrderTotal(total: total),
+                SizedBox(height: 14.h),
                 AppPrimaryButton(
-                  text: context.translate(LangKeys.placeOrder),
-                  onPressed: _isSaving ? null : save,
+                  text: context.translate(LangKeys.createOrder),
+                  onPressed: _isSaving || availableBranches.isEmpty
+                      ? null
+                      : save,
                   isLoading: _isSaving,
                 ),
               ],
@@ -384,5 +442,123 @@ class _CustomerOrderFormBottomSheetState
         ),
       ),
     );
+  }
+}
+
+class _OrderTotal extends StatelessWidget {
+  const _OrderTotal({required this.total});
+
+  final double total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(12.w),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextApp(
+                text: context.translate(LangKeys.total),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            TextApp(
+              text: '\$${total.toStringAsFixed(2)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              theme: context.textStyle.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _buildCustomerOrderErrorMessage(
+  BuildContext context,
+  String errorMessage,
+) {
+  if (errorMessage == 'branch_not_found') {
+    return context.translate(LangKeys.branchNotFound);
+  }
+
+  if (errorMessage == 'inactive_branch') {
+    return context.translate(LangKeys.inactiveBranch);
+  }
+
+  if (errorMessage.startsWith('medication_not_found|')) {
+    final medicationName = errorMessage
+        .replaceFirst('medication_not_found|', '')
+        .trim();
+
+    return context
+        .translate(LangKeys.medicationNotFound)
+        .replaceAll('{medication}', medicationName);
+  }
+
+  if (errorMessage.startsWith('inactive_medication|')) {
+    final medicationName = errorMessage
+        .replaceFirst('inactive_medication|', '')
+        .trim();
+
+    return context
+        .translate(LangKeys.inactiveMedication)
+        .replaceAll('{medication}', medicationName);
+  }
+
+  if (errorMessage.startsWith('not_enough_stock_for_medication|')) {
+    final medicationName = errorMessage
+        .replaceFirst('not_enough_stock_for_medication|', '')
+        .trim();
+
+    return context
+        .translate(LangKeys.notEnoughStockForMedication)
+        .replaceAll('{medication}', medicationName);
+  }
+
+  if (errorMessage.startsWith('expired_stock_for_medication|')) {
+    final medicationName = errorMessage
+        .replaceFirst('expired_stock_for_medication|', '')
+        .trim();
+
+    return context
+        .translate(LangKeys.expiredStockForMedication)
+        .replaceAll('{medication}', medicationName);
+  }
+
+  return context.translate(LangKeys.couldNotCreateOrder);
+}
+
+const orderTypes = ['pickup', 'delivery'];
+
+String orderTypeLabel(BuildContext context, String value) {
+  switch (value) {
+    case 'pickup':
+      return context.translate(LangKeys.pickup);
+    case 'delivery':
+      return context.translate(LangKeys.delivery);
+    default:
+      return value;
+  }
+}
+
+const paymentMethods = ['cash', 'card', 'insurance', 'online'];
+
+String paymentMethodLabel(BuildContext context, String value) {
+  switch (value) {
+    case 'cash':
+      return context.translate(LangKeys.cash);
+    case 'card':
+      return context.translate(LangKeys.card);
+    case 'insurance':
+      return context.translate(LangKeys.insurance);
+    case 'online':
+      return context.translate(LangKeys.online);
+    default:
+      return value;
   }
 }

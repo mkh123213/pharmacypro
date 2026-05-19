@@ -49,16 +49,38 @@ class InventoryRemoteDataSource {
   }
 
   Future<InventoryModel> createInventory(InventoryModel item) async {
-    final document = await _inventory.add({
+    await _validateActiveBranchAndMedication(
+      branchId: item.branchId,
+      medicationId: item.medicationId,
+    );
+
+    final inventoryId = _inventoryDocumentId(
+      branchId: item.branchId,
+      medicationId: item.medicationId,
+    );
+
+    final reference = _inventory.doc(inventoryId);
+    final snapshot = await reference.get();
+
+    if (snapshot.exists) {
+      throw Exception('duplicate_inventory_item');
+    }
+
+    await reference.set({
       ...item.toFirestoreJson(),
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     });
 
-    return InventoryModel.fromFirestore(await document.get());
+    return InventoryModel.fromFirestore(await reference.get());
   }
 
   Future<InventoryModel> updateInventory(InventoryModel item) async {
+    await _validateActiveBranchAndMedication(
+      branchId: item.branchId,
+      medicationId: item.medicationId,
+    );
+
     final reference = _inventory.doc(item.id);
 
     await reference.update({
@@ -105,6 +127,55 @@ class InventoryRemoteDataSource {
         'branch_id': currentItem.branchId,
         'branch_name': currentItem.branchName,
         'type': 'manual_adjustment',
+        'reason': reason,
+        'quantity_change': quantityChange,
+        'quantity_before': currentQuantity,
+        'quantity_after': newQuantity,
+        'reference_id': currentItem.id,
+        'reference_type': 'inventory',
+        'created_at': FieldValue.serverTimestamp(),
+      });
+    });
+
+    return InventoryModel.fromFirestore(await inventoryReference.get());
+  }
+
+  Future<InventoryModel> removeExpiredStock({
+    required InventoryModel item,
+    required String reason,
+  }) async {
+    final inventoryReference = _inventory.doc(item.id);
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(inventoryReference);
+
+      if (!snapshot.exists) {
+        throw Exception('inventory_item_not_found');
+      }
+
+      final currentItem = InventoryModel.fromFirestore(snapshot);
+
+      if (currentItem.quantity <= 0) {
+        throw Exception('expired_stock_quantity_already_zero');
+      }
+
+      final currentQuantity = currentItem.quantity;
+      const newQuantity = 0;
+      final quantityChange = -currentQuantity;
+
+      transaction.update(inventoryReference, {
+        'quantity': newQuantity,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
+      final movementReference = _stockMovements.doc();
+
+      transaction.set(movementReference, {
+        'medication_id': currentItem.medicationId,
+        'medication_name': currentItem.medicationName,
+        'branch_id': currentItem.branchId,
+        'branch_name': currentItem.branchName,
+        'type': 'expired_removed',
         'reason': reason,
         'quantity_change': quantityChange,
         'quantity_before': currentQuantity,
@@ -196,5 +267,57 @@ class InventoryRemoteDataSource {
     alerts.sort((a, b) => b.priority.compareTo(a.priority));
 
     return alerts;
+  }
+
+  String _inventoryDocumentId({
+    required String branchId,
+    required String medicationId,
+  }) {
+    return '${branchId}_$medicationId';
+  }
+
+  Future<void> _validateActiveBranchAndMedication({
+    required String branchId,
+    required String medicationId,
+  }) async {
+    final branchSnapshot = await _branches.doc(branchId).get();
+
+    if (!branchSnapshot.exists) {
+      throw Exception('branch_not_found');
+    }
+
+    final branchData = branchSnapshot.data();
+
+    if (branchData == null) {
+      throw Exception('branch_not_found');
+    }
+
+    if (!_readBool(branchData['is_active'], defaultValue: true)) {
+      throw Exception('inactive_branch');
+    }
+
+    final medicationSnapshot = await _medications.doc(medicationId).get();
+
+    if (!medicationSnapshot.exists) {
+      throw Exception('medication_not_found');
+    }
+
+    final medicationData = medicationSnapshot.data();
+
+    if (medicationData == null) {
+      throw Exception('medication_not_found');
+    }
+
+    if (!_readBool(medicationData['is_active'], defaultValue: true)) {
+      throw Exception('inactive_medication');
+    }
+  }
+
+  bool _readBool(Object? value, {required bool defaultValue}) {
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase().trim() == 'true';
+    if (value is num) return value != 0;
+
+    return defaultValue;
   }
 }

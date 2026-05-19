@@ -48,15 +48,26 @@ class InventoryModel {
   @JsonKey(name: 'location_in_store')
   final String? locationInStore;
 
-  @JsonKey(name: 'created_at', fromJson: dateTimeFromJson, toJson: dateTimeToJson)
+  @JsonKey(
+    name: 'created_at',
+    fromJson: dateTimeFromJson,
+    toJson: dateTimeToJson,
+  )
   final DateTime? createdAt;
 
-  @JsonKey(name: 'updated_at', fromJson: dateTimeFromJson, toJson: dateTimeToJson)
+  @JsonKey(
+    name: 'updated_at',
+    fromJson: dateTimeFromJson,
+    toJson: dateTimeToJson,
+  )
   final DateTime? updatedAt;
 
-  factory InventoryModel.fromJson(Map<String, dynamic> json) => _$InventoryModelFromJson(json);
+  factory InventoryModel.fromJson(Map<String, dynamic> json) =>
+      _$InventoryModelFromJson(json);
 
-  factory InventoryModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> document) {
+  factory InventoryModel.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> document,
+  ) {
     final data = document.data() ?? <String, dynamic>{};
     return InventoryModel.fromJson({...data, 'id': document.id});
   }
@@ -73,11 +84,33 @@ class InventoryModel {
 
   bool get isLowStock => quantity <= minStockLevel;
 
-  bool get isExpiringSoon {
-    if (expiryDate == null || expiryDate!.isEmpty) return false;
-    final date = DateTime.tryParse(expiryDate!);
+  bool get isExpired {
+    if (expiryDate == null || expiryDate!.trim().isEmpty) return false;
+
+    final date = DateTime.tryParse(expiryDate!.trim());
+
     if (date == null) return false;
-    return date.isBefore(DateTime.now().add(const Duration(days: 30)));
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final expiryDay = DateTime(date.year, date.month, date.day);
+
+    return expiryDay.isBefore(today);
+  }
+
+  bool get isExpiringSoon {
+    if (expiryDate == null || expiryDate!.trim().isEmpty) return false;
+
+    final date = DateTime.tryParse(expiryDate!.trim());
+
+    if (date == null) return false;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final expiryDay = DateTime(date.year, date.month, date.day);
+    final soonLimit = today.add(const Duration(days: 30));
+
+    return !expiryDay.isBefore(today) && !expiryDay.isAfter(soonLimit);
   }
 }
 

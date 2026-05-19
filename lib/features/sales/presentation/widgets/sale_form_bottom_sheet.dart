@@ -47,6 +47,16 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
 
   bool _isSaving = false;
 
+  List<BranchModel> get activeBranches {
+    return widget.branches.where((branch) => branch.isActive).toList();
+  }
+
+  List<MedicationModel> get activeMedications {
+    return widget.medications
+        .where((medication) => medication.isActive)
+        .toList();
+  }
+
   double get subtotal {
     return items.fold<double>(0, (sum, item) => sum + item.total);
   }
@@ -69,16 +79,18 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
   }
 
   Future<void> addItem() async {
-    if (widget.medications.isEmpty) {
+    final availableMedications = activeMedications;
+
+    if (availableMedications.isEmpty) {
       ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.noMedicationsFound),
+        message: context.translate(LangKeys.noActiveMedicationsFound),
       );
       return;
     }
 
     final result = await showSaleMedicationPickerBottomSheet(
       context: context,
-      medications: widget.medications,
+      medications: availableMedications,
     );
 
     if (result == null) return;
@@ -137,6 +149,17 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
       return;
     }
 
+    final selectedBranch = activeBranches.where(
+      (branch) => branch.id == branchId,
+    );
+
+    if (selectedBranch.isEmpty) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.inactiveBranch),
+      );
+      return;
+    }
+
     if (items.isEmpty) {
       ShowToast.showToastErrorTop(
         message: context.translate(LangKeys.pleaseAddAtLeastOneItem),
@@ -157,7 +180,7 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
       _isSaving = true;
     });
 
-    final branch = widget.branches.firstWhere((item) => item.id == branchId);
+    final branch = selectedBranch.first;
 
     final sale = SaleModel(
       id: '',
@@ -205,6 +228,7 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final availableBranches = activeBranches;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
@@ -236,26 +260,40 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
                   theme: context.textStyle,
                 ),
                 SizedBox(height: 16.h),
-                AppDropdownField<String>(
-                  value: branchId,
-                  label: context.translate(LangKeys.branch),
-                  isRequired: true,
-                  items: widget.branches.map((branch) {
-                    return AppDropdownItem<String>(
-                      value: branch.id,
-                      label: branch.name,
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      branchId = value;
-                    });
-                  },
-                  validator: AppValidators.requiredDropdown<String>(
-                    context,
-                    fieldName: context.translate(LangKeys.branch),
+                if (availableBranches.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 10.h),
+                    child: TextApp(
+                      text: context.translate(LangKeys.noActiveBranchesFound),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  AppDropdownField<String>(
+                    value: branchId,
+                    label: context.translate(LangKeys.branch),
+                    isRequired: true,
+                    items: availableBranches.map((branch) {
+                      return AppDropdownItem<String>(
+                        value: branch.id,
+                        label: branch.name,
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        branchId = value;
+                      });
+                    },
+                    validator: AppValidators.requiredDropdown<String>(
+                      context,
+                      fieldName: context.translate(LangKeys.branch),
+                    ),
                   ),
-                ),
                 SizedBox(height: 10.h),
                 AppDropdownField<String>(
                   value: payment,
@@ -288,7 +326,7 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: OutlinedButton.icon(
-                    onPressed: addItem,
+                    onPressed: activeMedications.isEmpty ? null : addItem,
                     icon: const Icon(Icons.add),
                     label: TextApp(
                       text: context.translate(LangKeys.addItem),
@@ -298,6 +336,23 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
                     ),
                   ),
                 ),
+                if (activeMedications.isEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextApp(
+                      text: context.translate(
+                        LangKeys.noActiveMedicationsFound,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 8.h),
                 if (items.isEmpty)
                   Padding(
@@ -369,7 +424,9 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
                 SizedBox(height: 12.h),
                 AppPrimaryButton(
                   text: context.translate(LangKeys.completeSale),
-                  onPressed: _isSaving ? null : save,
+                  onPressed: _isSaving || availableBranches.isEmpty
+                      ? null
+                      : save,
                   isLoading: _isSaving,
                 ),
               ],
@@ -382,6 +439,34 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
 }
 
 String _buildSaleErrorMessage(BuildContext context, String errorMessage) {
+  if (errorMessage == 'branch_not_found') {
+    return context.translate(LangKeys.branchNotFound);
+  }
+
+  if (errorMessage == 'inactive_branch') {
+    return context.translate(LangKeys.inactiveBranch);
+  }
+
+  if (errorMessage.startsWith('medication_not_found|')) {
+    final medicationName = errorMessage
+        .replaceFirst('medication_not_found|', '')
+        .trim();
+
+    return context
+        .translate(LangKeys.medicationNotFound)
+        .replaceAll('{medication}', medicationName);
+  }
+
+  if (errorMessage.startsWith('inactive_medication|')) {
+    final medicationName = errorMessage
+        .replaceFirst('inactive_medication|', '')
+        .trim();
+
+    return context
+        .translate(LangKeys.inactiveMedication)
+        .replaceAll('{medication}', medicationName);
+  }
+
   if (errorMessage.startsWith('not_enough_stock_for_medication|')) {
     final medicationName = errorMessage
         .replaceFirst('not_enough_stock_for_medication|', '')

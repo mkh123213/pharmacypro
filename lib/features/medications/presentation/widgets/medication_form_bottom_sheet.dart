@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/features/medications/presentation/cubit/medications_state.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_dropdown_field.dart';
@@ -150,9 +151,15 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
     });
 
     if (!success) {
-      ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.couldNotSaveMedication),
-      );
+      final state = context.read<MedicationsCubit>().state;
+
+      String message = context.translate(LangKeys.couldNotSaveMedication);
+
+      if (state is MedicationsLoaded && state.errorMessage != null) {
+        message = _buildMedicationErrorMessage(context, state.errorMessage!);
+      }
+
+      ShowToast.showToastErrorTop(message: message);
       return;
     }
 
@@ -349,5 +356,19 @@ class _MedicationFormBottomSheetState extends State<MedicationFormBottomSheet> {
         ),
       ),
     );
+  }
+
+  String _buildMedicationErrorMessage(
+    BuildContext context,
+    String errorMessage,
+  ) {
+    switch (errorMessage) {
+      case 'duplicate_medication_name':
+        return context.translate(LangKeys.duplicateMedicationName);
+      case 'duplicate_medication_barcode':
+        return context.translate(LangKeys.duplicateMedicationBarcode);
+      default:
+        return context.translate(LangKeys.couldNotSaveMedication);
+    }
   }
 }

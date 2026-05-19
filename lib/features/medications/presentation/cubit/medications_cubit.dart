@@ -45,7 +45,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
 
     final oldMedications = List<MedicationModel>.from(_allMedications);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final created = await _medicationsRepo.createMedication(medication);
@@ -62,6 +62,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         current.copyWith(
           medications: _filteredMedications,
           isSubmitting: false,
+          errorMessage: _medicationErrorMessage(error),
         ),
       );
 
@@ -76,7 +77,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
 
     final oldMedications = List<MedicationModel>.from(_allMedications);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final updated = await _medicationsRepo.updateMedication(medication);
@@ -95,11 +96,26 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         current.copyWith(
           medications: _filteredMedications,
           isSubmitting: false,
+          errorMessage: _medicationErrorMessage(error),
         ),
       );
 
       return false;
     }
+  }
+
+  String _medicationErrorMessage(Object error) {
+    final text = error.toString();
+
+    if (text.contains('duplicate_medication_name')) {
+      return 'duplicate_medication_name';
+    }
+
+    if (text.contains('duplicate_medication_barcode')) {
+      return 'duplicate_medication_barcode';
+    }
+
+    return 'could_not_save_medication';
   }
 
   List<MedicationModel> get _filteredMedications {
@@ -125,6 +141,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         medications: _filteredMedications,
         searchQuery: _searchQuery,
         selectedCategory: _selectedCategory,
+        errorMessage: null,
       ),
     );
   }

@@ -125,6 +125,52 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
 
   String _purchaseOrderErrorMessage(Object error) {
     final text = error.toString();
+    if (text.contains('purchase_order_already_cancelled')) {
+      return 'purchase_order_already_cancelled';
+    }
+
+    if (text.contains('cannot_cancel_received_purchase_order')) {
+      return 'cannot_cancel_received_purchase_order';
+    }
+
+    if (text.contains('invalid_purchase_order_status_transition')) {
+      return 'invalid_purchase_order_status_transition';
+    }
+    if (text.contains('supplier_not_found')) {
+      return 'supplier_not_found';
+    }
+
+    if (text.contains('inactive_supplier')) {
+      return 'inactive_supplier';
+    }
+
+    if (text.contains('branch_not_found')) {
+      return 'branch_not_found';
+    }
+
+    if (text.contains('inactive_branch')) {
+      return 'inactive_branch';
+    }
+
+    if (text.contains('medication_not_found:')) {
+      final medicationName = text
+          .split('medication_not_found:')
+          .last
+          .replaceAll(']', '')
+          .trim();
+
+      return 'medication_not_found|$medicationName';
+    }
+
+    if (text.contains('inactive_medication:')) {
+      final medicationName = text
+          .split('inactive_medication:')
+          .last
+          .replaceAll(']', '')
+          .trim();
+
+      return 'inactive_medication|$medicationName';
+    }
 
     if (text.contains('purchase_order_not_found')) {
       return 'purchase_order_not_found';

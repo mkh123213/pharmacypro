@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-
-import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 
+const allPurchaseOrderStatusesValue = 'all';
+
 const purchaseOrderStatuses = [
+  allPurchaseOrderStatusesValue,
   'draft',
   'sent',
   'confirmed',
@@ -17,8 +17,10 @@ const nextPurchaseOrderStatus = {
   'confirmed': 'received',
 };
 
-String purchaseOrderStatusLabel(BuildContext context, String value) {
-  switch (value) {
+String purchaseOrderStatusLabel(context, String status) {
+  switch (status) {
+    case allPurchaseOrderStatusesValue:
+      return context.translate(LangKeys.allStatuses);
     case 'draft':
       return context.translate(LangKeys.draft);
     case 'sent':
@@ -30,6 +32,6 @@ String purchaseOrderStatusLabel(BuildContext context, String value) {
     case 'cancelled':
       return context.translate(LangKeys.cancelled);
     default:
-      return value;
+      return status;
   }
 }

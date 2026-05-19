@@ -430,5 +430,9 @@
     "inventory_alerts_count": "{count} تنبيه مخزون نشط",
     "no_active_inventory_alerts": "لا توجد تنبيهات مخزون نشطة",
     "alerts": "التنبيهات",
-    "expired_stock_for_medication": "نفذ مخزون {medication}"
+    "expired_stock_for_medication": "نفذ مخزون {medication}",
+    "expired_items": "نفذ المخزون",
+    "items_expiring_soon": "قرب انتهاء الصلاحية",
+    "remove_from_stock": "إزالة من المخزون",
+    "duplicate_inventory_item": " "
 }

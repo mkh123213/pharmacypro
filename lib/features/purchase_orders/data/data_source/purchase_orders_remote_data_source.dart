@@ -64,6 +64,10 @@ class PurchaseOrdersRemoteDataSource {
   Future<PurchaseOrderModel> createPurchaseOrder(
     PurchaseOrderModel item,
   ) async {
+    await _validateActiveSupplier(item.supplierId);
+    await _validateActiveBranch(item.branchId);
+    await _validateActivePurchaseOrderMedications(item);
+
     final document = await _orders.add({
       ...item.toFirestoreJson(),
       'created_at': FieldValue.serverTimestamp(),
@@ -78,6 +82,10 @@ class PurchaseOrdersRemoteDataSource {
     Map<String, dynamic> data,
   ) async {
     final newStatus = data['status'];
+
+    if (newStatus is String) {
+      await _validateStatusTransition(id: id, newStatus: newStatus);
+    }
 
     if (newStatus == 'received') {
       await _receivePurchaseOrder(id);
@@ -106,28 +114,32 @@ class PurchaseOrdersRemoteDataSource {
         throw Exception('purchase_order_already_received');
       }
 
+      if (order.status == 'cancelled') {
+        throw Exception('purchase_order_already_cancelled');
+      }
+
       if (order.items.isEmpty) {
         throw Exception('purchase_order_has_no_items');
       }
 
-      final inventoryDocumentsByMedicationId =
-          <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+      await _validateActiveSupplier(order.supplierId);
+      await _validateActiveBranch(order.branchId);
+      await _validateActivePurchaseOrderMedications(order);
 
-      final missingInventoryMedicationIds = <String>{};
+      final inventoryDocumentsByMedicationId =
+          <String, DocumentSnapshot<Map<String, dynamic>>>{};
 
       for (final item in order.items) {
-        final inventoryQuery = await _inventory
-            .where('branch_id', isEqualTo: order.branchId)
-            .where('medication_id', isEqualTo: item.medicationId)
-            .limit(1)
-            .get();
+        final inventoryReference = _inventory.doc(
+          _inventoryDocumentId(
+            branchId: order.branchId,
+            medicationId: item.medicationId,
+          ),
+        );
 
-        if (inventoryQuery.docs.isEmpty) {
-          missingInventoryMedicationIds.add(item.medicationId);
-        } else {
-          inventoryDocumentsByMedicationId[item.medicationId] =
-              inventoryQuery.docs.first;
-        }
+        final inventorySnapshot = await transaction.get(inventoryReference);
+
+        inventoryDocumentsByMedicationId[item.medicationId] = inventorySnapshot;
       }
 
       transaction.update(orderReference, {
@@ -136,11 +148,16 @@ class PurchaseOrdersRemoteDataSource {
       });
 
       for (final item in order.items) {
-        final existingInventoryDocument =
-            inventoryDocumentsByMedicationId[item.medicationId];
+        final inventorySnapshot =
+            inventoryDocumentsByMedicationId[item.medicationId]!;
 
-        if (existingInventoryDocument == null) {
-          final inventoryReference = _inventory.doc();
+        if (!inventorySnapshot.exists) {
+          final inventoryReference = _inventory.doc(
+            _inventoryDocumentId(
+              branchId: order.branchId,
+              medicationId: item.medicationId,
+            ),
+          );
 
           transaction.set(inventoryReference, {
             'medication_id': item.medicationId,
@@ -175,11 +192,11 @@ class PurchaseOrdersRemoteDataSource {
           continue;
         }
 
-        final inventoryData = existingInventoryDocument.data();
+        final inventoryData = inventorySnapshot.data() ?? <String, dynamic>{};
         final currentQuantity = _readInt(inventoryData['quantity']);
         final newQuantity = currentQuantity + item.quantity;
 
-        transaction.update(existingInventoryDocument.reference, {
+        transaction.update(inventorySnapshot.reference, {
           'quantity': newQuantity,
           'updated_at': FieldValue.serverTimestamp(),
         });
@@ -203,11 +220,134 @@ class PurchaseOrdersRemoteDataSource {
     });
   }
 
+  Future<void> _validateActiveSupplier(String supplierId) async {
+    final supplierSnapshot = await _suppliers.doc(supplierId).get();
+
+    if (!supplierSnapshot.exists) {
+      throw Exception('supplier_not_found');
+    }
+
+    final supplierData = supplierSnapshot.data();
+
+    if (supplierData == null) {
+      throw Exception('supplier_not_found');
+    }
+
+    if (!_readBool(supplierData['is_active'], defaultValue: true)) {
+      throw Exception('inactive_supplier');
+    }
+  }
+
+  Future<void> _validateActiveBranch(String branchId) async {
+    final branchSnapshot = await _branches.doc(branchId).get();
+
+    if (!branchSnapshot.exists) {
+      throw Exception('branch_not_found');
+    }
+
+    final branchData = branchSnapshot.data();
+
+    if (branchData == null) {
+      throw Exception('branch_not_found');
+    }
+
+    if (!_readBool(branchData['is_active'], defaultValue: true)) {
+      throw Exception('inactive_branch');
+    }
+  }
+
+  Future<void> _validateActivePurchaseOrderMedications(
+    PurchaseOrderModel order,
+  ) async {
+    for (final item in order.items) {
+      final medicationSnapshot = await _medications
+          .doc(item.medicationId)
+          .get();
+
+      if (!medicationSnapshot.exists) {
+        throw Exception('medication_not_found:${item.medicationName}');
+      }
+
+      final medicationData = medicationSnapshot.data();
+
+      if (medicationData == null) {
+        throw Exception('medication_not_found:${item.medicationName}');
+      }
+
+      if (!_readBool(medicationData['is_active'], defaultValue: true)) {
+        throw Exception('inactive_medication:${item.medicationName}');
+      }
+    }
+  }
+
+  String _inventoryDocumentId({
+    required String branchId,
+    required String medicationId,
+  }) {
+    return '${branchId}_$medicationId';
+  }
+
   int _readInt(Object? value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value) ?? 0;
 
     return 0;
+  }
+
+  bool _readBool(Object? value, {required bool defaultValue}) {
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase().trim() == 'true';
+    if (value is num) return value != 0;
+
+    return defaultValue;
+  }
+
+  Future<void> _validateStatusTransition({
+    required String id,
+    required String newStatus,
+  }) async {
+    final snapshot = await _orders.doc(id).get();
+
+    if (!snapshot.exists) {
+      throw Exception('purchase_order_not_found');
+    }
+
+    final order = PurchaseOrderModel.fromFirestore(snapshot);
+
+    if (order.status == 'cancelled') {
+      throw Exception('purchase_order_already_cancelled');
+    }
+
+    if (order.status == 'received' && newStatus != 'received') {
+      throw Exception('purchase_order_already_received');
+    }
+
+    if (newStatus == 'cancelled') {
+      if (order.status == 'received') {
+        throw Exception('cannot_cancel_received_purchase_order');
+      }
+
+      return;
+    }
+
+    final expectedNextStatus = _nextStatus(order.status);
+
+    if (expectedNextStatus == null || expectedNextStatus != newStatus) {
+      throw Exception('invalid_purchase_order_status_transition');
+    }
+  }
+
+  String? _nextStatus(String status) {
+    switch (status) {
+      case 'draft':
+        return 'sent';
+      case 'sent':
+        return 'confirmed';
+      case 'confirmed':
+        return 'received';
+      default:
+        return null;
+    }
   }
 }

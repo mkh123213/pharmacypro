@@ -539,4 +539,52 @@ class LangKeys {
   static const String alerts = 'alerts';
   static const String expiredStockForMedication =
       'expired_stock_for_medication';
+  static const String removeExpiredStock = 'remove_expired_stock';
+  static const String removalReason = 'removal_reason';
+  static const String confirmRemoval = 'confirm_removal';
+  static const String removeExpiredStockWarning =
+      'remove_expired_stock_warning';
+  static const String expiredStockRemovedSuccessfully =
+      'expired_stock_removed_successfully';
+  static const String couldNotRemoveExpiredStock =
+      'could_not_remove_expired_stock';
+  static const String expiredStockQuantityAlreadyZero =
+      'expired_stock_quantity_already_zero';
+  static const String expiredItems = 'expired_items';
+  static const String itemsExpiringSoon = 'items_expiring_soon';
+  static const String removeFromStock = 'remove_from_stock';
+  static const String healthyStock = 'healthy_stock';
+  static const String inventoryHealthSummary = 'inventory_health_summary';
+  static const String duplicateInventoryItem = 'duplicate_inventory_item';
+  static const String duplicateMedicationName = 'duplicate_medication_name';
+  static const String duplicateMedicationBarcode =
+      'duplicate_medication_barcode';
+  static const String branchNotFound = 'branch_not_found';
+  static const String inactiveBranch = 'inactive_branch';
+  static const String medicationNotFound = 'medication_not_found';
+  static const String inactiveMedication = 'inactive_medication';
+  static const String noActiveBranchesFound = 'no_active_branches_found';
+  static const String noActiveMedicationsFound = 'no_active_medications_found';
+
+  static const String createOrder = 'create_order';
+  static const String couldNotCreateOrder = 'could_not_create_order';
+  static const String supplierNotFound = 'supplier_not_found';
+  static const String inactiveSupplier = 'inactive_supplier';
+  static const String noActiveSuppliersFound = 'no_active_suppliers_found';
+
+  static const String expiredRemoved = 'expired_removed';
+  static const String unitCost = 'unit_cost';
+  static const String view = 'view';
+  static const String cancel = 'cancel';
+  static const String cancelPurchaseOrder = 'cancel_purchase_order';
+  static const String cancelPurchaseOrderConfirmation =
+      'cancel_purchase_order_confirmation';
+  static const String no = 'no';
+  static const String yesCancel = 'yes_cancel';
+  static const String purchaseOrderAlreadyCancelled =
+      'purchase_order_already_cancelled';
+  static const String cannotCancelReceivedPurchaseOrder =
+      'cannot_cancel_received_purchase_order';
+  static const String invalidPurchaseOrderStatusTransition =
+      'invalid_purchase_order_status_transition';
 }

@@ -122,6 +122,16 @@ class ReportsChartCard extends StatelessWidget {
         return context.translate(LangKeys.prescriptionDispensed);
       case 'manual_adjustment':
         return context.translate(LangKeys.manualAdjustment);
+      case 'expired_removed':
+        return context.translate(LangKeys.expiredRemoved);
+      case 'healthy_stock':
+        return context.translate(LangKeys.healthyStock);
+      case 'low_stock':
+        return context.translate(LangKeys.lowStock);
+      case 'expiring_soon':
+        return context.translate(LangKeys.expiringSoon);
+      case 'expired':
+        return context.translate(LangKeys.expired);
       default:
         return value;
     }

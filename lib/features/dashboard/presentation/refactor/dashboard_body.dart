@@ -87,19 +87,35 @@ class DashboardBody extends StatelessWidget {
                         childAspectRatio: count == 1 ? 3.1 : 2.25,
                         children: [
                           DashboardStatCard(
-                            title: context.translate(LangKeys.totalRevenue),
-                            value:
-                                '\$${summary.totalRevenue.toStringAsFixed(2)}',
-                            subtitle: context.translate(LangKeys.allTime),
-                            icon: Icons.attach_money,
-                          ),
-                          DashboardStatCard(
                             title: context.translate(LangKeys.lowStockAlerts),
                             value: '${summary.lowStockItems.length}',
                             subtitle: context.translate(
                               LangKeys.needRestocking,
                             ),
                             icon: Icons.warning_amber,
+                          ),
+                          DashboardStatCard(
+                            title: context.translate(LangKeys.expiringSoon),
+                            value: '${summary.expiringSoonItems}',
+                            subtitle: context.translate(
+                              LangKeys.itemsExpiringSoon,
+                            ),
+                            icon: Icons.schedule,
+                          ),
+                          DashboardStatCard(
+                            title: context.translate(LangKeys.expiredItems),
+                            value: '${summary.expiredItems}',
+                            subtitle: context.translate(
+                              LangKeys.removeFromStock,
+                            ),
+                            icon: Icons.error_outline,
+                          ),
+                          DashboardStatCard(
+                            title: context.translate(LangKeys.totalRevenue),
+                            value:
+                                '\$${summary.totalRevenue.toStringAsFixed(2)}',
+                            subtitle: context.translate(LangKeys.allTime),
+                            icon: Icons.attach_money,
                           ),
                           DashboardStatCard(
                             title: context.translate(
@@ -171,12 +187,6 @@ class DashboardBody extends StatelessWidget {
                   ),
                   SizedBox(height: 16.h),
                   LowStockItemsCard(items: summary.lowStockItems),
-                  SizedBox(height: 16.h),
-                  RecentOrdersCard(orders: summary.orders),
-                  SizedBox(height: 16.h),
-                  RecentStockMovementsCard(
-                    movements: summary.recentStockMovements,
-                  ),
                   SizedBox(height: 16.h),
                   RecentOrdersCard(orders: summary.orders),
                   SizedBox(height: 16.h),

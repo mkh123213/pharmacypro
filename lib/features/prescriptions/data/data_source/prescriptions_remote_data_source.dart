@@ -51,6 +51,9 @@ class PrescriptionsRemoteDataSource {
   }
 
   Future<PrescriptionModel> createPrescription(PrescriptionModel item) async {
+    await _validateActiveBranch(item.branchId);
+    await _validateActivePrescriptionMedications(item);
+
     final document = await _prescriptions.add({
       ...item.toFirestoreJson(),
       'created_at': FieldValue.serverTimestamp(),
@@ -98,6 +101,9 @@ class PrescriptionsRemoteDataSource {
       if (prescription.items.isEmpty) {
         throw Exception('prescription_has_no_items');
       }
+
+      await _validateActiveBranch(prescription.branchId);
+      await _validateActivePrescriptionMedications(prescription);
 
       final inventoryDocumentsByMedicationId =
           <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
@@ -180,6 +186,53 @@ class PrescriptionsRemoteDataSource {
         });
       }
     });
+  }
+
+  Future<void> _validateActiveBranch(String branchId) async {
+    final branchSnapshot = await _branches.doc(branchId).get();
+
+    if (!branchSnapshot.exists) {
+      throw Exception('branch_not_found');
+    }
+
+    final branchData = branchSnapshot.data();
+
+    if (branchData == null) {
+      throw Exception('branch_not_found');
+    }
+
+    if (branchData['is_active'] == false) {
+      throw Exception('inactive_branch');
+    }
+  }
+
+  Future<void> _validateActivePrescriptionMedications(
+    PrescriptionModel prescription,
+  ) async {
+    for (final item in prescription.items) {
+      final medicationId = item.medicationId;
+      final medicationName = item.medicationName ?? '';
+
+      if (medicationId == null || medicationId.trim().isEmpty) {
+        throw Exception('prescription_item_missing_medication_id');
+      }
+
+      final medicationSnapshot = await _medications.doc(medicationId).get();
+
+      if (!medicationSnapshot.exists) {
+        throw Exception('medication_not_found:$medicationName');
+      }
+
+      final medicationData = medicationSnapshot.data();
+
+      if (medicationData == null) {
+        throw Exception('medication_not_found:$medicationName');
+      }
+
+      if (medicationData['is_active'] == false) {
+        throw Exception('inactive_medication:$medicationName');
+      }
+    }
   }
 
   int _readInt(Object? value) {

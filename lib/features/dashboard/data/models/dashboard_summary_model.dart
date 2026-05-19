@@ -29,6 +29,14 @@ class DashboardSummaryModel {
     return sales.fold(0, (sum, sale) => sum + sale.totalAmount);
   }
 
+  int get expiringSoonItems {
+    return inventory.where((item) => item.isExpiringSoon).length;
+  }
+
+  int get expiredItems {
+    return inventory.where((item) => item.isExpired).length;
+  }
+
   List<InventoryModel> get lowStockItems {
     return inventory.where((item) => item.isLowStock).toList();
   }

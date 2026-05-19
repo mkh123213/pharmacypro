@@ -163,6 +163,10 @@ class InventoryCubit extends Cubit<InventoryState> {
   String _inventoryErrorMessage(Object error) {
     final text = error.toString();
 
+    if (text.contains('duplicate_inventory_item')) {
+      return 'duplicate_inventory_item';
+    }
+
     if (text.contains('inventory_item_not_found')) {
       return 'inventory_item_not_found';
     }
@@ -170,8 +174,22 @@ class InventoryCubit extends Cubit<InventoryState> {
     if (text.contains('quantity_cannot_go_below_zero')) {
       return 'quantity_cannot_go_below_zero';
     }
+    if (text.contains('branch_not_found')) {
+      return 'branch_not_found';
+    }
 
-    return 'could_not_adjust_stock';
+    if (text.contains('inactive_branch')) {
+      return 'inactive_branch';
+    }
+
+    if (text.contains('medication_not_found')) {
+      return 'medication_not_found';
+    }
+
+    if (text.contains('inactive_medication')) {
+      return 'inactive_medication';
+    }
+    return 'could_not_save_inventory_item';
   }
 
   List<InventoryModel> get _filteredInventory {

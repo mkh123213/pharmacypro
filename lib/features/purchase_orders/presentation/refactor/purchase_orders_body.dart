@@ -39,6 +39,64 @@ class PurchaseOrdersBody extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmCancelPurchaseOrder(
+    BuildContext context,
+    PurchaseOrderModel order,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: TextApp(
+            text: context.translate(LangKeys.cancelPurchaseOrder),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            theme: context.textStyle,
+          ),
+          content: TextApp(
+            text: context.translate(LangKeys.cancelPurchaseOrderConfirmation),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            theme: context.textStyle,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: TextApp(
+                text: context.translate(LangKeys.no),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: TextApp(
+                text: context.translate(LangKeys.yesCancel),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle.copyWith(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    await _updatePurchaseOrderStatus(
+      context: context,
+      order: order,
+      status: 'cancelled',
+    );
+  }
+
   Future<void> _updatePurchaseOrderStatus({
     required BuildContext context,
     required PurchaseOrderModel order,
@@ -65,6 +123,7 @@ class PurchaseOrdersBody extends StatelessWidget {
       ShowToast.showToastErrorTop(message: message);
       return;
     }
+
     String message;
 
     switch (status) {
@@ -95,16 +154,67 @@ class PurchaseOrdersBody extends StatelessWidget {
     BuildContext context,
     String errorMessage,
   ) {
-    switch (errorMessage) {
-      case 'purchase_order_not_found':
-        return context.translate(LangKeys.purchaseOrderNotFound);
-      case 'purchase_order_already_received':
-        return context.translate(LangKeys.purchaseOrderAlreadyReceived);
-      case 'purchase_order_has_no_items':
-        return context.translate(LangKeys.purchaseOrderHasNoItems);
-      default:
-        return context.translate(LangKeys.couldNotUpdatePurchaseOrderStatus);
+    if (errorMessage == 'supplier_not_found') {
+      return context.translate(LangKeys.supplierNotFound);
     }
+
+    if (errorMessage == 'inactive_supplier') {
+      return context.translate(LangKeys.inactiveSupplier);
+    }
+
+    if (errorMessage == 'branch_not_found') {
+      return context.translate(LangKeys.branchNotFound);
+    }
+
+    if (errorMessage == 'inactive_branch') {
+      return context.translate(LangKeys.inactiveBranch);
+    }
+
+    if (errorMessage.startsWith('medication_not_found|')) {
+      final medicationName = errorMessage
+          .replaceFirst('medication_not_found|', '')
+          .trim();
+
+      return context
+          .translate(LangKeys.medicationNotFound)
+          .replaceAll('{medication}', medicationName);
+    }
+
+    if (errorMessage.startsWith('inactive_medication|')) {
+      final medicationName = errorMessage
+          .replaceFirst('inactive_medication|', '')
+          .trim();
+
+      return context
+          .translate(LangKeys.inactiveMedication)
+          .replaceAll('{medication}', medicationName);
+    }
+
+    if (errorMessage == 'purchase_order_not_found') {
+      return context.translate(LangKeys.purchaseOrderNotFound);
+    }
+
+    if (errorMessage == 'purchase_order_already_received') {
+      return context.translate(LangKeys.purchaseOrderAlreadyReceived);
+    }
+
+    if (errorMessage == 'purchase_order_already_cancelled') {
+      return context.translate(LangKeys.purchaseOrderAlreadyCancelled);
+    }
+
+    if (errorMessage == 'cannot_cancel_received_purchase_order') {
+      return context.translate(LangKeys.cannotCancelReceivedPurchaseOrder);
+    }
+
+    if (errorMessage == 'invalid_purchase_order_status_transition') {
+      return context.translate(LangKeys.invalidPurchaseOrderStatusTransition);
+    }
+
+    if (errorMessage == 'purchase_order_has_no_items') {
+      return context.translate(LangKeys.purchaseOrderHasNoItems);
+    }
+
+    return context.translate(LangKeys.couldNotUpdatePurchaseOrderStatus);
   }
 
   @override
@@ -198,6 +308,9 @@ class PurchaseOrdersBody extends StatelessWidget {
                             order: order,
                             status: nextStatus,
                           );
+                        },
+                        onCancel: (order) {
+                          _confirmCancelPurchaseOrder(context, order);
                         },
                       ),
               ),

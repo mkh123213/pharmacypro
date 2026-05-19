@@ -87,6 +87,35 @@ class ReportsRemoteDataSource {
               .where((movement) => movement.branchId == branchId)
               .toList();
 
+    final lowStockItems = filteredInventory.where((item) {
+      return item.isLowStock;
+    }).length;
+
+    final expiredItems = filteredInventory.where((item) {
+      return item.isExpired;
+    }).length;
+
+    final expiringSoonItems = filteredInventory.where((item) {
+      return item.isExpiringSoon;
+    }).length;
+
+    final healthyStockItems = filteredInventory.where((item) {
+      return !item.isLowStock && !item.isExpired && !item.isExpiringSoon;
+    }).length;
+
+    final inventoryHealthSummary = [
+      ReportChartModel(
+        label: 'healthy_stock',
+        value: healthyStockItems.toDouble(),
+      ),
+      ReportChartModel(label: 'low_stock', value: lowStockItems.toDouble()),
+      ReportChartModel(
+        label: 'expiring_soon',
+        value: expiringSoonItems.toDouble(),
+      ),
+      ReportChartModel(label: 'expired', value: expiredItems.toDouble()),
+    ].where((item) => item.value > 0).toList();
+
     final totalRevenue = filteredSales.fold<double>(
       0,
       (sum, sale) => sum + sale.totalAmount,
@@ -181,9 +210,11 @@ class ReportsRemoteDataSource {
       summary: ReportsSummaryModel(
         totalRevenue: totalRevenue,
         totalOrders: filteredOrders.length,
-        lowStockItems: filteredInventory
-            .where((item) => item.isLowStock)
-            .length,
+        lowStockItems: lowStockItems,
+        expiredItems: expiredItems,
+        expiringSoonItems: expiringSoonItems,
+        healthyStockItems: healthyStockItems,
+        inventoryHealthSummary: inventoryHealthSummary,
         prescriptionsCount: filteredPrescriptions.length,
         dailyRevenue: dailyRevenue,
         revenueByBranch: revenueByBranch,
@@ -208,6 +239,7 @@ class ReportsRemoteDataSource {
       'customer_order_delivered',
       'prescription_dispensed',
       'manual_adjustment',
+      'expired_removed',
     ];
 
     return types

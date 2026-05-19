@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/features/inventory/presentation/cubit/inventory_state.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_date_field.dart';
@@ -36,13 +37,8 @@ class InventoryFormBottomSheet extends StatefulWidget {
 class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
   final _formKey = GlobalKey<FormState>();
 
-  late String? medicationId =
-      widget.item?.medicationId ??
-      (widget.medications.isNotEmpty ? widget.medications.first.id : null);
-
-  late String? branchId =
-      widget.item?.branchId ??
-      (widget.branches.isNotEmpty ? widget.branches.first.id : null);
+  String? medicationId;
+  String? branchId;
 
   late final TextEditingController quantity;
   late final TextEditingController min;
@@ -54,9 +50,27 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
 
   bool get _isEditing => widget.item != null;
 
+  List<MedicationModel> get activeMedications {
+    return widget.medications
+        .where((medication) => medication.isActive)
+        .toList();
+  }
+
+  List<BranchModel> get activeBranches {
+    return widget.branches.where((branch) => branch.isActive).toList();
+  }
+
   @override
   void initState() {
     super.initState();
+
+    medicationId =
+        widget.item?.medicationId ??
+        (activeMedications.isNotEmpty ? activeMedications.first.id : null);
+
+    branchId =
+        widget.item?.branchId ??
+        (activeBranches.isNotEmpty ? activeBranches.first.id : null);
 
     quantity = TextEditingController(
       text: widget.item?.quantity.toString() ?? '0',
@@ -83,6 +97,20 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
     if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
 
+    if (activeMedications.isEmpty) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.noActiveMedicationsFound),
+      );
+      return;
+    }
+
+    if (activeBranches.isEmpty) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.noActiveBranchesFound),
+      );
+      return;
+    }
+
     if (medicationId == null || branchId == null) {
       ShowToast.showToastErrorTop(
         message: context.translate(LangKeys.pleaseSelectMedicationAndBranch),
@@ -94,11 +122,36 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
       _isSaving = true;
     });
 
-    final medication = widget.medications.firstWhere(
+    final selectedMedication = activeMedications.where(
       (item) => item.id == medicationId,
     );
 
-    final branch = widget.branches.firstWhere((item) => item.id == branchId);
+    final selectedBranch = activeBranches.where((item) => item.id == branchId);
+
+    if (selectedMedication.isEmpty) {
+      setState(() {
+        _isSaving = false;
+      });
+
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.inactiveMedication),
+      );
+      return;
+    }
+
+    if (selectedBranch.isEmpty) {
+      setState(() {
+        _isSaving = false;
+      });
+
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.inactiveBranch),
+      );
+      return;
+    }
+
+    final medication = selectedMedication.first;
+    final branch = selectedBranch.first;
 
     final model = InventoryModel(
       id: widget.item?.id ?? '',
@@ -128,9 +181,15 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
     });
 
     if (!success) {
-      ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.couldNotSaveInventoryItem),
-      );
+      final state = context.read<InventoryCubit>().state;
+
+      String message = context.translate(LangKeys.couldNotSaveInventoryItem);
+
+      if (state is InventoryLoaded && state.errorMessage != null) {
+        message = _buildInventoryErrorMessage(context, state.errorMessage!);
+      }
+
+      ShowToast.showToastErrorTop(message: message);
       return;
     }
 
@@ -152,6 +211,8 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final medications = activeMedications;
+    final branches = activeBranches;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
@@ -189,43 +250,73 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
                   value: medicationId,
                   label: context.translate(LangKeys.medication),
                   isRequired: true,
-                  items: widget.medications.map((medication) {
+                  items: medications.map((medication) {
                     return AppDropdownItem<String>(
                       value: medication.id,
                       label: medication.name,
                     );
                   }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      medicationId = value;
-                    });
-                  },
+                  onChanged: _isEditing || medications.isEmpty
+                      ? null
+                      : (value) {
+                          setState(() {
+                            medicationId = value;
+                          });
+                        },
                   validator: AppValidators.required(
                     context,
                     fieldName: context.translate(LangKeys.medication),
                   ),
                 ),
+                if (medications.isEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextApp(
+                      text: context.translate(
+                        LangKeys.noActiveMedicationsFound,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(color: Colors.red),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 10.h),
                 AppDropdownField<String>(
                   value: branchId,
                   label: context.translate(LangKeys.branch),
                   isRequired: true,
-                  items: widget.branches.map((branch) {
+                  items: branches.map((branch) {
                     return AppDropdownItem<String>(
                       value: branch.id,
                       label: branch.name,
                     );
                   }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      branchId = value;
-                    });
-                  },
+                  onChanged: _isEditing || branches.isEmpty
+                      ? null
+                      : (value) {
+                          setState(() {
+                            branchId = value;
+                          });
+                        },
                   validator: AppValidators.required(
                     context,
                     fieldName: context.translate(LangKeys.branch),
                   ),
                 ),
+                if (branches.isEmpty) ...[
+                  SizedBox(height: 6.h),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextApp(
+                      text: context.translate(LangKeys.noActiveBranchesFound),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(color: Colors.red),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 10.h),
                 AppTextField(
                   controller: quantity,
@@ -305,5 +396,29 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
         ),
       ),
     );
+  }
+
+  String _buildInventoryErrorMessage(
+    BuildContext context,
+    String errorMessage,
+  ) {
+    switch (errorMessage) {
+      case 'branch_not_found':
+        return context.translate(LangKeys.branchNotFound);
+      case 'inactive_branch':
+        return context.translate(LangKeys.inactiveBranch);
+      case 'medication_not_found':
+        return context.translate(LangKeys.medicationNotFound);
+      case 'inactive_medication':
+        return context.translate(LangKeys.inactiveMedication);
+      case 'duplicate_inventory_item':
+        return context.translate(LangKeys.duplicateInventoryItem);
+      case 'inventory_item_not_found':
+        return context.translate(LangKeys.inventoryItemNotFound);
+      case 'quantity_cannot_go_below_zero':
+        return context.translate(LangKeys.quantityCannotGoBelowZero);
+      default:
+        return context.translate(LangKeys.couldNotSaveInventoryItem);
+    }
   }
 }
