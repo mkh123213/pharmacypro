@@ -34,6 +34,7 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
           branches: results[2] as dynamic,
           medications: results[3] as dynamic,
           searchQuery: _searchQuery,
+          errorMessage: null,
         ),
       );
     } catch (error) {
@@ -57,7 +58,7 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
 
     final oldPurchaseOrders = List<PurchaseOrderModel>.from(_allPurchaseOrders);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final created = await _purchaseOrdersRepo.createPurchaseOrder(
@@ -76,6 +77,7 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
         current.copyWith(
           purchaseOrders: _filteredPurchaseOrders,
           isSubmitting: false,
+          errorMessage: _purchaseOrderErrorMessage(error),
         ),
       );
 
@@ -90,7 +92,7 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
 
     final oldPurchaseOrders = List<PurchaseOrderModel>.from(_allPurchaseOrders);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       await _purchaseOrdersRepo.updatePurchaseOrderFields(id, {
@@ -100,10 +102,7 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
       _allPurchaseOrders = oldPurchaseOrders.map((order) {
         if (order.id != id) return order;
 
-        return PurchaseOrderModel.fromJson({
-          ...order.toJson(),
-          'status': status,
-        });
+        return order.copyWith(status: status);
       }).toList();
 
       _emitFromLoaded();
@@ -116,11 +115,30 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
         current.copyWith(
           purchaseOrders: _filteredPurchaseOrders,
           isSubmitting: false,
+          errorMessage: _purchaseOrderErrorMessage(error),
         ),
       );
 
       return false;
     }
+  }
+
+  String _purchaseOrderErrorMessage(Object error) {
+    final text = error.toString();
+
+    if (text.contains('purchase_order_not_found')) {
+      return 'purchase_order_not_found';
+    }
+
+    if (text.contains('purchase_order_already_received')) {
+      return 'purchase_order_already_received';
+    }
+
+    if (text.contains('purchase_order_has_no_items')) {
+      return 'purchase_order_has_no_items';
+    }
+
+    return 'could_not_update_purchase_order_status';
   }
 
   List<PurchaseOrderModel> get _filteredPurchaseOrders {
@@ -142,6 +160,7 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
           purchaseOrders: _filteredPurchaseOrders,
           searchQuery: _searchQuery,
           isSubmitting: false,
+          errorMessage: null,
         ),
       );
     }

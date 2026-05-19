@@ -29,7 +29,10 @@ class PrescriptionsBody extends StatelessWidget {
       builder: (_) {
         return BlocProvider.value(
           value: context.read<PrescriptionsCubit>(),
-          child: PrescriptionFormBottomSheet(branches: state.branches),
+          child: PrescriptionFormBottomSheet(
+            branches: state.branches,
+            medications: state.medications,
+          ),
         );
       },
     );
@@ -48,9 +51,17 @@ class PrescriptionsBody extends StatelessWidget {
     if (!context.mounted) return;
 
     if (!success) {
-      ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.couldNotUpdatePrescriptionStatus),
+      final state = context.read<PrescriptionsCubit>().state;
+
+      String message = context.translate(
+        LangKeys.couldNotUpdatePrescriptionStatus,
       );
+
+      if (state is PrescriptionsLoaded && state.errorMessage != null) {
+        message = _buildPrescriptionErrorMessage(context, state.errorMessage!);
+      }
+
+      ShowToast.showToastErrorTop(message: message);
       return;
     }
 
@@ -73,6 +84,36 @@ class PrescriptionsBody extends StatelessWidget {
     }
 
     ShowToast.showToastSuccessTop(message: message);
+  }
+
+  String _buildPrescriptionErrorMessage(
+    BuildContext context,
+    String errorMessage,
+  ) {
+    if (errorMessage.startsWith('not_enough_stock_for_medication|')) {
+      final medicationName = errorMessage
+          .replaceFirst('not_enough_stock_for_medication|', '')
+          .trim();
+
+      return context
+          .translate(LangKeys.notEnoughStockForMedication)
+          .replaceAll('{medication}', medicationName);
+    }
+
+    switch (errorMessage) {
+      case 'prescription_not_found':
+        return context.translate(LangKeys.prescriptionNotFound);
+      case 'prescription_already_dispensed':
+        return context.translate(LangKeys.prescriptionAlreadyDispensed);
+      case 'prescription_has_no_items':
+        return context.translate(LangKeys.prescriptionHasNoItems);
+      case 'prescription_item_missing_medication_id':
+        return context.translate(LangKeys.prescriptionItemMissingMedicationId);
+      case 'prescription_item_invalid_quantity':
+        return context.translate(LangKeys.prescriptionItemInvalidQuantity);
+      default:
+        return context.translate(LangKeys.couldNotUpdatePrescriptionStatus);
+    }
   }
 
   @override

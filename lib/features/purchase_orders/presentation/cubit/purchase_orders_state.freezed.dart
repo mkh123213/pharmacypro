@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<PurchaseOrderModel> purchaseOrders,  List<SupplierModel> suppliers,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<PurchaseOrderModel> purchaseOrders,  List<SupplierModel> suppliers,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PurchaseOrdersInitial() when initial != null:
 return initial();case PurchaseOrdersLoading() when loading != null:
 return loading();case PurchaseOrdersLoaded() when loaded != null:
-return loaded(_that.purchaseOrders,_that.suppliers,_that.branches,_that.medications,_that.searchQuery,_that.isSubmitting);case PurchaseOrdersFailure() when failure != null:
+return loaded(_that.purchaseOrders,_that.suppliers,_that.branches,_that.medications,_that.searchQuery,_that.isSubmitting,_that.errorMessage);case PurchaseOrdersFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<PurchaseOrderModel> purchaseOrders,  List<SupplierModel> suppliers,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<PurchaseOrderModel> purchaseOrders,  List<SupplierModel> suppliers,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case PurchaseOrdersInitial():
 return initial();case PurchaseOrdersLoading():
 return loading();case PurchaseOrdersLoaded():
-return loaded(_that.purchaseOrders,_that.suppliers,_that.branches,_that.medications,_that.searchQuery,_that.isSubmitting);case PurchaseOrdersFailure():
+return loaded(_that.purchaseOrders,_that.suppliers,_that.branches,_that.medications,_that.searchQuery,_that.isSubmitting,_that.errorMessage);case PurchaseOrdersFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<PurchaseOrderModel> purchaseOrders,  List<SupplierModel> suppliers,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<PurchaseOrderModel> purchaseOrders,  List<SupplierModel> suppliers,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case PurchaseOrdersInitial() when initial != null:
 return initial();case PurchaseOrdersLoading() when loading != null:
 return loading();case PurchaseOrdersLoaded() when loaded != null:
-return loaded(_that.purchaseOrders,_that.suppliers,_that.branches,_that.medications,_that.searchQuery,_that.isSubmitting);case PurchaseOrdersFailure() when failure != null:
+return loaded(_that.purchaseOrders,_that.suppliers,_that.branches,_that.medications,_that.searchQuery,_that.isSubmitting,_that.errorMessage);case PurchaseOrdersFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class PurchaseOrdersLoaded implements PurchaseOrdersState {
-  const PurchaseOrdersLoaded({required final  List<PurchaseOrderModel> purchaseOrders, required final  List<SupplierModel> suppliers, required final  List<BranchModel> branches, required final  List<MedicationModel> medications, this.searchQuery = '', this.isSubmitting = false}): _purchaseOrders = purchaseOrders,_suppliers = suppliers,_branches = branches,_medications = medications;
+  const PurchaseOrdersLoaded({required final  List<PurchaseOrderModel> purchaseOrders, required final  List<SupplierModel> suppliers, required final  List<BranchModel> branches, required final  List<MedicationModel> medications, this.searchQuery = '', this.isSubmitting = false, this.errorMessage = null}): _purchaseOrders = purchaseOrders,_suppliers = suppliers,_branches = branches,_medications = medications;
   
 
  final  List<PurchaseOrderModel> _purchaseOrders;
@@ -290,6 +290,7 @@ class PurchaseOrdersLoaded implements PurchaseOrdersState {
 
 @JsonKey() final  String searchQuery;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of PurchaseOrdersState
 /// with the given fields replaced by the non-null parameter values.
@@ -301,16 +302,16 @@ $PurchaseOrdersLoadedCopyWith<PurchaseOrdersLoaded> get copyWith => _$PurchaseOr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PurchaseOrdersLoaded&&const DeepCollectionEquality().equals(other._purchaseOrders, _purchaseOrders)&&const DeepCollectionEquality().equals(other._suppliers, _suppliers)&&const DeepCollectionEquality().equals(other._branches, _branches)&&const DeepCollectionEquality().equals(other._medications, _medications)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PurchaseOrdersLoaded&&const DeepCollectionEquality().equals(other._purchaseOrders, _purchaseOrders)&&const DeepCollectionEquality().equals(other._suppliers, _suppliers)&&const DeepCollectionEquality().equals(other._branches, _branches)&&const DeepCollectionEquality().equals(other._medications, _medications)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_purchaseOrders),const DeepCollectionEquality().hash(_suppliers),const DeepCollectionEquality().hash(_branches),const DeepCollectionEquality().hash(_medications),searchQuery,isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_purchaseOrders),const DeepCollectionEquality().hash(_suppliers),const DeepCollectionEquality().hash(_branches),const DeepCollectionEquality().hash(_medications),searchQuery,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'PurchaseOrdersState.loaded(purchaseOrders: $purchaseOrders, suppliers: $suppliers, branches: $branches, medications: $medications, searchQuery: $searchQuery, isSubmitting: $isSubmitting)';
+  return 'PurchaseOrdersState.loaded(purchaseOrders: $purchaseOrders, suppliers: $suppliers, branches: $branches, medications: $medications, searchQuery: $searchQuery, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -321,7 +322,7 @@ abstract mixin class $PurchaseOrdersLoadedCopyWith<$Res> implements $PurchaseOrd
   factory $PurchaseOrdersLoadedCopyWith(PurchaseOrdersLoaded value, $Res Function(PurchaseOrdersLoaded) _then) = _$PurchaseOrdersLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<PurchaseOrderModel> purchaseOrders, List<SupplierModel> suppliers, List<BranchModel> branches, List<MedicationModel> medications, String searchQuery, bool isSubmitting
+ List<PurchaseOrderModel> purchaseOrders, List<SupplierModel> suppliers, List<BranchModel> branches, List<MedicationModel> medications, String searchQuery, bool isSubmitting, String? errorMessage
 });
 
 
@@ -338,7 +339,7 @@ class _$PurchaseOrdersLoadedCopyWithImpl<$Res>
 
 /// Create a copy of PurchaseOrdersState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? purchaseOrders = null,Object? suppliers = null,Object? branches = null,Object? medications = null,Object? searchQuery = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? purchaseOrders = null,Object? suppliers = null,Object? branches = null,Object? medications = null,Object? searchQuery = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(PurchaseOrdersLoaded(
 purchaseOrders: null == purchaseOrders ? _self._purchaseOrders : purchaseOrders // ignore: cast_nullable_to_non_nullable
 as List<PurchaseOrderModel>,suppliers: null == suppliers ? _self._suppliers : suppliers // ignore: cast_nullable_to_non_nullable
@@ -346,7 +347,8 @@ as List<SupplierModel>,branches: null == branches ? _self._branches : branches /
 as List<BranchModel>,medications: null == medications ? _self._medications : medications // ignore: cast_nullable_to_non_nullable
 as List<MedicationModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -32,6 +32,7 @@ class SalesCubit extends Cubit<SalesState> {
           medications: results[1] as dynamic,
           branches: results[2] as dynamic,
           searchQuery: _searchQuery,
+          errorMessage: null,
         ),
       );
     } catch (error) {
@@ -51,7 +52,7 @@ class SalesCubit extends Cubit<SalesState> {
 
     final oldSales = List<SaleModel>.from(_allSales);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final created = await _salesRepo.createSale(sale);
@@ -64,10 +65,34 @@ class SalesCubit extends Cubit<SalesState> {
     } catch (error) {
       _allSales = oldSales;
 
-      emit(current.copyWith(sales: _filteredSales, isSubmitting: false));
+      final message = _saleErrorMessage(error);
+
+      emit(
+        current.copyWith(
+          sales: _filteredSales,
+          isSubmitting: false,
+          errorMessage: message,
+        ),
+      );
 
       return false;
     }
+  }
+
+  String _saleErrorMessage(Object error) {
+    final text = error.toString();
+
+    if (text.contains('not_enough_stock_for_medication:')) {
+      final medicationName = text
+          .split('not_enough_stock_for_medication:')
+          .last
+          .replaceAll(']', '')
+          .trim();
+
+      return 'not_enough_stock_for_medication|$medicationName';
+    }
+
+    return 'could_not_complete_sale';
   }
 
   List<SaleModel> get _filteredSales {
@@ -90,6 +115,7 @@ class SalesCubit extends Cubit<SalesState> {
           sales: _filteredSales,
           searchQuery: _searchQuery,
           isSubmitting: false,
+          errorMessage: null,
         ),
       );
     }

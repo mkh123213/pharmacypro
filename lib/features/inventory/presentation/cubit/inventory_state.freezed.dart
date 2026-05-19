@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<InventoryModel> inventory,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedBranchId,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<InventoryModel> inventory,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedBranchId,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case InventoryInitial() when initial != null:
 return initial();case InventoryLoading() when loading != null:
 return loading();case InventoryLoaded() when loaded != null:
-return loaded(_that.inventory,_that.medications,_that.branches,_that.searchQuery,_that.selectedBranchId,_that.isSubmitting);case InventoryFailure() when failure != null:
+return loaded(_that.inventory,_that.medications,_that.branches,_that.searchQuery,_that.selectedBranchId,_that.isSubmitting,_that.errorMessage);case InventoryFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<InventoryModel> inventory,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedBranchId,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<InventoryModel> inventory,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedBranchId,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case InventoryInitial():
 return initial();case InventoryLoading():
 return loading();case InventoryLoaded():
-return loaded(_that.inventory,_that.medications,_that.branches,_that.searchQuery,_that.selectedBranchId,_that.isSubmitting);case InventoryFailure():
+return loaded(_that.inventory,_that.medications,_that.branches,_that.searchQuery,_that.selectedBranchId,_that.isSubmitting,_that.errorMessage);case InventoryFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<InventoryModel> inventory,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedBranchId,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<InventoryModel> inventory,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedBranchId,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case InventoryInitial() when initial != null:
 return initial();case InventoryLoading() when loading != null:
 return loading();case InventoryLoaded() when loaded != null:
-return loaded(_that.inventory,_that.medications,_that.branches,_that.searchQuery,_that.selectedBranchId,_that.isSubmitting);case InventoryFailure() when failure != null:
+return loaded(_that.inventory,_that.medications,_that.branches,_that.searchQuery,_that.selectedBranchId,_that.isSubmitting,_that.errorMessage);case InventoryFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class InventoryLoaded implements InventoryState {
-  const InventoryLoaded({required final  List<InventoryModel> inventory, required final  List<MedicationModel> medications, required final  List<BranchModel> branches, this.searchQuery = '', this.selectedBranchId = 'all', this.isSubmitting = false}): _inventory = inventory,_medications = medications,_branches = branches;
+  const InventoryLoaded({required final  List<InventoryModel> inventory, required final  List<MedicationModel> medications, required final  List<BranchModel> branches, this.searchQuery = '', this.selectedBranchId = 'all', this.isSubmitting = false, this.errorMessage = null}): _inventory = inventory,_medications = medications,_branches = branches;
   
 
  final  List<InventoryModel> _inventory;
@@ -284,6 +284,7 @@ class InventoryLoaded implements InventoryState {
 @JsonKey() final  String searchQuery;
 @JsonKey() final  String selectedBranchId;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of InventoryState
 /// with the given fields replaced by the non-null parameter values.
@@ -295,16 +296,16 @@ $InventoryLoadedCopyWith<InventoryLoaded> get copyWith => _$InventoryLoadedCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InventoryLoaded&&const DeepCollectionEquality().equals(other._inventory, _inventory)&&const DeepCollectionEquality().equals(other._medications, _medications)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedBranchId, selectedBranchId) || other.selectedBranchId == selectedBranchId)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InventoryLoaded&&const DeepCollectionEquality().equals(other._inventory, _inventory)&&const DeepCollectionEquality().equals(other._medications, _medications)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedBranchId, selectedBranchId) || other.selectedBranchId == selectedBranchId)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_inventory),const DeepCollectionEquality().hash(_medications),const DeepCollectionEquality().hash(_branches),searchQuery,selectedBranchId,isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_inventory),const DeepCollectionEquality().hash(_medications),const DeepCollectionEquality().hash(_branches),searchQuery,selectedBranchId,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'InventoryState.loaded(inventory: $inventory, medications: $medications, branches: $branches, searchQuery: $searchQuery, selectedBranchId: $selectedBranchId, isSubmitting: $isSubmitting)';
+  return 'InventoryState.loaded(inventory: $inventory, medications: $medications, branches: $branches, searchQuery: $searchQuery, selectedBranchId: $selectedBranchId, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -315,7 +316,7 @@ abstract mixin class $InventoryLoadedCopyWith<$Res> implements $InventoryStateCo
   factory $InventoryLoadedCopyWith(InventoryLoaded value, $Res Function(InventoryLoaded) _then) = _$InventoryLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<InventoryModel> inventory, List<MedicationModel> medications, List<BranchModel> branches, String searchQuery, String selectedBranchId, bool isSubmitting
+ List<InventoryModel> inventory, List<MedicationModel> medications, List<BranchModel> branches, String searchQuery, String selectedBranchId, bool isSubmitting, String? errorMessage
 });
 
 
@@ -332,7 +333,7 @@ class _$InventoryLoadedCopyWithImpl<$Res>
 
 /// Create a copy of InventoryState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? inventory = null,Object? medications = null,Object? branches = null,Object? searchQuery = null,Object? selectedBranchId = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? inventory = null,Object? medications = null,Object? branches = null,Object? searchQuery = null,Object? selectedBranchId = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(InventoryLoaded(
 inventory: null == inventory ? _self._inventory : inventory // ignore: cast_nullable_to_non_nullable
 as List<InventoryModel>,medications: null == medications ? _self._medications : medications // ignore: cast_nullable_to_non_nullable
@@ -340,7 +341,8 @@ as List<MedicationModel>,branches: null == branches ? _self._branches : branches
 as List<BranchModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
 as String,selectedBranchId: null == selectedBranchId ? _self.selectedBranchId : selectedBranchId // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

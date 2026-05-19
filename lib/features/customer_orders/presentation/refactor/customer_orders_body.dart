@@ -49,15 +49,47 @@ class CustomerOrdersBody extends StatelessWidget {
     if (!context.mounted) return;
 
     if (!success) {
-      ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.couldNotUpdateOrderStatus),
-      );
+      final state = context.read<CustomerOrdersCubit>().state;
+
+      String message = context.translate(LangKeys.couldNotUpdateOrderStatus);
+
+      if (state is CustomerOrdersLoaded && state.errorMessage != null) {
+        message = _buildCustomerOrderErrorMessage(context, state.errorMessage!);
+      }
+
+      ShowToast.showToastErrorTop(message: message);
       return;
     }
 
     ShowToast.showToastSuccessTop(
       message: context.translate(LangKeys.orderStatusUpdatedSuccessfully),
     );
+  }
+
+  String _buildCustomerOrderErrorMessage(
+    BuildContext context,
+    String errorMessage,
+  ) {
+    if (errorMessage.startsWith('not_enough_stock_for_medication|')) {
+      final medicationName = errorMessage
+          .replaceFirst('not_enough_stock_for_medication|', '')
+          .trim();
+
+      return context
+          .translate(LangKeys.notEnoughStockForMedication)
+          .replaceAll('{medication}', medicationName);
+    }
+
+    switch (errorMessage) {
+      case 'customer_order_not_found':
+        return context.translate(LangKeys.customerOrderNotFound);
+      case 'customer_order_already_delivered':
+        return context.translate(LangKeys.customerOrderAlreadyDelivered);
+      case 'customer_order_has_no_items':
+        return context.translate(LangKeys.customerOrderHasNoItems);
+      default:
+        return context.translate(LangKeys.couldNotUpdateOrderStatus);
+    }
   }
 
   @override

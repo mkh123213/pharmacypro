@@ -13,6 +13,7 @@ import '../../../../core/language/lang_keys.dart';
 import '../../data/models/inventory_model.dart';
 import '../cubit/inventory_cubit.dart';
 import '../cubit/inventory_state.dart';
+import '../widgets/inventory_adjust_stock_bottom_sheet.dart';
 import '../widgets/inventory_form_bottom_sheet.dart';
 import '../widgets/inventory_table.dart';
 
@@ -36,6 +37,20 @@ class InventoryBody extends StatelessWidget {
             branches: state.branches,
             item: item,
           ),
+        );
+      },
+    );
+  }
+
+  void _openAdjustStock(BuildContext context, InventoryModel item) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return BlocProvider.value(
+          value: context.read<InventoryCubit>(),
+          child: InventoryAdjustStockBottomSheet(item: item),
         );
       },
     );
@@ -160,8 +175,12 @@ class InventoryBody extends StatelessWidget {
                       )
                     : InventoryTable(
                         items: state.inventory,
+                        isSubmitting: state.isSubmitting,
                         onTap: (item) {
                           _openForm(context, state, item: item);
+                        },
+                        onAdjustStock: (item) {
+                          _openAdjustStock(context, item);
                         },
                       ),
               ),

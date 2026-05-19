@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<PrescriptionModel> prescriptions,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<PrescriptionModel> prescriptions,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PrescriptionsInitial() when initial != null:
 return initial();case PrescriptionsLoading() when loading != null:
 return loading();case PrescriptionsLoaded() when loaded != null:
-return loaded(_that.prescriptions,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting);case PrescriptionsFailure() when failure != null:
+return loaded(_that.prescriptions,_that.branches,_that.medications,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case PrescriptionsFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<PrescriptionModel> prescriptions,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<PrescriptionModel> prescriptions,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case PrescriptionsInitial():
 return initial();case PrescriptionsLoading():
 return loading();case PrescriptionsLoaded():
-return loaded(_that.prescriptions,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting);case PrescriptionsFailure():
+return loaded(_that.prescriptions,_that.branches,_that.medications,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case PrescriptionsFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<PrescriptionModel> prescriptions,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<PrescriptionModel> prescriptions,  List<BranchModel> branches,  List<MedicationModel> medications,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case PrescriptionsInitial() when initial != null:
 return initial();case PrescriptionsLoading() when loading != null:
 return loading();case PrescriptionsLoaded() when loaded != null:
-return loaded(_that.prescriptions,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting);case PrescriptionsFailure() when failure != null:
+return loaded(_that.prescriptions,_that.branches,_that.medications,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case PrescriptionsFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class PrescriptionsLoaded implements PrescriptionsState {
-  const PrescriptionsLoaded({required final  List<PrescriptionModel> prescriptions, required final  List<BranchModel> branches, this.searchQuery = '', this.selectedStatus = 'all', this.isSubmitting = false}): _prescriptions = prescriptions,_branches = branches;
+  const PrescriptionsLoaded({required final  List<PrescriptionModel> prescriptions, required final  List<BranchModel> branches, required final  List<MedicationModel> medications, this.searchQuery = '', this.selectedStatus = 'all', this.isSubmitting = false, this.errorMessage = null}): _prescriptions = prescriptions,_branches = branches,_medications = medications;
   
 
  final  List<PrescriptionModel> _prescriptions;
@@ -274,9 +274,17 @@ class PrescriptionsLoaded implements PrescriptionsState {
   return EqualUnmodifiableListView(_branches);
 }
 
+ final  List<MedicationModel> _medications;
+ List<MedicationModel> get medications {
+  if (_medications is EqualUnmodifiableListView) return _medications;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_medications);
+}
+
 @JsonKey() final  String searchQuery;
 @JsonKey() final  String selectedStatus;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of PrescriptionsState
 /// with the given fields replaced by the non-null parameter values.
@@ -288,16 +296,16 @@ $PrescriptionsLoadedCopyWith<PrescriptionsLoaded> get copyWith => _$Prescription
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrescriptionsLoaded&&const DeepCollectionEquality().equals(other._prescriptions, _prescriptions)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedStatus, selectedStatus) || other.selectedStatus == selectedStatus)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrescriptionsLoaded&&const DeepCollectionEquality().equals(other._prescriptions, _prescriptions)&&const DeepCollectionEquality().equals(other._branches, _branches)&&const DeepCollectionEquality().equals(other._medications, _medications)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedStatus, selectedStatus) || other.selectedStatus == selectedStatus)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_prescriptions),const DeepCollectionEquality().hash(_branches),searchQuery,selectedStatus,isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_prescriptions),const DeepCollectionEquality().hash(_branches),const DeepCollectionEquality().hash(_medications),searchQuery,selectedStatus,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'PrescriptionsState.loaded(prescriptions: $prescriptions, branches: $branches, searchQuery: $searchQuery, selectedStatus: $selectedStatus, isSubmitting: $isSubmitting)';
+  return 'PrescriptionsState.loaded(prescriptions: $prescriptions, branches: $branches, medications: $medications, searchQuery: $searchQuery, selectedStatus: $selectedStatus, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -308,7 +316,7 @@ abstract mixin class $PrescriptionsLoadedCopyWith<$Res> implements $Prescription
   factory $PrescriptionsLoadedCopyWith(PrescriptionsLoaded value, $Res Function(PrescriptionsLoaded) _then) = _$PrescriptionsLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<PrescriptionModel> prescriptions, List<BranchModel> branches, String searchQuery, String selectedStatus, bool isSubmitting
+ List<PrescriptionModel> prescriptions, List<BranchModel> branches, List<MedicationModel> medications, String searchQuery, String selectedStatus, bool isSubmitting, String? errorMessage
 });
 
 
@@ -325,14 +333,16 @@ class _$PrescriptionsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of PrescriptionsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? prescriptions = null,Object? branches = null,Object? searchQuery = null,Object? selectedStatus = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? prescriptions = null,Object? branches = null,Object? medications = null,Object? searchQuery = null,Object? selectedStatus = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(PrescriptionsLoaded(
 prescriptions: null == prescriptions ? _self._prescriptions : prescriptions // ignore: cast_nullable_to_non_nullable
 as List<PrescriptionModel>,branches: null == branches ? _self._branches : branches // ignore: cast_nullable_to_non_nullable
-as List<BranchModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
+as List<BranchModel>,medications: null == medications ? _self._medications : medications // ignore: cast_nullable_to_non_nullable
+as List<MedicationModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
 as String,selectedStatus: null == selectedStatus ? _self.selectedStatus : selectedStatus // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -12,17 +12,25 @@ import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../../../core/utils/app_validators.dart';
 import '../../../branches/data/models/branch_model.dart';
+import '../../../medications/data/models/medication_model.dart';
+import '../../data/models/prescription_item_model.dart';
 import '../../data/models/prescription_model.dart';
 import '../cubit/prescriptions_cubit.dart';
 
 class PrescriptionFormBottomSheet extends StatefulWidget {
-  const PrescriptionFormBottomSheet({required this.branches, super.key});
+  const PrescriptionFormBottomSheet({
+    required this.branches,
+    required this.medications,
+    super.key,
+  });
 
   final List<BranchModel> branches;
+  final List<MedicationModel> medications;
 
   @override
-  State<PrescriptionFormBottomSheet> createState() =>
-      _PrescriptionFormBottomSheetState();
+  State<PrescriptionFormBottomSheet> createState() {
+    return _PrescriptionFormBottomSheetState();
+  }
 }
 
 class _PrescriptionFormBottomSheetState
@@ -38,6 +46,8 @@ class _PrescriptionFormBottomSheetState
   final notes = TextEditingController();
 
   String? branchId;
+  final items = <PrescriptionItemModel>[];
+
   bool _isSaving = false;
 
   @override
@@ -52,6 +62,36 @@ class _PrescriptionFormBottomSheetState
     super.dispose();
   }
 
+  Future<void> _addPrescriptionItem() async {
+    if (widget.medications.isEmpty) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.noMedicationsFound),
+      );
+      return;
+    }
+
+    final result = await showPrescriptionItemFormBottomSheet(
+      context: context,
+      medications: widget.medications,
+    );
+
+    if (result == null) return;
+
+    setState(() {
+      items.add(result);
+    });
+
+    ShowToast.showToastSuccessTop(
+      message: context.translate(LangKeys.medicationAddedToPrescription),
+    );
+  }
+
+  void _removePrescriptionItem(int index) {
+    setState(() {
+      items.removeAt(index);
+    });
+  }
+
   Future<void> save() async {
     if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
@@ -59,6 +99,15 @@ class _PrescriptionFormBottomSheetState
     if (branchId == null) {
       ShowToast.showToastErrorTop(
         message: context.translate(LangKeys.pleaseSelectBranch),
+      );
+      return;
+    }
+
+    if (items.isEmpty) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(
+          LangKeys.pleaseAddAtLeastOnePrescriptionItem,
+        ),
       );
       return;
     }
@@ -94,6 +143,7 @@ class _PrescriptionFormBottomSheetState
           : expiryDate.text.trim(),
       branchId: branch.id,
       branchName: branch.name,
+      items: items,
       notes: notes.text.trim().isEmpty ? null : notes.text.trim(),
       prescriptionNumber:
           'RX-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
@@ -211,10 +261,16 @@ class _PrescriptionFormBottomSheetState
                       branchId = value;
                     });
                   },
-                  validator: AppValidators.required(
+                  validator: AppValidators.requiredDropdown<String>(
                     context,
                     fieldName: context.translate(LangKeys.branch),
                   ),
+                ),
+                SizedBox(height: 14.h),
+                _PrescriptionItemsSection(
+                  items: items,
+                  onAddPressed: _addPrescriptionItem,
+                  onRemovePressed: _removePrescriptionItem,
                 ),
                 SizedBox(height: 10.h),
                 AppTextField(
@@ -227,6 +283,248 @@ class _PrescriptionFormBottomSheetState
                   text: context.translate(LangKeys.createPrescription),
                   onPressed: _isSaving ? null : save,
                   isLoading: _isSaving,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrescriptionItemsSection extends StatelessWidget {
+  const _PrescriptionItemsSection({
+    required this.items,
+    required this.onAddPressed,
+    required this.onRemovePressed,
+  });
+
+  final List<PrescriptionItemModel> items;
+  final VoidCallback onAddPressed;
+  final ValueChanged<int> onRemovePressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextApp(
+                text: context.translate(LangKeys.prescriptionItems),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: onAddPressed,
+              icon: const Icon(Icons.add),
+              label: TextApp(
+                text: context.translate(LangKeys.addItem),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        if (items.isEmpty)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextApp(
+              text: context.translate(LangKeys.noPrescriptionItems),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              theme: context.textStyle,
+            ),
+          )
+        else
+          ...items.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: TextApp(
+                text: item.medicationName ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle,
+              ),
+              subtitle: TextApp(
+                text:
+                    '${context.translate(LangKeys.qty)}: ${item.quantity ?? 0}'
+                    ' · ${item.dosage ?? context.translate(LangKeys.noDosage)}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle,
+              ),
+              trailing: IconButton(
+                onPressed: () {
+                  onRemovePressed(index);
+                },
+                icon: const Icon(Icons.delete_outline),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+}
+
+Future<PrescriptionItemModel?> showPrescriptionItemFormBottomSheet({
+  required BuildContext context,
+  required List<MedicationModel> medications,
+}) {
+  return showModalBottomSheet<PrescriptionItemModel>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) {
+      return _PrescriptionItemFormBottomSheet(medications: medications);
+    },
+  );
+}
+
+class _PrescriptionItemFormBottomSheet extends StatefulWidget {
+  const _PrescriptionItemFormBottomSheet({required this.medications});
+
+  final List<MedicationModel> medications;
+
+  @override
+  State<_PrescriptionItemFormBottomSheet> createState() {
+    return _PrescriptionItemFormBottomSheetState();
+  }
+}
+
+class _PrescriptionItemFormBottomSheetState
+    extends State<_PrescriptionItemFormBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+
+  final quantity = TextEditingController(text: '1');
+  final dosage = TextEditingController();
+  final instructions = TextEditingController();
+
+  String? medicationId;
+
+  @override
+  void dispose() {
+    quantity.dispose();
+    dosage.dispose();
+    instructions.dispose();
+    super.dispose();
+  }
+
+  void _saveItem() {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (medicationId == null) {
+      ShowToast.showToastErrorTop(
+        message: context.translate(LangKeys.pleaseSelectMedication),
+      );
+      return;
+    }
+
+    final medication = widget.medications.firstWhere(
+      (item) => item.id == medicationId,
+    );
+
+    final item = PrescriptionItemModel(
+      medicationId: medication.id,
+      medicationName: medication.name,
+      quantity: int.tryParse(quantity.text.trim()) ?? 1,
+      dosage: dosage.text.trim().isEmpty ? null : dosage.text.trim(),
+      instructions: instructions.text.trim().isEmpty
+          ? null
+          : instructions.text.trim(),
+    );
+
+    Navigator.pop(context, item);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(999.r),
+                  ),
+                ),
+                SizedBox(height: 18.h),
+                TextApp(
+                  text: context.translate(LangKeys.addPrescriptionItem),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  theme: context.textStyle,
+                ),
+                SizedBox(height: 16.h),
+                AppDropdownField<String>(
+                  value: medicationId,
+                  label: context.translate(LangKeys.medication),
+                  isRequired: true,
+                  items: widget.medications.map((medication) {
+                    return AppDropdownItem<String>(
+                      value: medication.id,
+                      label: medication.name,
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      medicationId = value;
+                    });
+                  },
+                  validator: AppValidators.requiredDropdown<String>(
+                    context,
+                    fieldName: context.translate(LangKeys.medication),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: quantity,
+                  label: context.translate(LangKeys.quantity),
+                  isRequired: true,
+                  keyboardType: TextInputType.number,
+                  validator: AppValidators.requiredPositiveNumber(
+                    context,
+                    fieldName: context.translate(LangKeys.quantity),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: dosage,
+                  label: context.translate(LangKeys.dosage),
+                ),
+                SizedBox(height: 10.h),
+                AppTextField(
+                  controller: instructions,
+                  label: context.translate(LangKeys.instructions),
+                  maxLines: 3,
+                ),
+                SizedBox(height: 16.h),
+                AppPrimaryButton(
+                  text: context.translate(LangKeys.addItem),
+                  onPressed: _saveItem,
                 ),
               ],
             ),

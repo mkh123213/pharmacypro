@@ -22,6 +22,7 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
       final results = await Future.wait([
         _prescriptionsRepo.getPrescriptions(),
         _prescriptionsRepo.getBranches(),
+        _prescriptionsRepo.getMedications(),
       ]);
 
       _allPrescriptions = results[0] as List<PrescriptionModel>;
@@ -30,8 +31,10 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
         PrescriptionsState.loaded(
           prescriptions: _filteredPrescriptions,
           branches: results[1] as dynamic,
+          medications: results[2] as dynamic,
           searchQuery: _searchQuery,
           selectedStatus: _selectedStatus,
+          errorMessage: null,
         ),
       );
     } catch (error) {
@@ -60,7 +63,7 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
 
     final oldPrescriptions = List<PrescriptionModel>.from(_allPrescriptions);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final created = await _prescriptionsRepo.createPrescription(prescription);
@@ -77,6 +80,7 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
         current.copyWith(
           prescriptions: _filteredPrescriptions,
           isSubmitting: false,
+          errorMessage: _prescriptionErrorMessage(error),
         ),
       );
 
@@ -91,7 +95,7 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
 
     final oldPrescriptions = List<PrescriptionModel>.from(_allPrescriptions);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       await _prescriptionsRepo.updatePrescriptionFields(id, {'status': status});
@@ -99,7 +103,7 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
       _allPrescriptions = oldPrescriptions.map((item) {
         if (item.id != id) return item;
 
-        return PrescriptionModel.fromJson({...item.toJson(), 'status': status});
+        return item.copyWith(status: status);
       }).toList();
 
       _emitFromLoaded();
@@ -112,11 +116,48 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
         current.copyWith(
           prescriptions: _filteredPrescriptions,
           isSubmitting: false,
+          errorMessage: _prescriptionErrorMessage(error),
         ),
       );
 
       return false;
     }
+  }
+
+  String _prescriptionErrorMessage(Object error) {
+    final text = error.toString();
+
+    if (text.contains('prescription_not_found')) {
+      return 'prescription_not_found';
+    }
+
+    if (text.contains('prescription_already_dispensed')) {
+      return 'prescription_already_dispensed';
+    }
+
+    if (text.contains('prescription_has_no_items')) {
+      return 'prescription_has_no_items';
+    }
+
+    if (text.contains('prescription_item_missing_medication_id')) {
+      return 'prescription_item_missing_medication_id';
+    }
+
+    if (text.contains('prescription_item_invalid_quantity')) {
+      return 'prescription_item_invalid_quantity';
+    }
+
+    if (text.contains('not_enough_stock_for_medication:')) {
+      final medicationName = text
+          .split('not_enough_stock_for_medication:')
+          .last
+          .replaceAll(']', '')
+          .trim();
+
+      return 'not_enough_stock_for_medication|$medicationName';
+    }
+
+    return 'could_not_update_prescription_status';
   }
 
   List<PrescriptionModel> get _filteredPrescriptions {
@@ -147,6 +188,7 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
           searchQuery: _searchQuery,
           selectedStatus: _selectedStatus,
           isSubmitting: false,
+          errorMessage: null,
         ),
       );
     }

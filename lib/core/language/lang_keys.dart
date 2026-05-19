@@ -441,4 +441,50 @@ class LangKeys {
   static const String discountCannotBeGreaterThanSubtotal =
       'discount_cannot_be_greater_than_subtotal';
   static const String selectMedication = 'select_medication';
+  static const String notEnoughStockForMedication =
+      'not_enough_stock_for_medication';
+  static const String stockUpdatedSuccessfully = 'stock_updated_successfully';
+  static const String purchaseOrderNotFound = 'purchase_order_not_found';
+  static const String purchaseOrderAlreadyReceived =
+      'purchase_order_already_received';
+  static const String purchaseOrderHasNoItems = 'purchase_order_has_no_items';
+  static const String customerOrderNotFound = 'customer_order_not_found';
+  static const String customerOrderAlreadyDelivered =
+      'customer_order_already_delivered';
+  static const String customerOrderHasNoItems = 'customer_order_has_no_items';
+  static const String prescriptionNotFound = 'prescription_not_found';
+  static const String prescriptionAlreadyDispensed =
+      'prescription_already_dispensed';
+  static const String prescriptionHasNoItems = 'prescription_has_no_items';
+  static const String prescriptionItemMissingMedicationId =
+      'prescription_item_missing_medication_id';
+  static const String prescriptionItemInvalidQuantity =
+      'prescription_item_invalid_quantity';
+  static const String prescriptionItems = 'prescription_items';
+  static const String addPrescriptionItem = 'add_prescription_item';
+  static const String medicationAddedToPrescription =
+      'medication_added_to_prescription';
+  static const String pleaseAddAtLeastOnePrescriptionItem =
+      'please_add_at_least_one_prescription_item';
+  static const String pleaseSelectMedication = 'please_select_medication';
+
+  static const String dosage = 'dosage';
+  static const String instructions = 'instructions';
+  static const String noDosage = 'no_dosage';
+  static const String adjustStock = 'adjust_stock';
+  static const String currentQuantity = 'current_quantity';
+  static const String adjustmentQuantity = 'adjustment_quantity';
+  static const String adjustmentReason = 'adjustment_reason';
+  static const String adjustmentQuantityCannotBeZero =
+      'adjustment_quantity_cannot_be_zero';
+  static const String newQuantity = 'new_quantity';
+  static const String saveAdjustment = 'save_adjustment';
+  static const String stockAdjustedSuccessfully = 'stock_adjusted_successfully';
+  static const String couldNotAdjustStock = 'could_not_adjust_stock';
+  static const String quantityCannotGoBelowZero =
+      'quantity_cannot_go_below_zero';
+  static const String inventoryItemNotFound = 'inventory_item_not_found';
+  static const String lowStock = 'low_stock';
+  static const String useAdjustStockToChangeQuantity =
+      'use_adjust_stock_to_change_quantity';
 }

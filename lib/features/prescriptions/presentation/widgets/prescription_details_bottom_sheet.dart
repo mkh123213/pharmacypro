@@ -23,57 +23,70 @@ void showPrescriptionDetailsBottomSheet(
         ),
         child: SafeArea(
           top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextApp(
-                text: context.translate(LangKeys.prescriptionDetails),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-              SizedBox(height: 12.h),
-              _DetailRow(
-                label: context.translate(LangKeys.patient),
-                value: prescription.patientName,
-              ),
-              _DetailRow(
-                label: context.translate(LangKeys.doctor),
-                value: prescription.doctorName ?? '—',
-              ),
-              _DetailRow(
-                label: context.translate(LangKeys.status),
-                value: prescriptionStatusLabel(context, prescription.status),
-              ),
-              SizedBox(height: 12.h),
-              if (prescription.items.isEmpty)
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 TextApp(
-                  text: context.translate(LangKeys.noPrescriptionItems),
-                  maxLines: 2,
+                  text: context.translate(LangKeys.prescriptionDetails),
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   theme: context.textStyle,
-                )
-              else
-                ...prescription.items.map((item) {
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: TextApp(
-                      text: item.medicationName ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      theme: context.textStyle,
-                    ),
-                    subtitle: TextApp(
-                      text:
-                          '${item.dosage ?? ''} · ${context.translate(LangKeys.qty)}: ${item.quantity ?? 0}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      theme: context.textStyle,
-                    ),
-                  );
-                }),
-            ],
+                ),
+                SizedBox(height: 12.h),
+                _DetailRow(
+                  label: context.translate(LangKeys.patient),
+                  value: prescription.patientName,
+                ),
+                _DetailRow(
+                  label: context.translate(LangKeys.doctor),
+                  value: prescription.doctorName ?? '—',
+                ),
+                _DetailRow(
+                  label: context.translate(LangKeys.status),
+                  value: prescriptionStatusLabel(context, prescription.status),
+                ),
+                SizedBox(height: 12.h),
+                TextApp(
+                  text: context.translate(LangKeys.prescriptionItems),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  theme: context.textStyle.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                if (prescription.items.isEmpty)
+                  TextApp(
+                    text: context.translate(LangKeys.noPrescriptionItems),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    theme: context.textStyle,
+                  )
+                else
+                  ...prescription.items.map((item) {
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: TextApp(
+                        text: item.medicationName ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        theme: context.textStyle,
+                      ),
+                      subtitle: TextApp(
+                        text:
+                            '${context.translate(LangKeys.qty)}: ${item.quantity ?? 0}'
+                            ' · ${item.dosage ?? context.translate(LangKeys.noDosage)}'
+                            '${(item.instructions ?? '').isEmpty ? '' : '\n${item.instructions}'}',
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        theme: context.textStyle,
+                      ),
+                    );
+                  }),
+              ],
+            ),
           ),
         ),
       );

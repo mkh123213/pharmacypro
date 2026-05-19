@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pharmacypro/core/common/widgets/sale_medication_picker_bottom_sheet.dart';
+import 'package:pharmacypro/features/sales/presentation/cubit/sales_state.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_dropdown_field.dart';
@@ -182,9 +183,15 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
     });
 
     if (!success) {
-      ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.couldNotCompleteSale),
-      );
+      final state = context.read<SalesCubit>().state;
+
+      String message = context.translate(LangKeys.couldNotCompleteSale);
+
+      if (state is SalesLoaded && state.errorMessage != null) {
+        message = _buildSaleErrorMessage(context, state.errorMessage!);
+      }
+
+      ShowToast.showToastErrorTop(message: message);
       return;
     }
 
@@ -372,6 +379,20 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
       ),
     );
   }
+}
+
+String _buildSaleErrorMessage(BuildContext context, String errorMessage) {
+  if (errorMessage.startsWith('not_enough_stock_for_medication|')) {
+    final medicationName = errorMessage
+        .replaceFirst('not_enough_stock_for_medication|', '')
+        .trim();
+
+    return context
+        .translate(LangKeys.notEnoughStockForMedication)
+        .replaceAll('{medication}', medicationName);
+  }
+
+  return context.translate(LangKeys.couldNotCompleteSale);
 }
 
 const paymentMethods = ['cash', 'card', 'insurance', 'online'];

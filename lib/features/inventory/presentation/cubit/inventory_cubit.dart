@@ -34,6 +34,7 @@ class InventoryCubit extends Cubit<InventoryState> {
           branches: results[2] as dynamic,
           searchQuery: _searchQuery,
           selectedBranchId: _selectedBranchId,
+          errorMessage: null,
         ),
       );
     } catch (error) {
@@ -58,7 +59,7 @@ class InventoryCubit extends Cubit<InventoryState> {
 
     final oldInventory = List<InventoryModel>.from(_allInventory);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final created = await _inventoryRepo.createInventory(item);
@@ -72,7 +73,11 @@ class InventoryCubit extends Cubit<InventoryState> {
       _allInventory = oldInventory;
 
       emit(
-        current.copyWith(inventory: _filteredInventory, isSubmitting: false),
+        current.copyWith(
+          inventory: _filteredInventory,
+          isSubmitting: false,
+          errorMessage: _inventoryErrorMessage(error),
+        ),
       );
 
       return false;
@@ -86,7 +91,7 @@ class InventoryCubit extends Cubit<InventoryState> {
 
     final oldInventory = List<InventoryModel>.from(_allInventory);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final updated = await _inventoryRepo.updateInventory(item);
@@ -102,11 +107,71 @@ class InventoryCubit extends Cubit<InventoryState> {
       _allInventory = oldInventory;
 
       emit(
-        current.copyWith(inventory: _filteredInventory, isSubmitting: false),
+        current.copyWith(
+          inventory: _filteredInventory,
+          isSubmitting: false,
+          errorMessage: _inventoryErrorMessage(error),
+        ),
       );
 
       return false;
     }
+  }
+
+  Future<bool> adjustInventoryStock({
+    required InventoryModel item,
+    required int quantityChange,
+    required String reason,
+  }) async {
+    final current = state;
+
+    if (current is! InventoryLoaded) return false;
+
+    final oldInventory = List<InventoryModel>.from(_allInventory);
+
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
+
+    try {
+      final updated = await _inventoryRepo.adjustInventoryStock(
+        item: item,
+        quantityChange: quantityChange,
+        reason: reason,
+      );
+
+      _allInventory = oldInventory.map((entry) {
+        return entry.id == updated.id ? updated : entry;
+      }).toList();
+
+      _emitFromLoaded();
+
+      return true;
+    } catch (error) {
+      _allInventory = oldInventory;
+
+      emit(
+        current.copyWith(
+          inventory: _filteredInventory,
+          isSubmitting: false,
+          errorMessage: _inventoryErrorMessage(error),
+        ),
+      );
+
+      return false;
+    }
+  }
+
+  String _inventoryErrorMessage(Object error) {
+    final text = error.toString();
+
+    if (text.contains('inventory_item_not_found')) {
+      return 'inventory_item_not_found';
+    }
+
+    if (text.contains('quantity_cannot_go_below_zero')) {
+      return 'quantity_cannot_go_below_zero';
+    }
+
+    return 'could_not_adjust_stock';
   }
 
   List<InventoryModel> get _filteredInventory {
@@ -135,6 +200,7 @@ class InventoryCubit extends Cubit<InventoryState> {
           searchQuery: _searchQuery,
           selectedBranchId: _selectedBranchId,
           isSubmitting: false,
+          errorMessage: null,
         ),
       );
     }

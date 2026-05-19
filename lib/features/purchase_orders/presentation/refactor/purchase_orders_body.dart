@@ -52,12 +52,19 @@ class PurchaseOrdersBody extends StatelessWidget {
     if (!context.mounted) return;
 
     if (!success) {
-      ShowToast.showToastErrorTop(
-        message: context.translate(LangKeys.couldNotUpdatePurchaseOrderStatus),
+      final state = context.read<PurchaseOrdersCubit>().state;
+
+      String message = context.translate(
+        LangKeys.couldNotUpdatePurchaseOrderStatus,
       );
+
+      if (state is PurchaseOrdersLoaded && state.errorMessage != null) {
+        message = _buildPurchaseOrderErrorMessage(context, state.errorMessage!);
+      }
+
+      ShowToast.showToastErrorTop(message: message);
       return;
     }
-
     String message;
 
     switch (status) {
@@ -82,6 +89,22 @@ class PurchaseOrdersBody extends StatelessWidget {
     }
 
     ShowToast.showToastSuccessTop(message: message);
+  }
+
+  String _buildPurchaseOrderErrorMessage(
+    BuildContext context,
+    String errorMessage,
+  ) {
+    switch (errorMessage) {
+      case 'purchase_order_not_found':
+        return context.translate(LangKeys.purchaseOrderNotFound);
+      case 'purchase_order_already_received':
+        return context.translate(LangKeys.purchaseOrderAlreadyReceived);
+      case 'purchase_order_has_no_items':
+        return context.translate(LangKeys.purchaseOrderHasNoItems);
+      default:
+        return context.translate(LangKeys.couldNotUpdatePurchaseOrderStatus);
+    }
   }
 
   @override

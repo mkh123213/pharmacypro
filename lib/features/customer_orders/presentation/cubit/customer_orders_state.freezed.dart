@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<CustomerOrderModel> orders,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<CustomerOrderModel> orders,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CustomerOrdersInitial() when initial != null:
 return initial();case CustomerOrdersLoading() when loading != null:
 return loading();case CustomerOrdersLoaded() when loaded != null:
-return loaded(_that.orders,_that.medications,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting);case CustomerOrdersFailure() when failure != null:
+return loaded(_that.orders,_that.medications,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case CustomerOrdersFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<CustomerOrderModel> orders,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<CustomerOrderModel> orders,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case CustomerOrdersInitial():
 return initial();case CustomerOrdersLoading():
 return loading();case CustomerOrdersLoaded():
-return loaded(_that.orders,_that.medications,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting);case CustomerOrdersFailure():
+return loaded(_that.orders,_that.medications,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case CustomerOrdersFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<CustomerOrderModel> orders,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<CustomerOrderModel> orders,  List<MedicationModel> medications,  List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case CustomerOrdersInitial() when initial != null:
 return initial();case CustomerOrdersLoading() when loading != null:
 return loading();case CustomerOrdersLoaded() when loaded != null:
-return loaded(_that.orders,_that.medications,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting);case CustomerOrdersFailure() when failure != null:
+return loaded(_that.orders,_that.medications,_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case CustomerOrdersFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class CustomerOrdersLoaded implements CustomerOrdersState {
-  const CustomerOrdersLoaded({required final  List<CustomerOrderModel> orders, required final  List<MedicationModel> medications, required final  List<BranchModel> branches, this.searchQuery = '', this.selectedStatus = 'all', this.isSubmitting = false}): _orders = orders,_medications = medications,_branches = branches;
+  const CustomerOrdersLoaded({required final  List<CustomerOrderModel> orders, required final  List<MedicationModel> medications, required final  List<BranchModel> branches, this.searchQuery = '', this.selectedStatus = 'all', this.isSubmitting = false, this.errorMessage = null}): _orders = orders,_medications = medications,_branches = branches;
   
 
  final  List<CustomerOrderModel> _orders;
@@ -284,6 +284,7 @@ class CustomerOrdersLoaded implements CustomerOrdersState {
 @JsonKey() final  String searchQuery;
 @JsonKey() final  String selectedStatus;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of CustomerOrdersState
 /// with the given fields replaced by the non-null parameter values.
@@ -295,16 +296,16 @@ $CustomerOrdersLoadedCopyWith<CustomerOrdersLoaded> get copyWith => _$CustomerOr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CustomerOrdersLoaded&&const DeepCollectionEquality().equals(other._orders, _orders)&&const DeepCollectionEquality().equals(other._medications, _medications)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedStatus, selectedStatus) || other.selectedStatus == selectedStatus)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CustomerOrdersLoaded&&const DeepCollectionEquality().equals(other._orders, _orders)&&const DeepCollectionEquality().equals(other._medications, _medications)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedStatus, selectedStatus) || other.selectedStatus == selectedStatus)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_orders),const DeepCollectionEquality().hash(_medications),const DeepCollectionEquality().hash(_branches),searchQuery,selectedStatus,isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_orders),const DeepCollectionEquality().hash(_medications),const DeepCollectionEquality().hash(_branches),searchQuery,selectedStatus,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'CustomerOrdersState.loaded(orders: $orders, medications: $medications, branches: $branches, searchQuery: $searchQuery, selectedStatus: $selectedStatus, isSubmitting: $isSubmitting)';
+  return 'CustomerOrdersState.loaded(orders: $orders, medications: $medications, branches: $branches, searchQuery: $searchQuery, selectedStatus: $selectedStatus, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -315,7 +316,7 @@ abstract mixin class $CustomerOrdersLoadedCopyWith<$Res> implements $CustomerOrd
   factory $CustomerOrdersLoadedCopyWith(CustomerOrdersLoaded value, $Res Function(CustomerOrdersLoaded) _then) = _$CustomerOrdersLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<CustomerOrderModel> orders, List<MedicationModel> medications, List<BranchModel> branches, String searchQuery, String selectedStatus, bool isSubmitting
+ List<CustomerOrderModel> orders, List<MedicationModel> medications, List<BranchModel> branches, String searchQuery, String selectedStatus, bool isSubmitting, String? errorMessage
 });
 
 
@@ -332,7 +333,7 @@ class _$CustomerOrdersLoadedCopyWithImpl<$Res>
 
 /// Create a copy of CustomerOrdersState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? orders = null,Object? medications = null,Object? branches = null,Object? searchQuery = null,Object? selectedStatus = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? orders = null,Object? medications = null,Object? branches = null,Object? searchQuery = null,Object? selectedStatus = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(CustomerOrdersLoaded(
 orders: null == orders ? _self._orders : orders // ignore: cast_nullable_to_non_nullable
 as List<CustomerOrderModel>,medications: null == medications ? _self._medications : medications // ignore: cast_nullable_to_non_nullable
@@ -340,7 +341,8 @@ as List<MedicationModel>,branches: null == branches ? _self._branches : branches
 as List<BranchModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
 as String,selectedStatus: null == selectedStatus ? _self.selectedStatus : selectedStatus // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

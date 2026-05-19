@@ -106,7 +106,9 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
       medicationName: medication.name,
       branchId: branch.id,
       branchName: branch.name,
-      quantity: int.tryParse(quantity.text.trim()) ?? 0,
+      quantity: _isEditing
+          ? widget.item!.quantity
+          : int.tryParse(quantity.text.trim()) ?? 0,
       minStockLevel: int.tryParse(min.text.trim()) ?? 10,
       batchNumber: batch.text.trim().isEmpty ? null : batch.text.trim(),
       expiryDate: expiry.text.trim().isEmpty ? null : expiry.text.trim(),
@@ -228,13 +230,42 @@ class _InventoryFormBottomSheetState extends State<InventoryFormBottomSheet> {
                 AppTextField(
                   controller: quantity,
                   label: context.translate(LangKeys.quantity),
-                  isRequired: true,
+                  isRequired: !_isEditing,
+                  readOnly: _isEditing,
+                  enabled: true,
                   keyboardType: TextInputType.number,
-                  validator: AppValidators.requiredNonNegativeNumber(
-                    context,
-                    fieldName: context.translate(LangKeys.quantity),
-                  ),
+                  suffixIcon: _isEditing
+                      ? Tooltip(
+                          message: context.translate(
+                            LangKeys.useAdjustStockToChangeQuantity,
+                          ),
+                          child: const Icon(Icons.lock_outline),
+                        )
+                      : null,
+                  validator: _isEditing
+                      ? null
+                      : AppValidators.requiredNonNegativeNumber(
+                          context,
+                          fieldName: context.translate(LangKeys.quantity),
+                        ),
                 ),
+                if (_isEditing) ...[
+                  SizedBox(height: 6.h),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextApp(
+                      text: context.translate(
+                        LangKeys.useAdjustStockToChangeQuantity,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(
+                        color: Colors.grey,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 10.h),
                 AppTextField(
                   controller: min,

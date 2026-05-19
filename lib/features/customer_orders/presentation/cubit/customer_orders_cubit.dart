@@ -34,6 +34,7 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
           branches: results[2] as dynamic,
           searchQuery: _searchQuery,
           selectedStatus: _selectedStatus,
+          errorMessage: null,
         ),
       );
     } catch (error) {
@@ -62,7 +63,7 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
 
     final oldOrders = List<CustomerOrderModel>.from(_allOrders);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final created = await _customerOrdersRepo.createCustomerOrder(order);
@@ -75,7 +76,13 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
     } catch (error) {
       _allOrders = oldOrders;
 
-      emit(current.copyWith(orders: _filteredOrders, isSubmitting: false));
+      emit(
+        current.copyWith(
+          orders: _filteredOrders,
+          isSubmitting: false,
+          errorMessage: _customerOrderErrorMessage(error),
+        ),
+      );
 
       return false;
     }
@@ -88,7 +95,7 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
 
     final oldOrders = List<CustomerOrderModel>.from(_allOrders);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       await _customerOrdersRepo.updateCustomerOrderFields(id, {
@@ -98,10 +105,7 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
       _allOrders = oldOrders.map((order) {
         if (order.id != id) return order;
 
-        return CustomerOrderModel.fromJson({
-          ...order.toJson(),
-          'status': status,
-        });
+        return order.copyWith(status: status);
       }).toList();
 
       _emitFromLoaded();
@@ -110,10 +114,44 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
     } catch (error) {
       _allOrders = oldOrders;
 
-      emit(current.copyWith(orders: _filteredOrders, isSubmitting: false));
+      emit(
+        current.copyWith(
+          orders: _filteredOrders,
+          isSubmitting: false,
+          errorMessage: _customerOrderErrorMessage(error),
+        ),
+      );
 
       return false;
     }
+  }
+
+  String _customerOrderErrorMessage(Object error) {
+    final text = error.toString();
+
+    if (text.contains('customer_order_not_found')) {
+      return 'customer_order_not_found';
+    }
+
+    if (text.contains('customer_order_already_delivered')) {
+      return 'customer_order_already_delivered';
+    }
+
+    if (text.contains('customer_order_has_no_items')) {
+      return 'customer_order_has_no_items';
+    }
+
+    if (text.contains('not_enough_stock_for_medication:')) {
+      final medicationName = text
+          .split('not_enough_stock_for_medication:')
+          .last
+          .replaceAll(']', '')
+          .trim();
+
+      return 'not_enough_stock_for_medication|$medicationName';
+    }
+
+    return 'could_not_update_order_status';
   }
 
   List<CustomerOrderModel> get _filteredOrders {
@@ -143,6 +181,7 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
           searchQuery: _searchQuery,
           selectedStatus: _selectedStatus,
           isSubmitting: false,
+          errorMessage: null,
         ),
       );
     }
