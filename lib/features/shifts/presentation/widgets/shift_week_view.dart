@@ -43,7 +43,7 @@ class ShiftWeekView extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 color: isToday
                     ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade200,
+                    : context.color.surface,
                 child: Column(
                   children: [
                     TextApp(

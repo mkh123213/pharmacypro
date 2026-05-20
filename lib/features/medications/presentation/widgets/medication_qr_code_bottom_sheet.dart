@@ -22,7 +22,7 @@ void showMedicationQrCodeBottomSheet(
       return Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.color.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
         ),
         child: SafeArea(

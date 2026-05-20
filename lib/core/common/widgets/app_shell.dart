@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'app_sidebar.dart';
 import 'app_top_bar.dart';
@@ -24,15 +23,7 @@ class AppShell extends StatelessWidget {
                 children: [
                   const AppTopBar(),
                   const Divider(height: 1),
-                  Expanded(
-                    child: SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: EdgeInsets.all(24.w),
-                        child: child,
-                      ),
-                    ),
-                  ),
+                  Expanded(child: _ShellContent(width: width, child: child)),
                 ],
               ),
             ),
@@ -47,9 +38,26 @@ class AppShell extends StatelessWidget {
         child: AppTopBar(showMenuButton: true),
       ),
       drawer: const Drawer(child: AppSidebar()),
-      body: SafeArea(
-        top: false,
-        child: Padding(padding: EdgeInsets.all(16.w), child: child),
+      body: _ShellContent(width: width, child: child),
+    );
+  }
+}
+
+class _ShellContent extends StatelessWidget {
+  const _ShellContent({required this.width, required this.child});
+
+  final double width;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final padding = width >= 1200 ? 24.0 : (width >= 768 ? 20.0 : 16.0);
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: child,
       ),
     );
   }

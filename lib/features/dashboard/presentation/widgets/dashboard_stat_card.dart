@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
-import '../../../../core/theme/app_colors.dart';
 
 class DashboardStatCard extends StatelessWidget {
   const DashboardStatCard({
@@ -23,15 +22,16 @@ class DashboardStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = color ?? MyColors.primary;
+    final colors = context.color;
+    final cardColor = color ?? colors.primary;
 
     return Container(
       constraints: BoxConstraints(minHeight: 96.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: MyColors.background,
+        color: colors.background,
         borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: MyColors.border),
+        border: Border.all(color: colors.border),
       ),
       child: Row(
         children: [
@@ -58,7 +58,7 @@ class DashboardStatCard extends StatelessWidget {
                   theme: context.textStyle.copyWith(
                     fontSize: 12.sp,
                     height: 1.1,
-                    color: MyColors.textSecondary,
+                    color: colors.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -77,7 +77,7 @@ class DashboardStatCard extends StatelessWidget {
                         theme: context.textStyle.copyWith(
                           fontSize: 22.sp,
                           height: 1,
-                          color: MyColors.textPrimary,
+                          color: colors.textPrimary,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -93,7 +93,7 @@ class DashboardStatCard extends StatelessWidget {
                     theme: context.textStyle.copyWith(
                       fontSize: 11.sp,
                       height: 1.1,
-                      color: MyColors.textSecondary,
+                      color: colors.textSecondary,
                     ),
                   ),
                 ],

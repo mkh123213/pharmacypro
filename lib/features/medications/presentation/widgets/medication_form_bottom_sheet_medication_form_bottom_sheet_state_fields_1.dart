@@ -7,7 +7,7 @@ extension MedicationFormBottomSheetStateFields1 on _MedicationFormBottomSheetSta
                   width: 44.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: context.color.border,
                     borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),

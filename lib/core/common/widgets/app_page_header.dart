@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../theme/app_colors.dart';
+import '../../extensions/context_extension.dart';
 import 'text_app.dart';
 
 class AppPageHeader extends StatelessWidget {
@@ -18,33 +18,65 @@ class AppPageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 420;
+        final titleSection = _HeaderTitle(title: title, subtitle: subtitle);
+
+        if (action == null) return titleSection;
+        if (isNarrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [titleSection, SizedBox(height: 12.h), action!],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: titleSection),
+            SizedBox(width: 12.w),
+            Flexible(child: action!),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _HeaderTitle extends StatelessWidget {
+  const _HeaderTitle({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.color;
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextApp(
-                text: title,
-                theme: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: MyColors.textPrimary,
-                ),
-              ),
-              if (subtitle != null && subtitle!.isNotEmpty) ...[
-                SizedBox(height: 4.h),
-                TextApp(
-                  text: subtitle!,
-                  theme: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: MyColors.textSecondary,
-                  ),
-                ),
-              ],
-            ],
+        TextApp(
+          text: title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          theme: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: colors.textPrimary,
           ),
         ),
-        if (action != null) ...[SizedBox(width: 12.w), action!],
+        if (subtitle != null && subtitle!.isNotEmpty) ...[
+          SizedBox(height: 4.h),
+          TextApp(
+            text: subtitle!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            theme: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+          ),
+        ],
       ],
     );
   }

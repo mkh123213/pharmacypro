@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../language/app_localizations.dart';
-import '../theme/app_colors.dart';
+import '../style/theme/color_extension.dart';
 
 extension ContextExt on BuildContext {
   MyColors get color => Theme.of(this).extension<MyColors>()!;
 
   TextStyle get textStyle {
-    return Theme.of(this).textTheme.displaySmall ?? const TextStyle();
+    return Theme.of(this).textTheme.bodyMedium ?? const TextStyle();
   }
 
   String translate(String langkey) {

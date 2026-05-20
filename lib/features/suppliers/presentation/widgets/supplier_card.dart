@@ -86,7 +86,7 @@ class SupplierCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       theme: context.textStyle.copyWith(
                         fontSize: 12.sp,
-                        color: Colors.grey,
+                        color: context.color.textSecondary,
                         height: 1.1,
                       ),
                     ),
@@ -124,7 +124,7 @@ class _Info extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14.sp, color: Colors.grey),
+          Icon(icon, size: 14.sp, color: context.color.textSecondary),
           SizedBox(width: 7.w),
           Expanded(
             child: TextApp(

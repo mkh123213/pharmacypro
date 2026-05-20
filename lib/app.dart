@@ -7,8 +7,6 @@ import './core/di/dependency_injection.dart';
 import './core/language/app_localizations_setup.dart';
 import './core/routing/app_names_routers.dart';
 import './core/screens/no_network_screen.dart';
-import './core/services/shared_pref/pref_keys.dart';
-import './core/services/shared_pref/shared_pref.dart';
 import './core/style/theme/app_theme.dart';
 
 class PharmaChainApp extends StatelessWidget {
@@ -23,6 +21,7 @@ class PharmaChainApp extends StatelessWidget {
           return MaterialApp(
             title: 'PharmaChain',
             debugShowCheckedModeBanner: false,
+            theme: themeLight(),
             home: const NoNetWorkScreen(),
           );
         }
@@ -30,10 +29,8 @@ class PharmaChainApp extends StatelessWidget {
         return MultiBlocProvider(
           providers: [
             BlocProvider(
-              create: (context) => getIt<AppCubit>()
-                ..changeAppThemeMode(
-                  sharedMode: SharedPref().getBoolean(PrefKeys.themeMode),
-                )
+              create: (_) => getIt<AppCubit>()
+                ..getSavedThemeMode()
                 ..getSavedLanguage(),
             ),
           ],
@@ -49,6 +46,8 @@ class PharmaChainApp extends StatelessWidget {
                   title: 'PharmaChain',
                   debugShowCheckedModeBanner: false,
                   theme: themeLight(),
+                  darkTheme: themeDark(),
+                  themeMode: cubit.isDark ? ThemeMode.dark : ThemeMode.light,
                   locale: Locale(cubit.currentLangCode),
                   supportedLocales: AppLocalizationsSetup.supportedLocales,
                   localizationsDelegates:
@@ -60,9 +59,7 @@ class PharmaChainApp extends StatelessWidget {
                     ConnectivityController.instance.init();
 
                     return GestureDetector(
-                      onTap: () {
-                        FocusManager.instance.primaryFocus?.unfocus();
-                      },
+                      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                       child: widget ?? const SizedBox.shrink(),
                     );
                   },

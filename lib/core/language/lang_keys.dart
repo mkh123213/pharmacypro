@@ -13,6 +13,12 @@ class LangKeys {
   static const String city = 'city';
   static const String notes = 'notes';
   static const String save = 'save';
+  static const String theme = 'theme';
+  static const String language = 'language';
+  static const String darkMode = 'dark_mode';
+  static const String lightMode = 'light_mode';
+  static const String switchToArabic = 'switch_to_arabic';
+  static const String switchToEnglish = 'switch_to_english';
 
   // Branches
   static const String branches = 'branches';

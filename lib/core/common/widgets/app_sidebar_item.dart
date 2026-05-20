@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../theme/app_colors.dart';
+import '../../extensions/context_extension.dart';
 import 'text_app.dart';
 
 class AppSidebarItem extends StatelessWidget {
@@ -20,6 +20,8 @@ class AppSidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.color;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       child: InkWell(
@@ -36,7 +38,7 @@ class AppSidebarItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            color: isActive ? MyColors.sidebarActive : Colors.transparent,
+            color: isActive ? colors.sidebarActive : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

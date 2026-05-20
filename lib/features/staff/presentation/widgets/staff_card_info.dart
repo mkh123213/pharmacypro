@@ -12,7 +12,7 @@ class _Info extends StatelessWidget {
       padding: EdgeInsets.only(bottom: 6.h),
       child: Row(
         children: [
-          Icon(icon, size: 14.sp, color: Colors.grey.shade600),
+          Icon(icon, size: 14.sp, color: context.color.textSecondary),
           SizedBox(width: 7.w),
           Expanded(
             child: TextApp(

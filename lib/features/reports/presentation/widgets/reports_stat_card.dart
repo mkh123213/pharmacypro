@@ -39,7 +39,7 @@ class ReportsStatCard extends StatelessWidget {
                     theme: context.textStyle.copyWith(
                       fontSize: 12.sp,
                       height: 1.1,
-                      color: Colors.grey,
+                      color: context.color.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

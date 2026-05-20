@@ -51,7 +51,7 @@ extension InventoryFormBottomSheetStateFields2 on _InventoryFormBottomSheetState
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       theme: context.textStyle.copyWith(
-                        color: Colors.grey,
+                        color: context.color.textSecondary,
                         fontSize: 12.sp,
                       ),
                     ),

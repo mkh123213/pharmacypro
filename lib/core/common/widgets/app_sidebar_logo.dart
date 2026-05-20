@@ -10,7 +10,7 @@ class AppSidebarLogo extends StatelessWidget {
     return Container(
       height: 82,
       padding: const EdgeInsets.symmetric(horizontal: 18),
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: const Row(
         children: [
           Icon(Icons.local_pharmacy_outlined, color: Colors.white, size: 30),

@@ -14,18 +14,20 @@ class AppLocalizationsSetup {
         DefaultCupertinoLocalizations.delegate,
       ];
 
-  static Locale? localeResolutionCallback(
+  static Locale localeResolutionCallback(
     Locale? locale,
     Iterable<Locale>? supportedLocales,
   ) {
-    // Check if the desired locale is supported
-    for (final supportedLocale in supportedLocales!) {
-      if (supportedLocale.languageCode == locale!.languageCode &&
-          supportedLocale.countryCode == locale.countryCode) {
+    final supported = supportedLocales ?? AppLocalizationsSetup.supportedLocales;
+
+    if (locale == null) return supported.first;
+
+    for (final supportedLocale in supported) {
+      if (supportedLocale.languageCode == locale.languageCode) {
         return supportedLocale;
       }
     }
-    // If the desired locale is not supported, return the first supported locale
-    return supportedLocales.first;
+
+    return supported.first;
   }
 }

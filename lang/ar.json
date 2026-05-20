@@ -434,5 +434,11 @@
     "expired_items": "نفذ المخزون",
     "items_expiring_soon": "قرب انتهاء الصلاحية",
     "remove_from_stock": "إزالة من المخزون",
-    "duplicate_inventory_item": " "
+    "duplicate_inventory_item": " ",
+    "theme": "المظهر",
+    "language": "اللغة",
+    "dark_mode": "الوضع الداكن",
+    "light_mode": "الوضع الفاتح",
+    "switch_to_arabic": "التبديل إلى العربية",
+    "switch_to_english": "التبديل إلى الإنجليزية"
 }

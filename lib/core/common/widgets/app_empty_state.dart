@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../theme/app_colors.dart';
+import '../../extensions/context_extension.dart';
 import 'text_app.dart';
 
 class AppEmptyState extends StatelessWidget {
@@ -20,8 +20,10 @@ class AppEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.color;
+
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: EdgeInsets.all(24.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -30,19 +32,21 @@ class AppEmptyState extends StatelessWidget {
               width: 64.w,
               height: 64.w,
               decoration: BoxDecoration(
-                color: MyColors.primary.withOpacity(0.08),
+                color: colors.primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Icon(
                 icon ?? Icons.inbox_outlined,
                 size: 30.sp,
-                color: MyColors.primary,
+                color: colors.primary,
               ),
             ),
             SizedBox(height: 16.h),
             TextApp(
               text: title,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               theme: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -51,9 +55,11 @@ class AppEmptyState extends StatelessWidget {
             TextApp(
               text: message,
               textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               theme: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: MyColors.textSecondary),
+              ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
             ),
             if (action != null) ...[SizedBox(height: 18.h), action!],
           ],

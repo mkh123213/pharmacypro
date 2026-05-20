@@ -110,7 +110,7 @@ class _Info extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14.sp, color: Colors.grey),
+          Icon(icon, size: 14.sp, color: context.color.textSecondary),
           SizedBox(width: 7.w),
           Expanded(
             child: TextApp(

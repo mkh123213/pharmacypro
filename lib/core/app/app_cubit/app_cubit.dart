@@ -11,41 +11,38 @@ part 'app_state.dart';
 class AppCubit extends Cubit<AppState> {
   AppCubit() : super(const AppState.initial());
 
-  bool isDark = true;
-
+  bool isDark = false;
   String currentLangCode = 'en';
 
-//Theme Mode
-  Future<void> changeAppThemeMode({bool? sharedMode}) async {
-    if (sharedMode != null) {
-      isDark = sharedMode;
-      emit(AppState.themeChangeMode(isDark: isDark));
-    } else {
-      isDark = !isDark;
-      await SharedPref().setBoolean(PrefKeys.themeMode, isDark).then((value) {
-        emit(AppState.themeChangeMode(isDark: isDark));
-      });
-    }
+  void getSavedThemeMode() {
+    isDark = SharedPref().getBoolean(PrefKeys.themeMode) ?? false;
+    emit(AppState.themeChangeMode(isDark: isDark));
   }
 
-//Language Change
+  Future<void> changeAppThemeMode({bool? sharedMode}) async {
+    isDark = sharedMode ?? !isDark;
+    await SharedPref().setBoolean(PrefKeys.themeMode, isDark);
+    emit(AppState.themeChangeMode(isDark: isDark));
+  }
+
   void getSavedLanguage() {
-    final result = SharedPref().containPreference(PrefKeys.language)
-        ? SharedPref().getString(PrefKeys.language)
-        : 'en';
-
-    currentLangCode = result!;
-
+    currentLangCode = SharedPref().getString(PrefKeys.language) ?? 'en';
     emit(AppState.languageChange(locale: Locale(currentLangCode)));
   }
 
-  Future<void> _changeLang(String langCode) async {
+  Future<void> changeLanguage(String langCode) async {
+    if (currentLangCode == langCode) return;
+
     await SharedPref().setString(PrefKeys.language, langCode);
     currentLangCode = langCode;
     emit(AppState.languageChange(locale: Locale(currentLangCode)));
   }
 
-  void toArabic() => _changeLang('ar');
+  Future<void> toggleLanguage() async {
+    await changeLanguage(currentLangCode == 'ar' ? 'en' : 'ar');
+  }
 
-  void toEnglish() => _changeLang('en');
+  Future<void> toArabic() async => changeLanguage('ar');
+
+  Future<void> toEnglish() async => changeLanguage('en');
 }

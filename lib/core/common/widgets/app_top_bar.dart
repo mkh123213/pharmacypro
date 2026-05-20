@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
-import '../../routing/app_routes.dart';
 
-import '../../theme/app_colors.dart';
+import '../../extensions/context_extension.dart';
+import 'app_top_bar_actions.dart';
 import 'text_app.dart';
 
 class AppTopBar extends StatelessWidget {
@@ -13,50 +11,44 @@ class AppTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.color;
+
     return Container(
-      height: 64.h,
-      padding: EdgeInsets.symmetric(horizontal: 16.w),
-      color: MyColors.background,
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      color: colors.background,
       child: SafeArea(
         bottom: false,
-        child: Row(
-          children: [
-            if (showMenuButton)
-              IconButton(
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                icon: const Icon(Icons.menu),
-              ),
-            if (!showMenuButton) SizedBox(width: 8.w),
-            Expanded(
-              child: TextApp(
-                text: 'PharmaChain',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: MyColors.textPrimary,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 380;
+
+            return Row(
+              children: [
+                if (showMenuButton)
+                  IconButton(
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                    icon: Icon(Icons.menu, color: colors.textPrimary),
+                  ),
+                if (!showMenuButton) const SizedBox(width: 8),
+                Expanded(
+                  child: TextApp(
+                    text: 'PharmaChain',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    theme: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: colors.textPrimary,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                context.push(AppRoutes.inventoryAlerts);
-              },
-              icon: const Icon(Icons.notifications_none_outlined),
-            ),
-            SizedBox(width: 8.w),
-            CircleAvatar(
-              radius: 18.r,
-              backgroundColor: MyColors.primary.withOpacity(0.12),
-              child: Icon(
-                Icons.person_outline,
-                color: MyColors.primary,
-                size: 20.sp,
-              ),
-            ),
-          ],
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AppTopBarActions(showAvatar: !compact),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

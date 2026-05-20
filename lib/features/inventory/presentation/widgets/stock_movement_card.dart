@@ -84,7 +84,7 @@ class StockMovementCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 theme: context.textStyle.copyWith(
-                  color: Colors.grey,
+                  color: context.color.textSecondary,
                   fontSize: 12.sp,
                 ),
               ),

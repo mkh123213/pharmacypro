@@ -22,7 +22,7 @@ class _RemoveExpiredStockBottomSheetState
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.color.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       child: SafeArea(
@@ -37,7 +37,7 @@ class _RemoveExpiredStockBottomSheetState
                   width: 44.w,
                   height: 4.h,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: context.color.border,
                     borderRadius: BorderRadius.circular(999.r),
                   ),
                 ),

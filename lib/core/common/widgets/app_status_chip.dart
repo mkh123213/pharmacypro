@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../theme/app_colors.dart';
+import '../../extensions/context_extension.dart';
+import 'text_app.dart';
 
 enum AppStatusChipType { success, error, warning, info, neutral, primary }
 
@@ -17,28 +18,29 @@ class AppStatusChip extends StatelessWidget {
   final AppStatusChipType type;
   final Color? color;
 
-  Color get _statusColor {
+  Color _statusColor(BuildContext context) {
     if (color != null) return color!;
 
+    final colors = context.color;
     switch (type) {
       case AppStatusChipType.success:
-        return MyColors.success;
+        return colors.success;
       case AppStatusChipType.error:
-        return MyColors.error;
+        return colors.error;
       case AppStatusChipType.warning:
-        return MyColors.warning;
+        return colors.warning;
       case AppStatusChipType.info:
-        return MyColors.info;
+        return colors.info;
       case AppStatusChipType.primary:
-        return MyColors.primary;
+        return colors.primary;
       case AppStatusChipType.neutral:
-        return MyColors.textSecondary;
+        return colors.textSecondary;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = _statusColor;
+    final chipColor = _statusColor(context);
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
@@ -47,9 +49,11 @@ class AppStatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: chipColor.withOpacity(0.18)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
+      child: TextApp(
+        text: label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        theme: TextStyle(
           fontSize: 12.sp,
           fontWeight: FontWeight.w600,
           color: chipColor,

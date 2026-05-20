@@ -57,7 +57,7 @@ class _SaleFormBottomSheetState extends State<SaleFormBottomSheet> {
     return Container(
       padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, bottomInset + 20.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.color.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       child: SafeArea(

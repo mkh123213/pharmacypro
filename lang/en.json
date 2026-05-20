@@ -593,5 +593,11 @@
     "refreshing": "Refreshing",
     "sales": "Sales",
     "reports": "Reports",
-    "menu": "Menu"
+    "menu": "Menu",
+    "theme": "Theme",
+    "language": "Language",
+    "dark_mode": "Dark mode",
+    "light_mode": "Light mode",
+    "switch_to_arabic": "Switch to Arabic",
+    "switch_to_english": "Switch to English"
 }
