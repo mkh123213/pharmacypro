@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<BranchModel> branches,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BranchesInitial() when initial != null:
 return initial();case BranchesLoading() when loading != null:
 return loading();case BranchesLoaded() when loaded != null:
-return loaded(_that.branches,_that.isSubmitting);case BranchesFailure() when failure != null:
+return loaded(_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case BranchesFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<BranchModel> branches,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case BranchesInitial():
 return initial();case BranchesLoading():
 return loading();case BranchesLoaded():
-return loaded(_that.branches,_that.isSubmitting);case BranchesFailure():
+return loaded(_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case BranchesFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<BranchModel> branches,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<BranchModel> branches,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case BranchesInitial() when initial != null:
 return initial();case BranchesLoading() when loading != null:
 return loading();case BranchesLoaded() when loaded != null:
-return loaded(_that.branches,_that.isSubmitting);case BranchesFailure() when failure != null:
+return loaded(_that.branches,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case BranchesFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class BranchesLoaded implements BranchesState {
-  const BranchesLoaded({required final  List<BranchModel> branches, this.isSubmitting = false}): _branches = branches;
+  const BranchesLoaded({required final  List<BranchModel> branches, this.searchQuery = '', this.selectedStatus = 'all', this.isSubmitting = false, this.errorMessage = null}): _branches = branches;
   
 
  final  List<BranchModel> _branches;
@@ -267,7 +267,10 @@ class BranchesLoaded implements BranchesState {
   return EqualUnmodifiableListView(_branches);
 }
 
+@JsonKey() final  String searchQuery;
+@JsonKey() final  String selectedStatus;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of BranchesState
 /// with the given fields replaced by the non-null parameter values.
@@ -279,16 +282,16 @@ $BranchesLoadedCopyWith<BranchesLoaded> get copyWith => _$BranchesLoadedCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BranchesLoaded&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BranchesLoaded&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedStatus, selectedStatus) || other.selectedStatus == selectedStatus)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_branches),isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_branches),searchQuery,selectedStatus,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'BranchesState.loaded(branches: $branches, isSubmitting: $isSubmitting)';
+  return 'BranchesState.loaded(branches: $branches, searchQuery: $searchQuery, selectedStatus: $selectedStatus, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -299,7 +302,7 @@ abstract mixin class $BranchesLoadedCopyWith<$Res> implements $BranchesStateCopy
   factory $BranchesLoadedCopyWith(BranchesLoaded value, $Res Function(BranchesLoaded) _then) = _$BranchesLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<BranchModel> branches, bool isSubmitting
+ List<BranchModel> branches, String searchQuery, String selectedStatus, bool isSubmitting, String? errorMessage
 });
 
 
@@ -316,11 +319,14 @@ class _$BranchesLoadedCopyWithImpl<$Res>
 
 /// Create a copy of BranchesState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? branches = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? branches = null,Object? searchQuery = null,Object? selectedStatus = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(BranchesLoaded(
 branches: null == branches ? _self._branches : branches // ignore: cast_nullable_to_non_nullable
-as List<BranchModel>,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as List<BranchModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
+as String,selectedStatus: null == selectedStatus ? _self.selectedStatus : selectedStatus // ignore: cast_nullable_to_non_nullable
+as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

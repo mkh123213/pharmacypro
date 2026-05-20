@@ -7,11 +7,17 @@ part 'suppliers_state.freezed.dart';
 @freezed
 class SuppliersState with _$SuppliersState {
   const factory SuppliersState.initial() = SuppliersInitial;
+
   const factory SuppliersState.loading() = SuppliersLoading;
+
   const factory SuppliersState.loaded({
     required List<SupplierModel> suppliers,
     @Default('') String searchQuery,
+    @Default('all') String selectedStatus,
     @Default(false) bool isSubmitting,
+    @Default(null) String? errorMessage,
   }) = SuppliersLoaded;
-  const factory SuppliersState.failure({required String message}) = SuppliersFailure;
+
+  const factory SuppliersState.failure({required String message}) =
+      SuppliersFailure;
 }

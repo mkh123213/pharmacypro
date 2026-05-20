@@ -25,6 +25,8 @@ class ReportsChartCard extends StatelessWidget {
         padding: EdgeInsets.all(16.w),
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final compact = constraints.maxWidth < 360;
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -45,43 +47,52 @@ class ReportsChartCard extends StatelessWidget {
                     theme: context.textStyle,
                   )
                 else
-                  ...data.map((item) {
-                    final progress = max == 0 ? 0.0 : item.value / max;
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: data.length,
+                      physics: const NeverScrollableScrollPhysics(),
+                      separatorBuilder: (_, _) => SizedBox(height: 8.h),
+                      itemBuilder: (context, index) {
+                        final item = data[index];
+                        final progress = max == 0 ? 0.0 : item.value / max;
 
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 8.h),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: constraints.maxWidth < 330 ? 72.w : 120.w,
-                            child: TextApp(
-                              text: _chartLabel(context, item.label),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              theme: context.textStyle,
+                        return Row(
+                          children: [
+                            SizedBox(
+                              width: compact ? 72.w : 120.w,
+                              child: TextApp(
+                                text: _chartLabel(context, item.label),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                theme: context.textStyle,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: LinearProgressIndicator(
-                              value: progress.clamp(0.0, 1.0),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(999.r),
+                                child: LinearProgressIndicator(
+                                  minHeight: 8.h,
+                                  value: progress.clamp(0.0, 1.0),
+                                ),
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 8.w),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: 64.w),
-                            child: TextApp(
-                              text: item.value.toStringAsFixed(0),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
-                              theme: context.textStyle,
+                            SizedBox(width: 8.w),
+                            SizedBox(
+                              width: compact ? 44.w : 64.w,
+                              child: TextApp(
+                                text: item.value.toStringAsFixed(0),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.end,
+                                theme: context.textStyle,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
               ],
             );
           },

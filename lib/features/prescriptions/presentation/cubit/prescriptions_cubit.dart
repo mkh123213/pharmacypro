@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/prescription_model.dart';
 import '../../data/repos/prescriptions_repo.dart';
+import '../refactor/prescriptions_constants.dart';
 import 'prescriptions_state.dart';
 
 class PrescriptionsCubit extends Cubit<PrescriptionsState> {
@@ -13,7 +14,8 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
 
   List<PrescriptionModel> _allPrescriptions = [];
   String _searchQuery = '';
-  String _selectedStatus = 'all';
+  String _selectedStatus = allPrescriptionStatusesValue;
+  String _selectedBranchId = allPrescriptionBranchesValue;
 
   Future<void> getPrescriptionsData() async {
     emit(const PrescriptionsState.loading());
@@ -34,10 +36,11 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
           medications: results[2] as dynamic,
           searchQuery: _searchQuery,
           selectedStatus: _selectedStatus,
+          selectedBranchId: _selectedBranchId,
           errorMessage: null,
         ),
       );
-    } catch (error) {
+    } catch (_) {
       emit(
         const PrescriptionsState.failure(
           message: 'could_not_load_prescriptions',
@@ -53,6 +56,11 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
 
   void updateSelectedStatus(String value) {
     _selectedStatus = value;
+    _emitFromLoaded();
+  }
+
+  void updateSelectedBranch(String value) {
+    _selectedBranchId = value;
     _emitFromLoaded();
   }
 
@@ -127,6 +135,14 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
   String _prescriptionErrorMessage(Object error) {
     final text = error.toString();
 
+    if (text.contains('patient_name_required')) {
+      return 'patient_name_required';
+    }
+
+    if (text.contains('doctor_name_required')) {
+      return 'doctor_name_required';
+    }
+
     if (text.contains('branch_not_found')) {
       return 'branch_not_found';
     }
@@ -135,24 +151,8 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
       return 'inactive_branch';
     }
 
-    if (text.contains('medication_not_found:')) {
-      final medicationName = text
-          .split('medication_not_found:')
-          .last
-          .replaceAll(']', '')
-          .trim();
-
-      return 'medication_not_found|$medicationName';
-    }
-
-    if (text.contains('inactive_medication:')) {
-      final medicationName = text
-          .split('inactive_medication:')
-          .last
-          .replaceAll(']', '')
-          .trim();
-
-      return 'inactive_medication|$medicationName';
+    if (text.contains('prescription_missing_branch')) {
+      return 'prescription_missing_branch';
     }
 
     if (text.contains('prescription_not_found')) {
@@ -161,6 +161,22 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
 
     if (text.contains('prescription_already_dispensed')) {
       return 'prescription_already_dispensed';
+    }
+
+    if (text.contains('prescription_already_rejected')) {
+      return 'prescription_already_rejected';
+    }
+
+    if (text.contains('prescription_already_expired')) {
+      return 'prescription_already_expired';
+    }
+
+    if (text.contains('prescription_not_verified')) {
+      return 'prescription_not_verified';
+    }
+
+    if (text.contains('invalid_prescription_status_transition')) {
+      return 'invalid_prescription_status_transition';
     }
 
     if (text.contains('prescription_has_no_items')) {
@@ -175,27 +191,49 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
       return 'prescription_item_invalid_quantity';
     }
 
-    if (text.contains('not_enough_stock_for_medication:')) {
-      final medicationName = text
-          .split('not_enough_stock_for_medication:')
-          .last
-          .replaceAll(']', '')
-          .trim();
+    if (text.contains('medication_not_found:')) {
+      return _errorWithValue(
+        text: text,
+        token: 'medication_not_found:',
+        outputPrefix: 'medication_not_found',
+      );
+    }
 
-      return 'not_enough_stock_for_medication|$medicationName';
+    if (text.contains('inactive_medication:')) {
+      return _errorWithValue(
+        text: text,
+        token: 'inactive_medication:',
+        outputPrefix: 'inactive_medication',
+      );
+    }
+
+    if (text.contains('not_enough_stock_for_medication:')) {
+      return _errorWithValue(
+        text: text,
+        token: 'not_enough_stock_for_medication:',
+        outputPrefix: 'not_enough_stock_for_medication',
+      );
     }
 
     if (text.contains('expired_stock_for_medication:')) {
-      final medicationName = text
-          .split('expired_stock_for_medication:')
-          .last
-          .replaceAll(']', '')
-          .trim();
-
-      return 'expired_stock_for_medication|$medicationName';
+      return _errorWithValue(
+        text: text,
+        token: 'expired_stock_for_medication:',
+        outputPrefix: 'expired_stock_for_medication',
+      );
     }
 
     return 'could_not_update_prescription_status';
+  }
+
+  String _errorWithValue({
+    required String text,
+    required String token,
+    required String outputPrefix,
+  }) {
+    final value = text.split(token).last.replaceAll(']', '').trim();
+
+    return '$outputPrefix|$value';
   }
 
   List<PrescriptionModel> get _filteredPrescriptions {
@@ -203,16 +241,23 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
 
     return _allPrescriptions.where((prescription) {
       final matchSearch =
+          query.isEmpty ||
           prescription.patientName.toLowerCase().contains(query) ||
           (prescription.patientPhone?.toLowerCase().contains(query) ?? false) ||
           (prescription.prescriptionNumber?.toLowerCase().contains(query) ??
               false) ||
-          (prescription.doctorName?.toLowerCase().contains(query) ?? false);
+          (prescription.doctorName?.toLowerCase().contains(query) ?? false) ||
+          (prescription.branchName?.toLowerCase().contains(query) ?? false);
 
       final matchStatus =
-          _selectedStatus == 'all' || prescription.status == _selectedStatus;
+          _selectedStatus == allPrescriptionStatusesValue ||
+          prescription.status == _selectedStatus;
 
-      return matchSearch && matchStatus;
+      final matchBranch =
+          _selectedBranchId == allPrescriptionBranchesValue ||
+          prescription.branchId == _selectedBranchId;
+
+      return matchSearch && matchStatus && matchBranch;
     }).toList();
   }
 
@@ -225,6 +270,7 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
           prescriptions: _filteredPrescriptions,
           searchQuery: _searchQuery,
           selectedStatus: _selectedStatus,
+          selectedBranchId: _selectedBranchId,
           isSubmitting: false,
           errorMessage: null,
         ),

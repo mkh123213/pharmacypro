@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacypro/core/style/images/app_images.dart';
+import '../style/images/app_images.dart';
 
 class PageUnderBuildScreen extends StatelessWidget {
   const PageUnderBuildScreen({super.key});

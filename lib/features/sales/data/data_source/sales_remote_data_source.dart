@@ -52,12 +52,13 @@ class SalesRemoteDataSource {
   }
 
   Future<SaleModel> createSale(SaleModel item) async {
+    await _validateSale(item);
+
     final saleReference = _sales.doc();
 
     await _firestore.runTransaction((transaction) async {
-      final branchSnapshot = await transaction.get(
-        _branches.doc(item.branchId),
-      );
+      final branchReference = _branches.doc(item.branchId);
+      final branchSnapshot = await transaction.get(branchReference);
 
       if (!branchSnapshot.exists) {
         throw Exception('branch_not_found');
@@ -73,9 +74,8 @@ class SalesRemoteDataSource {
           <String, DocumentSnapshot<Map<String, dynamic>>>{};
 
       for (final saleItem in item.items) {
-        final medicationSnapshot = await transaction.get(
-          _medications.doc(saleItem.medicationId),
-        );
+        final medicationReference = _medications.doc(saleItem.medicationId);
+        final medicationSnapshot = await transaction.get(medicationReference);
 
         if (!medicationSnapshot.exists) {
           throw Exception('medication_not_found:${saleItem.medicationName}');
@@ -87,20 +87,22 @@ class SalesRemoteDataSource {
           throw Exception('inactive_medication:${saleItem.medicationName}');
         }
 
-        final inventoryQuery = await _inventory
-            .where('branch_id', isEqualTo: item.branchId)
-            .where('medication_id', isEqualTo: saleItem.medicationId)
-            .limit(1)
-            .get();
+        final inventoryReference = _inventory.doc(
+          _inventoryDocumentId(
+            branchId: item.branchId,
+            medicationId: saleItem.medicationId,
+          ),
+        );
 
-        if (inventoryQuery.docs.isEmpty) {
+        final inventorySnapshot = await transaction.get(inventoryReference);
+
+        if (!inventorySnapshot.exists) {
           throw Exception(
             'not_enough_stock_for_medication:${saleItem.medicationName}',
           );
         }
 
-        final inventoryDocument = inventoryQuery.docs.first;
-        final inventoryData = inventoryDocument.data();
+        final inventoryData = inventorySnapshot.data() ?? <String, dynamic>{};
 
         if (_isExpired(inventoryData['expiry_date'])) {
           throw Exception(
@@ -117,7 +119,7 @@ class SalesRemoteDataSource {
         }
 
         inventoryDocumentsByMedicationId[saleItem.medicationId] =
-            inventoryDocument;
+            inventorySnapshot;
       }
 
       transaction.set(saleReference, {
@@ -160,6 +162,61 @@ class SalesRemoteDataSource {
     return SaleModel.fromFirestore(await saleReference.get());
   }
 
+  Future<void> _validateSale(SaleModel sale) async {
+    if (sale.branchId.trim().isEmpty) {
+      throw Exception('sale_missing_branch');
+    }
+
+    if (sale.items.isEmpty) {
+      throw Exception('sale_has_no_items');
+    }
+
+    if (!_validPaymentMethods.contains(sale.paymentMethod)) {
+      throw Exception('sale_invalid_payment_method');
+    }
+
+    if (sale.subtotal < 0) {
+      throw Exception('sale_invalid_subtotal');
+    }
+
+    if (sale.discount < 0) {
+      throw Exception('sale_invalid_discount');
+    }
+
+    if (sale.discount > sale.subtotal) {
+      throw Exception('sale_discount_greater_than_subtotal');
+    }
+
+    if (sale.totalAmount < 0) {
+      throw Exception('sale_invalid_total');
+    }
+
+    for (final item in sale.items) {
+      if (item.medicationId.trim().isEmpty) {
+        throw Exception('sale_item_missing_medication');
+      }
+
+      if (item.quantity <= 0) {
+        throw Exception('sale_item_invalid_quantity');
+      }
+
+      if (item.unitPrice < 0) {
+        throw Exception('sale_item_invalid_unit_price');
+      }
+
+      if (item.total < 0) {
+        throw Exception('sale_item_invalid_total');
+      }
+    }
+  }
+
+  String _inventoryDocumentId({
+    required String branchId,
+    required String medicationId,
+  }) {
+    return '${branchId}_$medicationId';
+  }
+
   int _readInt(Object? value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
@@ -194,3 +251,5 @@ class SalesRemoteDataSource {
     return expiryDay.isBefore(today);
   }
 }
+
+const _validPaymentMethods = ['cash', 'card', 'insurance', 'online'];

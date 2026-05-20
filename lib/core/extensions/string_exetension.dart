@@ -6,17 +6,22 @@ extension StringFormate on String {
   }
 
   String toCapitalized() {
+    if (trim().isEmpty) return this;
+
     return '${this[0].toUpperCase()}${substring(1)}';
   }
 
   String convertLongString() {
-    final shortString = split(' ').sublist(0, split(' ').length - 2).join(' ');
-    return shortString;
+    final parts = split(' ');
+
+    if (parts.length <= 2) return this;
+
+    return parts.sublist(0, parts.length - 2).join(' ');
   }
 
   String convertDataFormate() {
-    final now = DateTime.now();
+    final parsedDate = DateTime.tryParse(this);
 
-    return DateFormat('d MMM, y - h:mm a').format(now);
+    return DateFormat('d MMM, y - h:mm a').format(parsedDate ?? DateTime.now());
   }
 }

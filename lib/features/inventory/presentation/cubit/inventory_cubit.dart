@@ -14,6 +14,7 @@ class InventoryCubit extends Cubit<InventoryState> {
   List<InventoryModel> _allInventory = [];
   String _searchQuery = '';
   String _selectedBranchId = 'all';
+  String _selectedStockStatus = 'all';
 
   Future<void> getInventoryData() async {
     emit(const InventoryState.loading());
@@ -34,6 +35,7 @@ class InventoryCubit extends Cubit<InventoryState> {
           branches: results[2] as dynamic,
           searchQuery: _searchQuery,
           selectedBranchId: _selectedBranchId,
+          selectedStockStatus: _selectedStockStatus,
           errorMessage: null,
         ),
       );
@@ -49,6 +51,11 @@ class InventoryCubit extends Cubit<InventoryState> {
 
   void updateSelectedBranch(String value) {
     _selectedBranchId = value;
+    _emitFromLoaded();
+  }
+
+  void updateSelectedStockStatus(String value) {
+    _selectedStockStatus = value;
     _emitFromLoaded();
   }
 
@@ -174,6 +181,35 @@ class InventoryCubit extends Cubit<InventoryState> {
     if (text.contains('quantity_cannot_go_below_zero')) {
       return 'quantity_cannot_go_below_zero';
     }
+
+    if (text.contains('inventory_missing_medication')) {
+      return 'inventory_missing_medication';
+    }
+
+    if (text.contains('inventory_missing_branch')) {
+      return 'inventory_missing_branch';
+    }
+
+    if (text.contains('inventory_invalid_quantity')) {
+      return 'inventory_invalid_quantity';
+    }
+
+    if (text.contains('inventory_invalid_min_stock_level')) {
+      return 'inventory_invalid_min_stock_level';
+    }
+
+    if (text.contains('inventory_invalid_expiry_date')) {
+      return 'inventory_invalid_expiry_date';
+    }
+
+    if (text.contains('inventory_adjustment_quantity_required')) {
+      return 'inventory_adjustment_quantity_required';
+    }
+
+    if (text.contains('inventory_adjustment_reason_required')) {
+      return 'inventory_adjustment_reason_required';
+    }
+
     if (text.contains('branch_not_found')) {
       return 'branch_not_found';
     }
@@ -189,6 +225,7 @@ class InventoryCubit extends Cubit<InventoryState> {
     if (text.contains('inactive_medication')) {
       return 'inactive_medication';
     }
+
     return 'could_not_save_inventory_item';
   }
 
@@ -197,14 +234,26 @@ class InventoryCubit extends Cubit<InventoryState> {
 
     return _allInventory.where((item) {
       final matchSearch =
+          query.isEmpty ||
           (item.medicationName?.toLowerCase().contains(query) ?? false) ||
           (item.branchName?.toLowerCase().contains(query) ?? false) ||
-          (item.batchNumber?.toLowerCase().contains(query) ?? false);
+          (item.batchNumber?.toLowerCase().contains(query) ?? false) ||
+          (item.locationInStore?.toLowerCase().contains(query) ?? false);
 
       final matchBranch =
           _selectedBranchId == 'all' || item.branchId == _selectedBranchId;
 
-      return matchSearch && matchBranch;
+      final matchStockStatus =
+          _selectedStockStatus == 'all' ||
+          (_selectedStockStatus == 'low_stock' && item.isLowStock) ||
+          (_selectedStockStatus == 'expired' && item.isExpired) ||
+          (_selectedStockStatus == 'expiring_soon' && item.isExpiringSoon) ||
+          (_selectedStockStatus == 'healthy' &&
+              !item.isLowStock &&
+              !item.isExpired &&
+              !item.isExpiringSoon);
+
+      return matchSearch && matchBranch && matchStockStatus;
     }).toList();
   }
 
@@ -217,6 +266,7 @@ class InventoryCubit extends Cubit<InventoryState> {
           inventory: _filteredInventory,
           searchQuery: _searchQuery,
           selectedBranchId: _selectedBranchId,
+          selectedStockStatus: _selectedStockStatus,
           isSubmitting: false,
           errorMessage: null,
         ),

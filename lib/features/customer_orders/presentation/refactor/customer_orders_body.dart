@@ -10,125 +10,26 @@ import '../../../../core/common/widgets/app_primary_button.dart';
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
+import '../../../branches/data/models/branch_model.dart';
 import '../cubit/customer_orders_cubit.dart';
 import '../cubit/customer_orders_state.dart';
 import '../widgets/customer_order_card.dart';
 import '../widgets/customer_order_form_bottom_sheet.dart';
 import 'customer_orders_constants.dart';
 
+part 'customer_orders_body_branch_dropdown.dart';
+part 'customer_orders_body_customer_order_filters.dart';
+part 'customer_orders_body_customer_orders_error_view.dart';
+part 'customer_orders_body_status_dropdown.dart';
+
+part 'customer_orders_body_build_customer_order_error_message.dart';
+part 'customer_orders_body_update_order_status.dart';
+part 'customer_orders_body_open_form.dart';
 class CustomerOrdersBody extends StatelessWidget {
   const CustomerOrdersBody({super.key});
 
-  void _openForm(BuildContext context, CustomerOrdersLoaded state) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return BlocProvider.value(
-          value: context.read<CustomerOrdersCubit>(),
-          child: CustomerOrderFormBottomSheet(
-            medications: state.medications,
-            branches: state.branches,
-          ),
-        );
-      },
-    );
-  }
 
-  Future<void> _updateOrderStatus({
-    required BuildContext context,
-    required String orderId,
-    required String nextStatus,
-  }) async {
-    final success = await context.read<CustomerOrdersCubit>().updateStatus(
-      orderId,
-      nextStatus,
-    );
 
-    if (!context.mounted) return;
-
-    if (!success) {
-      final state = context.read<CustomerOrdersCubit>().state;
-
-      String message = context.translate(LangKeys.couldNotUpdateOrderStatus);
-
-      if (state is CustomerOrdersLoaded && state.errorMessage != null) {
-        message = _buildCustomerOrderErrorMessage(context, state.errorMessage!);
-      }
-
-      ShowToast.showToastErrorTop(message: message);
-      return;
-    }
-
-    ShowToast.showToastSuccessTop(
-      message: context.translate(LangKeys.orderStatusUpdatedSuccessfully),
-    );
-  }
-
-  String _buildCustomerOrderErrorMessage(
-    BuildContext context,
-    String errorMessage,
-  ) {
-    if (errorMessage == 'branch_not_found') {
-      return context.translate(LangKeys.branchNotFound);
-    }
-
-    if (errorMessage == 'inactive_branch') {
-      return context.translate(LangKeys.inactiveBranch);
-    }
-
-    if (errorMessage.startsWith('medication_not_found|')) {
-      final medicationName = errorMessage
-          .replaceFirst('medication_not_found|', '')
-          .trim();
-
-      return context
-          .translate(LangKeys.medicationNotFound)
-          .replaceAll('{medication}', medicationName);
-    }
-
-    if (errorMessage.startsWith('inactive_medication|')) {
-      final medicationName = errorMessage
-          .replaceFirst('inactive_medication|', '')
-          .trim();
-
-      return context
-          .translate(LangKeys.inactiveMedication)
-          .replaceAll('{medication}', medicationName);
-    }
-
-    if (errorMessage.startsWith('not_enough_stock_for_medication|')) {
-      final medicationName = errorMessage
-          .replaceFirst('not_enough_stock_for_medication|', '')
-          .trim();
-
-      return context
-          .translate(LangKeys.notEnoughStockForMedication)
-          .replaceAll('{medication}', medicationName);
-    }
-
-    if (errorMessage.startsWith('expired_stock_for_medication|')) {
-      final medicationName = errorMessage
-          .replaceFirst('expired_stock_for_medication|', '')
-          .trim();
-
-      return context
-          .translate(LangKeys.expiredStockForMedication)
-          .replaceAll('{medication}', medicationName);
-    }
-
-    switch (errorMessage) {
-      case 'customer_order_not_found':
-        return context.translate(LangKeys.customerOrderNotFound);
-      case 'customer_order_already_delivered':
-        return context.translate(LangKeys.customerOrderAlreadyDelivered);
-      case 'customer_order_has_no_items':
-        return context.translate(LangKeys.customerOrderHasNoItems);
-      default:
-        return context.translate(LangKeys.couldNotUpdateOrderStatus);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,82 +61,50 @@ class CustomerOrdersBody extends StatelessWidget {
             return const SizedBox.shrink();
           }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppPageHeader(
-                title: context.translate(LangKeys.customerOrders),
-                subtitle: context.translate(
-                  LangKeys.browseAndManageCustomerOrders,
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppPageHeader(
+                  title: context.translate(LangKeys.customerOrders),
+                  subtitle: context.translate(
+                    LangKeys.browseAndManageCustomerOrders,
+                  ),
+                  action: AppPrimaryButton(
+                    text: context.translate(LangKeys.newOrder),
+                    icon: Icons.add,
+                    onPressed: state.isSubmitting
+                        ? null
+                        : () {
+                            this._openForm(context, state);
+                          },
+                  ),
                 ),
-                action: AppPrimaryButton(
-                  text: context.translate(LangKeys.newOrder),
-                  icon: Icons.add,
-                  onPressed: state.isSubmitting
-                      ? null
-                      : () {
-                          _openForm(context, state);
-                        },
-                ),
-              ),
-              SizedBox(height: 14.h),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 700;
-
-                  if (wide) {
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search),
-                              hintText: context.translate(
-                                LangKeys.searchOrders,
-                              ),
-                            ),
-                            onChanged: context
-                                .read<CustomerOrdersCubit>()
-                                .updateSearchQuery,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        SizedBox(
-                          width: 220.w,
-                          child: _StatusDropdown(
-                            selectedStatus: state.selectedStatus,
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-
-                  return Column(
-                    children: [
-                      TextField(
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.search),
-                          hintText: context.translate(LangKeys.searchOrders),
-                        ),
-                        onChanged: context
-                            .read<CustomerOrdersCubit>()
-                            .updateSearchQuery,
+                SizedBox(height: 14.h),
+                _CustomerOrderFilters(state: state),
+                SizedBox(height: 14.h),
+                if (state.errorMessage != null)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 12.h),
+                    child: TextApp(
+                      text: this._buildCustomerOrderErrorMessage(
+                        context,
+                        state.errorMessage!,
                       ),
-                      SizedBox(height: 12.h),
-                      _StatusDropdown(selectedStatus: state.selectedStatus),
-                    ],
-                  );
-                },
-              ),
-              SizedBox(height: 14.h),
-              Expanded(
-                child: state.orders.isEmpty
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(color: Colors.red),
+                    ),
+                  ),
+                state.orders.isEmpty
                     ? AppEmptyState(
                         title: context.translate(LangKeys.noOrdersFound),
                         message:
                             state.searchQuery.trim().isEmpty &&
                                 state.selectedStatus ==
-                                    allCustomerOrderStatusesValue
+                                    allCustomerOrderStatusesValue &&
+                                state.selectedBranchId == 'all'
                             ? context.translate(LangKeys.createYourFirstOrder)
                             : context.translate(
                                 LangKeys.noOrdersMatchYourFilters,
@@ -244,6 +113,8 @@ class CustomerOrdersBody extends StatelessWidget {
                       )
                     : ListView.separated(
                         itemCount: state.orders.length,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
                         separatorBuilder: (_, _) => SizedBox(height: 8.h),
                         itemBuilder: (_, index) {
                           final order = state.orders[index];
@@ -256,7 +127,7 @@ class CustomerOrdersBody extends StatelessWidget {
                                 nextStatus == null || state.isSubmitting
                                 ? null
                                 : () {
-                                    _updateOrderStatus(
+                                    this._updateOrderStatus(
                                       context: context,
                                       orderId: order.id,
                                       nextStatus: nextStatus,
@@ -265,81 +136,11 @@ class CustomerOrdersBody extends StatelessWidget {
                           );
                         },
                       ),
-              ),
-            ],
+                SizedBox(height: 24.h),
+              ],
+            ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _StatusDropdown extends StatelessWidget {
-  const _StatusDropdown({required this.selectedStatus});
-
-  final String selectedStatus;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: selectedStatus,
-      decoration: InputDecoration(
-        labelText: context.translate(LangKeys.status),
-      ),
-      items: customerOrderStatuses.map((status) {
-        return DropdownMenuItem<String>(
-          value: status,
-          child: TextApp(
-            text: customerOrderStatusLabel(context, status),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            theme: context.textStyle,
-          ),
-        );
-      }).toList(),
-      onChanged: (value) {
-        context.read<CustomerOrdersCubit>().updateSelectedStatus(
-          value ?? allCustomerOrderStatusesValue,
-        );
-      },
-    );
-  }
-}
-
-class _CustomerOrdersErrorView extends StatelessWidget {
-  const _CustomerOrdersErrorView({
-    required this.message,
-    required this.onRetry,
-  });
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 48.sp, color: Colors.red.shade400),
-            SizedBox(height: 12.h),
-            TextApp(
-              text: message,
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              theme: context.textStyle,
-            ),
-            SizedBox(height: 16.h),
-            AppPrimaryButton(
-              text: context.translate(LangKeys.retry),
-              icon: Icons.refresh,
-              onPressed: onRetry,
-            ),
-          ],
-        ),
       ),
     );
   }

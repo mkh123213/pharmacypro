@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/common/widgets/app_status_chip.dart';
@@ -7,6 +8,13 @@ import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../data/models/sale_model.dart';
 
+part 'sales_table_info_row.dart';
+part 'sales_table_sales_cards.dart';
+part 'sales_table_sales_data_table.dart';
+
+part 'sales_table_sales_data_table_columns.dart';
+part 'sales_table_sales_data_table_rows.dart';
+
 class SalesTable extends StatelessWidget {
   const SalesTable({required this.sales, super.key});
 
@@ -14,181 +22,68 @@ class SalesTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: [
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.saleNumber),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.date),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.customer),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.branch),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.items),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.total),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.payment),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.status),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-          ],
-          rows: sales.map((sale) {
-            return DataRow(
-              cells: [
-                DataCell(
-                  TextApp(
-                    text:
-                        sale.saleNumber ??
-                        sale.id.substring(0, sale.id.length.clamp(0, 6)),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text: sale.createdAt == null
-                        ? '—'
-                        : DateFormat('MMM d, HH:mm').format(sale.createdAt!),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text:
-                        sale.customerName ?? context.translate(LangKeys.walkIn),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text: sale.branchName ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text: context
-                        .translate(LangKeys.itemsCount)
-                        .replaceAll('{count}', sale.items.length.toString()),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text: '\$${sale.totalAmount.toStringAsFixed(2)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text: _paymentLabel(context, sale.paymentMethod),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  AppStatusChip(
-                    label: _statusLabel(context, sale.status),
-                    type: AppStatusChipType.success,
-                  ),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 760) {
+          return _SalesCards(sales: sales);
+        }
+
+        return _SalesDataTable(sales: sales);
+      },
     );
   }
+}
 
-  String _paymentLabel(BuildContext context, String value) {
-    switch (value) {
-      case 'cash':
-        return context.translate(LangKeys.cash);
-      case 'card':
-        return context.translate(LangKeys.card);
-      case 'insurance':
-        return context.translate(LangKeys.insurance);
-      case 'online':
-        return context.translate(LangKeys.online);
-      default:
-        return value;
-    }
+
+
+
+String _saleNumber(SaleModel sale) {
+  return sale.saleNumber ?? sale.id.substring(0, sale.id.length.clamp(0, 6));
+}
+
+String _dateText(SaleModel sale) {
+  if (sale.createdAt == null) return '—';
+
+  return DateFormat('MMM d, HH:mm').format(sale.createdAt!);
+}
+
+String _paymentLabel(BuildContext context, String value) {
+  switch (value) {
+    case 'cash':
+      return context.translate(LangKeys.cash);
+    case 'card':
+      return context.translate(LangKeys.card);
+    case 'insurance':
+      return context.translate(LangKeys.insurance);
+    case 'online':
+      return context.translate(LangKeys.online);
+    default:
+      return value;
   }
+}
 
-  String _statusLabel(BuildContext context, String value) {
-    switch (value) {
-      case 'completed':
-        return context.translate(LangKeys.completed);
-      case 'refunded':
-        return context.translate(LangKeys.refunded);
-      case 'voided':
-        return context.translate(LangKeys.voided);
-      default:
-        return value;
-    }
+String _statusLabel(BuildContext context, String value) {
+  switch (value) {
+    case 'completed':
+      return context.translate(LangKeys.completed);
+    case 'refunded':
+      return context.translate(LangKeys.refunded);
+    case 'voided':
+      return context.translate(LangKeys.voided);
+    default:
+      return value;
+  }
+}
+
+AppStatusChipType _statusType(String value) {
+  switch (value) {
+    case 'completed':
+      return AppStatusChipType.success;
+    case 'refunded':
+      return AppStatusChipType.warning;
+    case 'voided':
+      return AppStatusChipType.error;
+    default:
+      return AppStatusChipType.neutral;
   }
 }

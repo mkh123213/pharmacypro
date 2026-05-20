@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/medication_model.dart';
 import '../../data/repos/medications_repo.dart';
+import '../refactor/medication_error_mapper.dart';
+import '../refactor/medication_filter_values.dart';
 import 'medications_state.dart';
 
 class MedicationsCubit extends Cubit<MedicationsState> {
@@ -13,17 +15,33 @@ class MedicationsCubit extends Cubit<MedicationsState> {
 
   List<MedicationModel> _allMedications = [];
   String _searchQuery = '';
-  String _selectedCategory = 'all';
+  String _selectedCategory = allMedicationCategoriesValue;
+  String _selectedStatus = allMedicationStatusesValue;
 
   Future<void> getMedications() async {
-    emit(const MedicationsState.loading());
+    final current = state;
+
+    if (current is! MedicationsLoaded) {
+      emit(const MedicationsState.loading());
+    }
 
     try {
       _allMedications = await _medicationsRepo.getMedications();
       _emitLoaded();
     } catch (error) {
+      if (current is MedicationsLoaded) {
+        emit(
+          current.copyWith(
+            medications: _filteredMedications,
+            isSubmitting: false,
+            errorMessage: MedicationErrorKeys.couldNotLoad,
+          ),
+        );
+        return;
+      }
+
       emit(
-        const MedicationsState.failure(message: 'could_not_load_medications'),
+        const MedicationsState.failure(message: MedicationErrorKeys.couldNotLoad),
       );
     }
   }
@@ -38,10 +56,15 @@ class MedicationsCubit extends Cubit<MedicationsState> {
     _emitLoaded();
   }
 
+  void updateSelectedStatus(String value) {
+    _selectedStatus = value;
+    _emitLoaded();
+  }
+
   Future<bool> createMedication(MedicationModel medication) async {
     final current = state;
 
-    if (current is! MedicationsLoaded) return false;
+    if (current is! MedicationsLoaded || current.isSubmitting) return false;
 
     final oldMedications = List<MedicationModel>.from(_allMedications);
 
@@ -62,7 +85,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         current.copyWith(
           medications: _filteredMedications,
           isSubmitting: false,
-          errorMessage: _medicationErrorMessage(error),
+          errorMessage: medicationExceptionToErrorKey(error),
         ),
       );
 
@@ -73,7 +96,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
   Future<bool> updateMedication(MedicationModel medication) async {
     final current = state;
 
-    if (current is! MedicationsLoaded) return false;
+    if (current is! MedicationsLoaded || current.isSubmitting) return false;
 
     final oldMedications = List<MedicationModel>.from(_allMedications);
 
@@ -96,7 +119,7 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         current.copyWith(
           medications: _filteredMedications,
           isSubmitting: false,
-          errorMessage: _medicationErrorMessage(error),
+          errorMessage: medicationExceptionToErrorKey(error),
         ),
       );
 
@@ -104,34 +127,30 @@ class MedicationsCubit extends Cubit<MedicationsState> {
     }
   }
 
-  String _medicationErrorMessage(Object error) {
-    final text = error.toString();
-
-    if (text.contains('duplicate_medication_name')) {
-      return 'duplicate_medication_name';
-    }
-
-    if (text.contains('duplicate_medication_barcode')) {
-      return 'duplicate_medication_barcode';
-    }
-
-    return 'could_not_save_medication';
-  }
-
   List<MedicationModel> get _filteredMedications {
     final query = _searchQuery.toLowerCase().trim();
 
     return _allMedications.where((medication) {
       final matchSearch =
+          query.isEmpty ||
           medication.name.toLowerCase().contains(query) ||
           (medication.genericName?.toLowerCase().contains(query) ?? false) ||
-          (medication.barcode?.toLowerCase().contains(query) ?? false);
+          (medication.barcode?.toLowerCase().contains(query) ?? false) ||
+          (medication.manufacturer?.toLowerCase().contains(query) ?? false) ||
+          (medication.strength?.toLowerCase().contains(query) ?? false);
 
       final matchCategory =
           _selectedCategory == allMedicationCategoriesValue ||
           medication.category == _selectedCategory;
 
-      return matchSearch && matchCategory;
+      final matchStatus =
+          _selectedStatus == allMedicationStatusesValue ||
+          (_selectedStatus == activeMedicationStatusValue &&
+              medication.isActive) ||
+          (_selectedStatus == inactiveMedicationStatusValue &&
+              !medication.isActive);
+
+      return matchSearch && matchCategory && matchStatus;
     }).toList();
   }
 
@@ -141,10 +160,9 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         medications: _filteredMedications,
         searchQuery: _searchQuery,
         selectedCategory: _selectedCategory,
+        selectedStatus: _selectedStatus,
         errorMessage: null,
       ),
     );
   }
 }
-
-const String allMedicationCategoriesValue = 'all';

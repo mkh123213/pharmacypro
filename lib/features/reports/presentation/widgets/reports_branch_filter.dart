@@ -11,17 +11,19 @@ class ReportsBranchFilter extends StatelessWidget {
     required this.branches,
     required this.value,
     required this.onChanged,
+    this.isEnabled = true,
     super.key,
   });
 
   final List<BranchModel> branches;
   final String value;
   final ValueChanged<String> onChanged;
+  final bool isEnabled;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 220.w,
+      width: 240.w,
       child: DropdownButtonFormField<String>(
         initialValue: value,
         decoration: InputDecoration(
@@ -49,10 +51,12 @@ class ReportsBranchFilter extends StatelessWidget {
             );
           }),
         ],
-        onChanged: (value) {
-          if (value == null) return;
-          onChanged(value);
-        },
+        onChanged: isEnabled
+            ? (value) {
+                if (value == null) return;
+                onChanged(value);
+              }
+            : null,
       ),
     );
   }

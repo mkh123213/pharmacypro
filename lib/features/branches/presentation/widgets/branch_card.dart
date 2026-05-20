@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:pharmacypro/core/extensions/context_extension.dart';
-import 'package:pharmacypro/core/language/lang_keys.dart';
 
+import '../../../../core/common/widgets/app_status_chip.dart';
 import '../../../../core/common/widgets/text_app.dart';
+import '../../../../core/extensions/context_extension.dart';
+import '../../../../core/language/lang_keys.dart';
 import '../../data/models/branch_model.dart';
 
 class BranchCard extends StatelessWidget {
@@ -22,7 +23,8 @@ class BranchCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Padding(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
         padding: EdgeInsets.all(12.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -43,12 +45,15 @@ class BranchCard extends StatelessWidget {
                 Expanded(
                   child: TextApp(
                     text: branch.name,
-                    theme: context.textStyle,
+                    theme: context.textStyle.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 IconButton(
+                  tooltip: context.translate(LangKeys.edit),
                   onPressed: onEditPressed,
                   padding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
@@ -57,7 +62,7 @@ class BranchCard extends StatelessWidget {
                 ),
               ],
             ),
-            if ((branch.city ?? '').isNotEmpty) ...[
+            if ((branch.city ?? '').trim().isNotEmpty) ...[
               SizedBox(height: 4.h),
               TextApp(
                 text: branch.city!,
@@ -68,38 +73,22 @@ class BranchCard extends StatelessWidget {
             ],
             SizedBox(height: 8.h),
             _Info(icon: Icons.location_on_outlined, text: branch.address),
-            if ((branch.phone ?? '').isNotEmpty)
+            if ((branch.phone ?? '').trim().isNotEmpty)
               _Info(icon: Icons.phone_outlined, text: branch.phone!),
-            if ((branch.email ?? '').isNotEmpty)
+            if ((branch.email ?? '').trim().isNotEmpty)
               _Info(icon: Icons.mail_outline, text: branch.email!),
-            if ((branch.managerName ?? '').isNotEmpty)
+            if ((branch.managerName ?? '').trim().isNotEmpty)
               _Info(icon: Icons.person_outline, text: branch.managerName!),
-            if ((branch.openingHours ?? '').isNotEmpty)
+            if ((branch.openingHours ?? '').trim().isNotEmpty)
               _Info(icon: Icons.schedule_outlined, text: branch.openingHours!),
             SizedBox(height: 8.h),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Chip(
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelPadding: EdgeInsets.symmetric(horizontal: 6.w),
-                label: TextApp(
-                  text: branch.isActive
-                      ? context.translate(LangKeys.open)
-                      : context.translate(LangKeys.closed),
-                  theme: context.textStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                backgroundColor: branch.isActive
-                    ? Colors.green.shade50
-                    : Colors.red.shade50,
-                side: BorderSide(
-                  color: branch.isActive
-                      ? Colors.green.shade100
-                      : Colors.red.shade100,
-                ),
-              ),
+            AppStatusChip(
+              label: branch.isActive
+                  ? context.translate(LangKeys.active)
+                  : context.translate(LangKeys.inactive),
+              type: branch.isActive
+                  ? AppStatusChipType.success
+                  : AppStatusChipType.error,
             ),
           ],
         ),

@@ -15,25 +15,16 @@ import '../cubit/sales_state.dart';
 import '../widgets/sale_form_bottom_sheet.dart';
 import '../widgets/sales_table.dart';
 
+part 'sales_body_payment_method_dropdown.dart';
+part 'sales_body_sales_error_view.dart';
+part 'sales_body_sales_filters.dart';
+
+part 'sales_body_build_sale_error_message.dart';
+part 'sales_body_open_sale_form.dart';
 class SalesBody extends StatelessWidget {
   const SalesBody({super.key});
 
-  void _openSaleForm(BuildContext context, SalesLoaded state) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return BlocProvider.value(
-          value: context.read<SalesCubit>(),
-          child: SaleFormBottomSheet(
-            medications: state.medications,
-            branches: state.branches,
-          ),
-        );
-      },
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -65,38 +56,48 @@ class SalesBody extends StatelessWidget {
             return const SizedBox.shrink();
           }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppPageHeader(
-                title: context.translate(LangKeys.salesAndPos),
-                subtitle: context.translate(
-                  LangKeys.processSalesAndViewTransactionHistory,
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppPageHeader(
+                  title: context.translate(LangKeys.salesAndPos),
+                  subtitle: context.translate(
+                    LangKeys.processSalesAndViewTransactionHistory,
+                  ),
+                  action: AppPrimaryButton(
+                    text: context.translate(LangKeys.newSale),
+                    icon: Icons.add,
+                    onPressed: state.isSubmitting
+                        ? null
+                        : () {
+                            this._openSaleForm(context, state);
+                          },
+                  ),
                 ),
-                action: AppPrimaryButton(
-                  text: context.translate(LangKeys.newSale),
-                  icon: Icons.add,
-                  onPressed: state.isSubmitting
-                      ? null
-                      : () {
-                          _openSaleForm(context, state);
-                        },
-                ),
-              ),
-              SizedBox(height: 14.h),
-              TextField(
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search),
-                  hintText: context.translate(LangKeys.searchSales),
-                ),
-                onChanged: context.read<SalesCubit>().updateSearchQuery,
-              ),
-              SizedBox(height: 14.h),
-              Expanded(
-                child: state.sales.isEmpty
+                SizedBox(height: 14.h),
+                _SalesFilters(state: state),
+                SizedBox(height: 14.h),
+                if (state.errorMessage != null)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 12.h),
+                    child: TextApp(
+                      text: this._buildSaleErrorMessage(
+                        context,
+                        state.errorMessage!,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(color: Colors.red),
+                    ),
+                  ),
+                state.sales.isEmpty
                     ? AppEmptyState(
                         title: context.translate(LangKeys.noSalesFound),
-                        message: state.searchQuery.trim().isEmpty
+                        message:
+                            state.searchQuery.trim().isEmpty &&
+                                state.selectedPaymentMethod == 'all'
                             ? context.translate(LangKeys.createYourFirstSale)
                             : context.translate(
                                 LangKeys.noSalesMatchYourSearch,
@@ -104,8 +105,9 @@ class SalesBody extends StatelessWidget {
                         icon: Icons.point_of_sale_outlined,
                       )
                     : SalesTable(sales: state.sales),
-              ),
-            ],
+                SizedBox(height: 24.h),
+              ],
+            ),
           );
         },
       ),
@@ -113,38 +115,22 @@ class SalesBody extends StatelessWidget {
   }
 }
 
-class _SalesErrorView extends StatelessWidget {
-  const _SalesErrorView({required this.message, required this.onRetry});
 
-  final String message;
-  final VoidCallback onRetry;
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 48.sp, color: Colors.red.shade400),
-            SizedBox(height: 12.h),
-            TextApp(
-              text: message,
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              theme: context.textStyle,
-            ),
-            SizedBox(height: 16.h),
-            AppPrimaryButton(
-              text: context.translate(LangKeys.retry),
-              icon: Icons.refresh,
-              onPressed: onRetry,
-            ),
-          ],
-        ),
-      ),
-    );
+
+const paymentMethods = ['cash', 'card', 'insurance', 'online'];
+
+String paymentMethodLabel(BuildContext context, String value) {
+  switch (value) {
+    case 'cash':
+      return context.translate(LangKeys.cash);
+    case 'card':
+      return context.translate(LangKeys.card);
+    case 'insurance':
+      return context.translate(LangKeys.insurance);
+    case 'online':
+      return context.translate(LangKeys.online);
+    default:
+      return value;
   }
 }

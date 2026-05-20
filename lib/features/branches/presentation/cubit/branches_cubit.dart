@@ -11,67 +11,174 @@ class BranchesCubit extends Cubit<BranchesState> {
 
   final BranchesRepo _branchesRepo;
 
-  List<BranchModel> _branches = [];
+  List<BranchModel> _allBranches = [];
+  String _searchQuery = '';
+  String _selectedStatus = 'all';
 
   Future<void> getBranches() async {
     emit(const BranchesState.loading());
 
     try {
-      _branches = await _branchesRepo.getBranches();
+      _allBranches = await _branchesRepo.getBranches();
 
-      emit(BranchesState.loaded(branches: _branches));
+      emit(
+        BranchesState.loaded(
+          branches: _filteredBranches,
+          searchQuery: _searchQuery,
+          selectedStatus: _selectedStatus,
+          errorMessage: null,
+        ),
+      );
     } catch (error) {
       emit(const BranchesState.failure(message: 'could_not_load_branches'));
     }
   }
 
-  Future<bool> createBranch(BranchModel branch) async {
-    final oldBranches = state is BranchesLoaded
-        ? (state as BranchesLoaded).branches
-        : _branches;
+  void updateSearchQuery(String value) {
+    _searchQuery = value;
+    _emitFromLoaded();
+  }
 
-    emit(BranchesState.loaded(branches: oldBranches, isSubmitting: true));
+  void updateSelectedStatus(String value) {
+    _selectedStatus = value;
+    _emitFromLoaded();
+  }
+
+  Future<bool> createBranch(BranchModel branch) async {
+    final current = state;
+
+    if (current is! BranchesLoaded) return false;
+
+    final oldBranches = List<BranchModel>.from(_allBranches);
+
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
-      final created = await _branchesRepo.createBranch(branch);
+      final created = await _branchesRepo.createBranch(
+        branch.copyWith(name: branch.name.trim()),
+      );
 
-      _branches = [created, ...oldBranches];
+      _allBranches = [created, ...oldBranches];
 
-      emit(BranchesState.loaded(branches: _branches));
+      _emitFromLoaded();
 
       return true;
     } catch (error) {
-      emit(BranchesState.loaded(branches: oldBranches));
+      _allBranches = oldBranches;
 
-      emit(const BranchesState.failure(message: 'could_not_save_branch'));
+      emit(
+        current.copyWith(
+          branches: _filteredBranches,
+          isSubmitting: false,
+          errorMessage: _branchErrorMessage(error),
+        ),
+      );
 
       return false;
     }
   }
 
   Future<bool> updateBranch(BranchModel branch) async {
-    final oldBranches = state is BranchesLoaded
-        ? (state as BranchesLoaded).branches
-        : _branches;
+    final current = state;
 
-    emit(BranchesState.loaded(branches: oldBranches, isSubmitting: true));
+    if (current is! BranchesLoaded) return false;
+
+    final oldBranches = List<BranchModel>.from(_allBranches);
+
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
-      final updated = await _branchesRepo.updateBranch(branch);
+      final updated = await _branchesRepo.updateBranch(
+        branch.copyWith(name: branch.name.trim()),
+      );
 
-      _branches = oldBranches.map((item) {
+      _allBranches = oldBranches.map((item) {
         return item.id == updated.id ? updated : item;
       }).toList();
 
-      emit(BranchesState.loaded(branches: _branches));
+      _emitFromLoaded();
 
       return true;
     } catch (error) {
-      emit(BranchesState.loaded(branches: oldBranches));
+      _allBranches = oldBranches;
 
-      emit(const BranchesState.failure(message: 'could_not_save_branch'));
+      emit(
+        current.copyWith(
+          branches: _filteredBranches,
+          isSubmitting: false,
+          errorMessage: _branchErrorMessage(error),
+        ),
+      );
 
       return false;
+    }
+  }
+
+  String _branchErrorMessage(Object error) {
+    final text = error.toString();
+
+    if (text.contains('branch_not_found')) {
+      return 'branch_not_found';
+    }
+
+    if (text.contains('branch_name_required')) {
+      return 'branch_name_required';
+    }
+
+    if (text.contains('branch_address_required')) {
+      return 'branch_address_required';
+    }
+
+    if (text.contains('branch_invalid_phone')) {
+      return 'branch_invalid_phone';
+    }
+
+    if (text.contains('branch_invalid_email')) {
+      return 'branch_invalid_email';
+    }
+
+    if (text.contains('branch_name_already_exists')) {
+      return 'branch_name_already_exists';
+    }
+
+    return 'could_not_save_branch';
+  }
+
+  List<BranchModel> get _filteredBranches {
+    final query = _searchQuery.toLowerCase().trim();
+
+    return _allBranches.where((branch) {
+      final matchSearch =
+          query.isEmpty ||
+          branch.name.toLowerCase().contains(query) ||
+          branch.address.toLowerCase().contains(query) ||
+          (branch.city?.toLowerCase().contains(query) ?? false) ||
+          (branch.phone?.toLowerCase().contains(query) ?? false) ||
+          (branch.email?.toLowerCase().contains(query) ?? false) ||
+          (branch.managerName?.toLowerCase().contains(query) ?? false);
+
+      final matchStatus =
+          _selectedStatus == 'all' ||
+          (_selectedStatus == 'active' && branch.isActive) ||
+          (_selectedStatus == 'inactive' && !branch.isActive);
+
+      return matchSearch && matchStatus;
+    }).toList();
+  }
+
+  void _emitFromLoaded() {
+    final current = state;
+
+    if (current is BranchesLoaded) {
+      emit(
+        current.copyWith(
+          branches: _filteredBranches,
+          searchQuery: _searchQuery,
+          selectedStatus: _selectedStatus,
+          isSubmitting: false,
+          errorMessage: null,
+        ),
+      );
     }
   }
 }

@@ -27,6 +27,7 @@ PurchaseOrderModel _$PurchaseOrderModelFromJson(Map<String, dynamic> json) =>
               .toList() ??
           const [],
       notes: json['notes'] as String?,
+      receivedAt: dateTimeFromJson(json['received_at']),
       createdAt: dateTimeFromJson(json['created_at']),
       updatedAt: dateTimeFromJson(json['updated_at']),
     );
@@ -45,6 +46,7 @@ Map<String, dynamic> _$PurchaseOrderModelToJson(PurchaseOrderModel instance) =>
       'total_amount': instance.totalAmount,
       'items': instance.items.map((e) => e.toJson()).toList(),
       'notes': instance.notes,
+      'received_at': dateTimeToJson(instance.receivedAt),
       'created_at': dateTimeToJson(instance.createdAt),
       'updated_at': dateTimeToJson(instance.updatedAt),
     };

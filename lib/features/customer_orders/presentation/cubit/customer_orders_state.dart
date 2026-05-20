@@ -18,6 +18,7 @@ class CustomerOrdersState with _$CustomerOrdersState {
     required List<BranchModel> branches,
     @Default('') String searchQuery,
     @Default('all') String selectedStatus,
+    @Default('all') String selectedBranchId,
     @Default(false) bool isSubmitting,
     @Default(null) String? errorMessage,
   }) = CustomerOrdersLoaded;

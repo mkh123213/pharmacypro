@@ -13,6 +13,8 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
 
   List<PurchaseOrderModel> _allPurchaseOrders = [];
   String _searchQuery = '';
+  String _selectedStatus = 'all';
+  String _selectedBranchId = 'all';
 
   Future<void> getPurchaseOrdersData() async {
     emit(const PurchaseOrdersState.loading());
@@ -34,6 +36,8 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
           branches: results[2] as dynamic,
           medications: results[3] as dynamic,
           searchQuery: _searchQuery,
+          selectedStatus: _selectedStatus,
+          selectedBranchId: _selectedBranchId,
           errorMessage: null,
         ),
       );
@@ -48,6 +52,16 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
 
   void updateSearchQuery(String value) {
     _searchQuery = value;
+    _emitFromLoaded();
+  }
+
+  void updateSelectedStatus(String value) {
+    _selectedStatus = value;
+    _emitFromLoaded();
+  }
+
+  void updateSelectedBranch(String value) {
+    _selectedBranchId = value;
     _emitFromLoaded();
   }
 
@@ -85,6 +99,42 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
     }
   }
 
+  Future<bool> updatePurchaseOrder(PurchaseOrderModel purchaseOrder) async {
+    final current = state;
+
+    if (current is! PurchaseOrdersLoaded) return false;
+
+    final oldPurchaseOrders = List<PurchaseOrderModel>.from(_allPurchaseOrders);
+
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
+
+    try {
+      final updated = await _purchaseOrdersRepo.updatePurchaseOrder(
+        purchaseOrder,
+      );
+
+      _allPurchaseOrders = oldPurchaseOrders.map((order) {
+        return order.id == updated.id ? updated : order;
+      }).toList();
+
+      _emitFromLoaded();
+
+      return true;
+    } catch (error) {
+      _allPurchaseOrders = oldPurchaseOrders;
+
+      emit(
+        current.copyWith(
+          purchaseOrders: _filteredPurchaseOrders,
+          isSubmitting: false,
+          errorMessage: _purchaseOrderErrorMessage(error),
+        ),
+      );
+
+      return false;
+    }
+  }
+
   Future<bool> updateStatus(String id, String status) async {
     final current = state;
 
@@ -102,7 +152,10 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
       _allPurchaseOrders = oldPurchaseOrders.map((order) {
         if (order.id != id) return order;
 
-        return order.copyWith(status: status);
+        return order.copyWith(
+          status: status,
+          receivedAt: status == 'received' ? DateTime.now() : order.receivedAt,
+        );
       }).toList();
 
       _emitFromLoaded();
@@ -125,17 +178,7 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
 
   String _purchaseOrderErrorMessage(Object error) {
     final text = error.toString();
-    if (text.contains('purchase_order_already_cancelled')) {
-      return 'purchase_order_already_cancelled';
-    }
 
-    if (text.contains('cannot_cancel_received_purchase_order')) {
-      return 'cannot_cancel_received_purchase_order';
-    }
-
-    if (text.contains('invalid_purchase_order_status_transition')) {
-      return 'invalid_purchase_order_status_transition';
-    }
     if (text.contains('supplier_not_found')) {
       return 'supplier_not_found';
     }
@@ -180,8 +223,44 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
       return 'purchase_order_already_received';
     }
 
+    if (text.contains('purchase_order_already_cancelled')) {
+      return 'purchase_order_already_cancelled';
+    }
+
+    if (text.contains('cannot_cancel_received_purchase_order')) {
+      return 'cannot_cancel_received_purchase_order';
+    }
+
+    if (text.contains('invalid_purchase_order_status_transition')) {
+      return 'invalid_purchase_order_status_transition';
+    }
+
+    if (text.contains('only_draft_purchase_orders_can_be_edited')) {
+      return 'only_draft_purchase_orders_can_be_edited';
+    }
+
     if (text.contains('purchase_order_has_no_items')) {
       return 'purchase_order_has_no_items';
+    }
+
+    if (text.contains('purchase_order_item_missing_medication')) {
+      return 'purchase_order_item_missing_medication';
+    }
+
+    if (text.contains('purchase_order_item_invalid_quantity')) {
+      return 'purchase_order_item_invalid_quantity';
+    }
+
+    if (text.contains('purchase_order_item_invalid_unit_cost')) {
+      return 'purchase_order_item_invalid_unit_cost';
+    }
+
+    if (text.contains('purchase_order_item_invalid_total')) {
+      return 'purchase_order_item_invalid_total';
+    }
+
+    if (text.contains('purchase_order_invalid_total')) {
+      return 'purchase_order_invalid_total';
     }
 
     return 'could_not_update_purchase_order_status';
@@ -191,9 +270,19 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
     final query = _searchQuery.toLowerCase().trim();
 
     return _allPurchaseOrders.where((order) {
-      return (order.orderNumber?.toLowerCase().contains(query) ?? false) ||
+      final matchSearch =
+          query.isEmpty ||
+          (order.orderNumber?.toLowerCase().contains(query) ?? false) ||
           (order.supplierName?.toLowerCase().contains(query) ?? false) ||
           (order.branchName?.toLowerCase().contains(query) ?? false);
+
+      final matchStatus =
+          _selectedStatus == 'all' || order.status == _selectedStatus;
+
+      final matchBranch =
+          _selectedBranchId == 'all' || order.branchId == _selectedBranchId;
+
+      return matchSearch && matchStatus && matchBranch;
     }).toList();
   }
 
@@ -205,6 +294,8 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
         current.copyWith(
           purchaseOrders: _filteredPurchaseOrders,
           searchQuery: _searchQuery,
+          selectedStatus: _selectedStatus,
+          selectedBranchId: _selectedBranchId,
           isSubmitting: false,
           errorMessage: null,
         ),

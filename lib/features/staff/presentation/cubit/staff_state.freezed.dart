@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<StaffModel> staff,  List<BranchModel> branches,  String searchQuery,  String selectedRole,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<StaffModel> staff,  List<BranchModel> branches,  String searchQuery,  String selectedRole,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case StaffInitial() when initial != null:
 return initial();case StaffLoading() when loading != null:
 return loading();case StaffLoaded() when loaded != null:
-return loaded(_that.staff,_that.branches,_that.searchQuery,_that.selectedRole,_that.isSubmitting);case StaffFailure() when failure != null:
+return loaded(_that.staff,_that.branches,_that.searchQuery,_that.selectedRole,_that.isSubmitting,_that.errorMessage);case StaffFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<StaffModel> staff,  List<BranchModel> branches,  String searchQuery,  String selectedRole,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<StaffModel> staff,  List<BranchModel> branches,  String searchQuery,  String selectedRole,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case StaffInitial():
 return initial();case StaffLoading():
 return loading();case StaffLoaded():
-return loaded(_that.staff,_that.branches,_that.searchQuery,_that.selectedRole,_that.isSubmitting);case StaffFailure():
+return loaded(_that.staff,_that.branches,_that.searchQuery,_that.selectedRole,_that.isSubmitting,_that.errorMessage);case StaffFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<StaffModel> staff,  List<BranchModel> branches,  String searchQuery,  String selectedRole,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<StaffModel> staff,  List<BranchModel> branches,  String searchQuery,  String selectedRole,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case StaffInitial() when initial != null:
 return initial();case StaffLoading() when loading != null:
 return loading();case StaffLoaded() when loaded != null:
-return loaded(_that.staff,_that.branches,_that.searchQuery,_that.selectedRole,_that.isSubmitting);case StaffFailure() when failure != null:
+return loaded(_that.staff,_that.branches,_that.searchQuery,_that.selectedRole,_that.isSubmitting,_that.errorMessage);case StaffFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class StaffLoaded implements StaffState {
-  const StaffLoaded({required final  List<StaffModel> staff, required final  List<BranchModel> branches, this.searchQuery = '', this.selectedRole = 'all', this.isSubmitting = false}): _staff = staff,_branches = branches;
+  const StaffLoaded({required final  List<StaffModel> staff, required final  List<BranchModel> branches, this.searchQuery = '', this.selectedRole = 'all', this.isSubmitting = false, this.errorMessage = null}): _staff = staff,_branches = branches;
   
 
  final  List<StaffModel> _staff;
@@ -277,6 +277,7 @@ class StaffLoaded implements StaffState {
 @JsonKey() final  String searchQuery;
 @JsonKey() final  String selectedRole;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of StaffState
 /// with the given fields replaced by the non-null parameter values.
@@ -288,16 +289,16 @@ $StaffLoadedCopyWith<StaffLoaded> get copyWith => _$StaffLoadedCopyWithImpl<Staf
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StaffLoaded&&const DeepCollectionEquality().equals(other._staff, _staff)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedRole, selectedRole) || other.selectedRole == selectedRole)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StaffLoaded&&const DeepCollectionEquality().equals(other._staff, _staff)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedRole, selectedRole) || other.selectedRole == selectedRole)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_staff),const DeepCollectionEquality().hash(_branches),searchQuery,selectedRole,isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_staff),const DeepCollectionEquality().hash(_branches),searchQuery,selectedRole,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'StaffState.loaded(staff: $staff, branches: $branches, searchQuery: $searchQuery, selectedRole: $selectedRole, isSubmitting: $isSubmitting)';
+  return 'StaffState.loaded(staff: $staff, branches: $branches, searchQuery: $searchQuery, selectedRole: $selectedRole, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -308,7 +309,7 @@ abstract mixin class $StaffLoadedCopyWith<$Res> implements $StaffStateCopyWith<$
   factory $StaffLoadedCopyWith(StaffLoaded value, $Res Function(StaffLoaded) _then) = _$StaffLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<StaffModel> staff, List<BranchModel> branches, String searchQuery, String selectedRole, bool isSubmitting
+ List<StaffModel> staff, List<BranchModel> branches, String searchQuery, String selectedRole, bool isSubmitting, String? errorMessage
 });
 
 
@@ -325,14 +326,15 @@ class _$StaffLoadedCopyWithImpl<$Res>
 
 /// Create a copy of StaffState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? staff = null,Object? branches = null,Object? searchQuery = null,Object? selectedRole = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? staff = null,Object? branches = null,Object? searchQuery = null,Object? selectedRole = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(StaffLoaded(
 staff: null == staff ? _self._staff : staff // ignore: cast_nullable_to_non_nullable
 as List<StaffModel>,branches: null == branches ? _self._branches : branches // ignore: cast_nullable_to_non_nullable
 as List<BranchModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
 as String,selectedRole: null == selectedRole ? _self.selectedRole : selectedRole // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

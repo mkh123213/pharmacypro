@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( DashboardSummaryModel summary)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( DashboardSummaryModel summary,  bool isRefreshing,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case DashboardInitial() when initial != null:
 return initial();case DashboardLoading() when loading != null:
 return loading();case DashboardLoaded() when loaded != null:
-return loaded(_that.summary);case DashboardFailure() when failure != null:
+return loaded(_that.summary,_that.isRefreshing,_that.errorMessage);case DashboardFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( DashboardSummaryModel summary)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( DashboardSummaryModel summary,  bool isRefreshing,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case DashboardInitial():
 return initial();case DashboardLoading():
 return loading();case DashboardLoaded():
-return loaded(_that.summary);case DashboardFailure():
+return loaded(_that.summary,_that.isRefreshing,_that.errorMessage);case DashboardFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( DashboardSummaryModel summary)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( DashboardSummaryModel summary,  bool isRefreshing,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case DashboardInitial() when initial != null:
 return initial();case DashboardLoading() when loading != null:
 return loading();case DashboardLoaded() when loaded != null:
-return loaded(_that.summary);case DashboardFailure() when failure != null:
+return loaded(_that.summary,_that.isRefreshing,_that.errorMessage);case DashboardFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,10 +257,12 @@ String toString() {
 
 
 class DashboardLoaded implements DashboardState {
-  const DashboardLoaded({required this.summary});
+  const DashboardLoaded({required this.summary, this.isRefreshing = false, this.errorMessage = null});
   
 
  final  DashboardSummaryModel summary;
+@JsonKey() final  bool isRefreshing;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of DashboardState
 /// with the given fields replaced by the non-null parameter values.
@@ -272,16 +274,16 @@ $DashboardLoadedCopyWith<DashboardLoaded> get copyWith => _$DashboardLoadedCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardLoaded&&(identical(other.summary, summary) || other.summary == summary));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardLoaded&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.isRefreshing, isRefreshing) || other.isRefreshing == isRefreshing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,summary);
+int get hashCode => Object.hash(runtimeType,summary,isRefreshing,errorMessage);
 
 @override
 String toString() {
-  return 'DashboardState.loaded(summary: $summary)';
+  return 'DashboardState.loaded(summary: $summary, isRefreshing: $isRefreshing, errorMessage: $errorMessage)';
 }
 
 
@@ -292,7 +294,7 @@ abstract mixin class $DashboardLoadedCopyWith<$Res> implements $DashboardStateCo
   factory $DashboardLoadedCopyWith(DashboardLoaded value, $Res Function(DashboardLoaded) _then) = _$DashboardLoadedCopyWithImpl;
 @useResult
 $Res call({
- DashboardSummaryModel summary
+ DashboardSummaryModel summary, bool isRefreshing, String? errorMessage
 });
 
 
@@ -309,10 +311,12 @@ class _$DashboardLoadedCopyWithImpl<$Res>
 
 /// Create a copy of DashboardState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? summary = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? summary = null,Object? isRefreshing = null,Object? errorMessage = freezed,}) {
   return _then(DashboardLoaded(
 summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
-as DashboardSummaryModel,
+as DashboardSummaryModel,isRefreshing: null == isRefreshing ? _self.isRefreshing : isRefreshing // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

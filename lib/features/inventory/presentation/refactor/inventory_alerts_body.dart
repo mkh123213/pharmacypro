@@ -18,25 +18,13 @@ import '../widgets/inventory_alert_filter_bar.dart';
 import '../widgets/inventory_alerts_table.dart';
 import '../widgets/remove_expired_stock_bottom_sheet.dart';
 
+part 'inventory_alerts_body_alerts_summary.dart';
+part 'inventory_alerts_body_inventory_alerts_error_view.dart';
+
+part 'inventory_alerts_body_open_remove_expired_stock_sheet.dart';
 class InventoryAlertsBody extends StatelessWidget {
   const InventoryAlertsBody({super.key});
 
-  void _openRemoveExpiredStockSheet(
-    BuildContext context,
-    InventoryAlertModel alert,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return BlocProvider.value(
-          value: context.read<InventoryAlertsCubit>(),
-          child: RemoveExpiredStockBottomSheet(item: alert.inventoryItem),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +106,7 @@ class InventoryAlertsBody extends StatelessWidget {
                             return InventoryAlertsTable(
                               alerts: state.filteredAlerts,
                               onRemoveExpiredStock: (alert) {
-                                _openRemoveExpiredStockSheet(context, alert);
+                                this._openRemoveExpiredStockSheet(context, alert);
                               },
                             );
                           }
@@ -133,7 +121,7 @@ class InventoryAlertsBody extends StatelessWidget {
                                 alert: alert,
                                 onRemoveExpiredStock: alert.type == 'expired'
                                     ? () {
-                                        _openRemoveExpiredStockSheet(
+                                        this._openRemoveExpiredStockSheet(
                                           context,
                                           alert,
                                         );
@@ -148,82 +136,6 @@ class InventoryAlertsBody extends StatelessWidget {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _AlertsSummary extends StatelessWidget {
-  const _AlertsSummary({required this.alertsCount});
-
-  final int alertsCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(14.w),
-        child: Row(
-          children: [
-            Icon(
-              Icons.warning_amber,
-              size: 26.sp,
-              color: alertsCount > 0 ? Colors.orange : Colors.green,
-            ),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: TextApp(
-                text: alertsCount > 0
-                    ? context
-                          .translate(LangKeys.inventoryAlertsCount)
-                          .replaceAll('{count}', alertsCount.toString())
-                    : context.translate(LangKeys.noActiveInventoryAlerts),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InventoryAlertsErrorView extends StatelessWidget {
-  const _InventoryAlertsErrorView({
-    required this.message,
-    required this.onRetry,
-  });
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 48.sp, color: Colors.red.shade400),
-            SizedBox(height: 12.h),
-            TextApp(
-              text: message,
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              theme: context.textStyle,
-            ),
-            SizedBox(height: 16.h),
-            AppPrimaryButton(
-              text: context.translate(LangKeys.retry),
-              icon: Icons.refresh,
-              onPressed: onRetry,
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -9,14 +9,18 @@ part 'sales_state.freezed.dart';
 @freezed
 class SalesState with _$SalesState {
   const factory SalesState.initial() = SalesInitial;
+
   const factory SalesState.loading() = SalesLoading;
+
   const factory SalesState.loaded({
-    @Default(null) String? errorMessage,
     required List<SaleModel> sales,
     required List<MedicationModel> medications,
     required List<BranchModel> branches,
     @Default('') String searchQuery,
+    @Default('all') String selectedPaymentMethod,
     @Default(false) bool isSubmitting,
+    @Default(null) String? errorMessage,
   }) = SalesLoaded;
+
   const factory SalesState.failure({required String message}) = SalesFailure;
 }

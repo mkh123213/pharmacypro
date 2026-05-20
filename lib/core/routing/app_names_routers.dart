@@ -15,8 +15,8 @@
 //   static const String reports = '/reports';
 // }
 import 'package:go_router/go_router.dart';
-import 'package:pharmacypro/features/inventory/presentation/screens/inventory_alerts_screen.dart';
-import 'package:pharmacypro/features/inventory/presentation/screens/stock_movements_screen.dart';
+import '../../features/inventory/presentation/screens/inventory_alerts_screen.dart';
+import '../../features/inventory/presentation/screens/stock_movements_screen.dart';
 
 import '../../features/branches/presentation/screens/branches_screen.dart';
 import '../../features/customer_orders/presentation/screens/customer_orders_screen.dart';

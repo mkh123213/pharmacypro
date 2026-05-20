@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:pharmacypro/features/medications/data/models/medication_model.dart';
+import '../../../features/medications/data/models/medication_model.dart';
 
-import '../../../../core/common/widgets/app_primary_button.dart';
-import '../../../../core/common/widgets/app_text_field.dart';
-import '../../../../core/common/widgets/text_app.dart';
-import '../../../../core/extensions/context_extension.dart';
-import '../../../../core/language/lang_keys.dart';
-import '../../../../core/utils/app_validators.dart';
+import 'app_primary_button.dart';
+import 'app_text_field.dart';
+import 'text_app.dart';
+import '../../extensions/context_extension.dart';
+import '../../language/lang_keys.dart';
+import '../../utils/app_validators.dart';
 
 class SaleMedicationPickerResult {
   const SaleMedicationPickerResult({

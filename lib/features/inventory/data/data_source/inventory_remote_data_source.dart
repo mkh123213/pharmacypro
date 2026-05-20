@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pharmacypro/features/inventory/data/models/inventory_alert_model.dart';
-import 'package:pharmacypro/features/inventory/data/models/stock_movement_model.dart';
+import '../models/inventory_alert_model.dart';
+import '../models/stock_movement_model.dart';
 
 import '../../../branches/data/models/branch_model.dart';
 import '../../../medications/data/models/medication_model.dart';
@@ -49,6 +49,7 @@ class InventoryRemoteDataSource {
   }
 
   Future<InventoryModel> createInventory(InventoryModel item) async {
+    await _validateInventoryItem(item);
     await _validateActiveBranchAndMedication(
       branchId: item.branchId,
       medicationId: item.medicationId,
@@ -76,12 +77,18 @@ class InventoryRemoteDataSource {
   }
 
   Future<InventoryModel> updateInventory(InventoryModel item) async {
+    final reference = _inventory.doc(item.id);
+    final snapshot = await reference.get();
+
+    if (!snapshot.exists) {
+      throw Exception('inventory_item_not_found');
+    }
+
+    await _validateInventoryItem(item);
     await _validateActiveBranchAndMedication(
       branchId: item.branchId,
       medicationId: item.medicationId,
     );
-
-    final reference = _inventory.doc(item.id);
 
     await reference.update({
       ...item.toFirestoreJson(),
@@ -96,6 +103,14 @@ class InventoryRemoteDataSource {
     required int quantityChange,
     required String reason,
   }) async {
+    if (quantityChange == 0) {
+      throw Exception('inventory_adjustment_quantity_required');
+    }
+
+    if (reason.trim().isEmpty) {
+      throw Exception('inventory_adjustment_reason_required');
+    }
+
     final inventoryReference = _inventory.doc(item.id);
 
     await _firestore.runTransaction((transaction) async {
@@ -106,6 +121,11 @@ class InventoryRemoteDataSource {
       }
 
       final currentItem = InventoryModel.fromFirestore(snapshot);
+
+      await _validateActiveBranchAndMedication(
+        branchId: currentItem.branchId,
+        medicationId: currentItem.medicationId,
+      );
 
       final currentQuantity = currentItem.quantity;
       final newQuantity = currentQuantity + quantityChange;
@@ -127,7 +147,7 @@ class InventoryRemoteDataSource {
         'branch_id': currentItem.branchId,
         'branch_name': currentItem.branchName,
         'type': 'manual_adjustment',
-        'reason': reason,
+        'reason': reason.trim(),
         'quantity_change': quantityChange,
         'quantity_before': currentQuantity,
         'quantity_after': newQuantity,
@@ -144,6 +164,10 @@ class InventoryRemoteDataSource {
     required InventoryModel item,
     required String reason,
   }) async {
+    if (reason.trim().isEmpty) {
+      throw Exception('inventory_adjustment_reason_required');
+    }
+
     final inventoryReference = _inventory.doc(item.id);
 
     await _firestore.runTransaction((transaction) async {
@@ -176,7 +200,7 @@ class InventoryRemoteDataSource {
         'branch_id': currentItem.branchId,
         'branch_name': currentItem.branchName,
         'type': 'expired_removed',
-        'reason': reason,
+        'reason': reason.trim(),
         'quantity_change': quantityChange,
         'quantity_before': currentQuantity,
         'quantity_after': newQuantity,
@@ -267,6 +291,32 @@ class InventoryRemoteDataSource {
     alerts.sort((a, b) => b.priority.compareTo(a.priority));
 
     return alerts;
+  }
+
+  Future<void> _validateInventoryItem(InventoryModel item) async {
+    if (item.medicationId.trim().isEmpty) {
+      throw Exception('inventory_missing_medication');
+    }
+
+    if (item.branchId.trim().isEmpty) {
+      throw Exception('inventory_missing_branch');
+    }
+
+    if (item.quantity < 0) {
+      throw Exception('inventory_invalid_quantity');
+    }
+
+    if (item.minStockLevel < 0) {
+      throw Exception('inventory_invalid_min_stock_level');
+    }
+
+    final expiryText = item.expiryDate?.trim();
+
+    if (expiryText != null &&
+        expiryText.isNotEmpty &&
+        DateTime.tryParse(expiryText) == null) {
+      throw Exception('inventory_invalid_expiry_date');
+    }
   }
 
   String _inventoryDocumentId({

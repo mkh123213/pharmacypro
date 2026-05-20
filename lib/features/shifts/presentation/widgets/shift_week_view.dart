@@ -34,7 +34,8 @@ class ShiftWeekView extends StatelessWidget {
         final dayShifts = shifts.where((shift) => shift.date == key).toList();
         final isToday = DateUtils.isSameDay(day, DateTime.now());
 
-        return Expanded(
+        return SizedBox(
+          width: 128,
           child: Column(
             children: [
               Container(
@@ -65,15 +66,23 @@ class ShiftWeekView extends StatelessWidget {
                   ],
                 ),
               ),
-              ...dayShifts.map((shift) {
-                return ShiftCard(
-                  shift: shift,
-                  isSubmitting: isSubmitting,
-                  onTap: () {
-                    onShiftTap(shift);
-                  },
-                );
-              }),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: dayShifts.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 4),
+                itemBuilder: (context, index) {
+                  final shift = dayShifts[index];
+
+                  return ShiftCard(
+                    shift: shift,
+                    isSubmitting: isSubmitting,
+                    onTap: () {
+                      onShiftTap(shift);
+                    },
+                  );
+                },
+              ),
             ],
           ),
         );

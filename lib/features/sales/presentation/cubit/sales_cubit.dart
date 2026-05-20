@@ -13,6 +13,7 @@ class SalesCubit extends Cubit<SalesState> {
 
   List<SaleModel> _allSales = [];
   String _searchQuery = '';
+  String _selectedPaymentMethod = 'all';
 
   Future<void> getSalesData() async {
     emit(const SalesState.loading());
@@ -32,6 +33,7 @@ class SalesCubit extends Cubit<SalesState> {
           medications: results[1] as dynamic,
           branches: results[2] as dynamic,
           searchQuery: _searchQuery,
+          selectedPaymentMethod: _selectedPaymentMethod,
           errorMessage: null,
         ),
       );
@@ -42,6 +44,11 @@ class SalesCubit extends Cubit<SalesState> {
 
   void updateSearchQuery(String value) {
     _searchQuery = value;
+    _emitFromLoaded();
+  }
+
+  void updateSelectedPaymentMethod(String value) {
+    _selectedPaymentMethod = value;
     _emitFromLoaded();
   }
 
@@ -65,13 +72,11 @@ class SalesCubit extends Cubit<SalesState> {
     } catch (error) {
       _allSales = oldSales;
 
-      final message = _saleErrorMessage(error);
-
       emit(
         current.copyWith(
           sales: _filteredSales,
           isSubmitting: false,
-          errorMessage: message,
+          errorMessage: _saleErrorMessage(error),
         ),
       );
 
@@ -88,6 +93,50 @@ class SalesCubit extends Cubit<SalesState> {
 
     if (text.contains('inactive_branch')) {
       return 'inactive_branch';
+    }
+
+    if (text.contains('sale_missing_branch')) {
+      return 'sale_missing_branch';
+    }
+
+    if (text.contains('sale_has_no_items')) {
+      return 'sale_has_no_items';
+    }
+
+    if (text.contains('sale_invalid_payment_method')) {
+      return 'sale_invalid_payment_method';
+    }
+
+    if (text.contains('sale_invalid_subtotal')) {
+      return 'sale_invalid_subtotal';
+    }
+
+    if (text.contains('sale_invalid_discount')) {
+      return 'sale_invalid_discount';
+    }
+
+    if (text.contains('sale_discount_greater_than_subtotal')) {
+      return 'sale_discount_greater_than_subtotal';
+    }
+
+    if (text.contains('sale_invalid_total')) {
+      return 'sale_invalid_total';
+    }
+
+    if (text.contains('sale_item_missing_medication')) {
+      return 'sale_item_missing_medication';
+    }
+
+    if (text.contains('sale_item_invalid_quantity')) {
+      return 'sale_item_invalid_quantity';
+    }
+
+    if (text.contains('sale_item_invalid_unit_price')) {
+      return 'sale_item_invalid_unit_price';
+    }
+
+    if (text.contains('sale_item_invalid_total')) {
+      return 'sale_item_invalid_total';
     }
 
     if (text.contains('medication_not_found:')) {
@@ -137,10 +186,20 @@ class SalesCubit extends Cubit<SalesState> {
     final query = _searchQuery.toLowerCase().trim();
 
     return _allSales.where((sale) {
-      return (sale.customerName?.toLowerCase().contains(query) ?? false) ||
+      final matchSearch =
+          query.isEmpty ||
+          (sale.customerName?.toLowerCase().contains(query) ?? false) ||
           (sale.customerPhone?.toLowerCase().contains(query) ?? false) ||
           (sale.branchName?.toLowerCase().contains(query) ?? false) ||
-          (sale.saleNumber?.toLowerCase().contains(query) ?? false);
+          (sale.saleNumber?.toLowerCase().contains(query) ?? false) ||
+          sale.paymentMethod.toLowerCase().contains(query) ||
+          sale.status.toLowerCase().contains(query);
+
+      final matchPayment =
+          _selectedPaymentMethod == 'all' ||
+          sale.paymentMethod == _selectedPaymentMethod;
+
+      return matchSearch && matchPayment;
     }).toList();
   }
 
@@ -152,6 +211,7 @@ class SalesCubit extends Cubit<SalesState> {
         current.copyWith(
           sales: _filteredSales,
           searchQuery: _searchQuery,
+          selectedPaymentMethod: _selectedPaymentMethod,
           isSubmitting: false,
           errorMessage: null,
         ),

@@ -16,6 +16,8 @@ import '../widgets/stock_movement_card.dart';
 import '../widgets/stock_movement_filter_bar.dart';
 import '../widgets/stock_movements_table.dart';
 
+part 'stock_movements_body_stock_movements_error_view.dart';
+
 class StockMovementsBody extends StatelessWidget {
   const StockMovementsBody({super.key});
 
@@ -108,45 +110,6 @@ class StockMovementsBody extends StatelessWidget {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _StockMovementsErrorView extends StatelessWidget {
-  const _StockMovementsErrorView({
-    required this.message,
-    required this.onRetry,
-  });
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 48.sp, color: Colors.red.shade400),
-            SizedBox(height: 12.h),
-            TextApp(
-              text: message,
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              theme: context.textStyle,
-            ),
-            SizedBox(height: 16.h),
-            AppPrimaryButton(
-              text: context.translate(LangKeys.retry),
-              icon: Icons.refresh,
-              onPressed: onRetry,
-            ),
-          ],
-        ),
       ),
     );
   }

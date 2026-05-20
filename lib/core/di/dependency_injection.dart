@@ -1,9 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:pharmacypro/core/app/app_cubit/app_cubit.dart';
-import 'package:pharmacypro/features/inventory/presentation/cubit/inventory_alerts_cubit.dart';
-import 'package:pharmacypro/features/inventory/presentation/cubit/stock_movements_cubit.dart';
 
 import '../../features/branches/data/data_source/branches_remote_data_source.dart';
 import '../../features/branches/data/repos/branches_repo.dart';
@@ -16,7 +13,9 @@ import '../../features/dashboard/data/repos/dashboard_repo.dart';
 import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
 import '../../features/inventory/data/data_source/inventory_remote_data_source.dart';
 import '../../features/inventory/data/repos/inventory_repo.dart';
+import '../../features/inventory/presentation/cubit/inventory_alerts_cubit.dart';
 import '../../features/inventory/presentation/cubit/inventory_cubit.dart';
+import '../../features/inventory/presentation/cubit/stock_movements_cubit.dart';
 import '../../features/medications/data/data_source/medications_remote_data_source.dart';
 import '../../features/medications/data/repos/medications_repo.dart';
 import '../../features/medications/presentation/cubit/medications_cubit.dart';
@@ -41,15 +40,14 @@ import '../../features/staff/presentation/cubit/staff_cubit.dart';
 import '../../features/suppliers/data/data_source/suppliers_remote_data_source.dart';
 import '../../features/suppliers/data/repos/suppliers_repo.dart';
 import '../../features/suppliers/presentation/cubit/suppliers_cubit.dart';
+import '../app/app_cubit/app_cubit.dart';
 
 final getIt = GetIt.instance;
 
 void setupDependencies() {
-  if (!getIt.isRegistered<FirebaseFirestore>()) {
-    getIt.registerLazySingleton<FirebaseFirestore>(
-      () => FirebaseFirestore.instance,
-    );
-  }
+  _registerLazySingletonIfAbsent<FirebaseFirestore>(
+    () => FirebaseFirestore.instance,
+  );
 
   _registerCore();
   _registerBranches();
@@ -66,176 +64,198 @@ void setupDependencies() {
   _registerReports();
 }
 
-void _registerCore() {
-  final navigatorKey = GlobalKey<NavigatorState>();
+void _registerLazySingletonIfAbsent<T extends Object>(T Function() factoryFunc) {
+  if (!getIt.isRegistered<T>()) {
+    getIt.registerLazySingleton<T>(factoryFunc);
+  }
+}
 
-  getIt
-    ..registerFactory(AppCubit.new)
-    ..registerSingleton<GlobalKey<NavigatorState>>(navigatorKey);
+void _registerFactoryIfAbsent<T extends Object>(T Function() factoryFunc) {
+  if (!getIt.isRegistered<T>()) {
+    getIt.registerFactory<T>(factoryFunc);
+  }
+}
+
+void _registerSingletonIfAbsent<T extends Object>(T instance) {
+  if (!getIt.isRegistered<T>()) {
+    getIt.registerSingleton<T>(instance);
+  }
+}
+
+void _registerCore() {
+  _registerSingletonIfAbsent<GlobalKey<NavigatorState>>(
+    GlobalKey<NavigatorState>(),
+  );
+
+  _registerFactoryIfAbsent<AppCubit>(AppCubit.new);
 }
 
 void _registerBranches() {
-  getIt.registerLazySingleton<BranchesRemoteDataSource>(
+  _registerLazySingletonIfAbsent<BranchesRemoteDataSource>(
     () => BranchesRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<BranchesRepo>(
+  _registerLazySingletonIfAbsent<BranchesRepo>(
     () => BranchesRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<BranchesCubit>(
+  _registerFactoryIfAbsent<BranchesCubit>(
     () => BranchesCubit(branchesRepo: getIt()),
   );
 }
 
 void _registerSuppliers() {
-  getIt.registerLazySingleton<SuppliersRemoteDataSource>(
+  _registerLazySingletonIfAbsent<SuppliersRemoteDataSource>(
     () => SuppliersRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<SuppliersRepo>(
+  _registerLazySingletonIfAbsent<SuppliersRepo>(
     () => SuppliersRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<SuppliersCubit>(
+  _registerFactoryIfAbsent<SuppliersCubit>(
     () => SuppliersCubit(suppliersRepo: getIt()),
   );
 }
 
 void _registerStaff() {
-  getIt.registerLazySingleton<StaffRemoteDataSource>(
+  _registerLazySingletonIfAbsent<StaffRemoteDataSource>(
     () => StaffRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<StaffRepo>(
+  _registerLazySingletonIfAbsent<StaffRepo>(
     () => StaffRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<StaffCubit>(() => StaffCubit(staffRepo: getIt()));
+  _registerFactoryIfAbsent<StaffCubit>(() => StaffCubit(staffRepo: getIt()));
 }
 
 void _registerMedications() {
-  getIt.registerLazySingleton<MedicationsRemoteDataSource>(
+  _registerLazySingletonIfAbsent<MedicationsRemoteDataSource>(
     () => MedicationsRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<MedicationsRepo>(
+  _registerLazySingletonIfAbsent<MedicationsRepo>(
     () => MedicationsRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<MedicationsCubit>(
+  _registerFactoryIfAbsent<MedicationsCubit>(
     () => MedicationsCubit(medicationsRepo: getIt()),
   );
 }
 
 void _registerInventory() {
-  getIt.registerLazySingleton<InventoryRemoteDataSource>(
+  _registerLazySingletonIfAbsent<InventoryRemoteDataSource>(
     () => InventoryRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<InventoryRepo>(
+  _registerLazySingletonIfAbsent<InventoryRepo>(
     () => InventoryRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<InventoryCubit>(
+  _registerFactoryIfAbsent<InventoryCubit>(
     () => InventoryCubit(inventoryRepo: getIt()),
   );
-  getIt.registerFactory<StockMovementsCubit>(
+
+  _registerFactoryIfAbsent<StockMovementsCubit>(
     () => StockMovementsCubit(inventoryRepo: getIt<InventoryRepo>()),
   );
-  getIt.registerFactory<InventoryAlertsCubit>(
+
+  _registerFactoryIfAbsent<InventoryAlertsCubit>(
     () => InventoryAlertsCubit(inventoryRepo: getIt<InventoryRepo>()),
   );
 }
 
 void _registerSales() {
-  getIt.registerLazySingleton<SalesRemoteDataSource>(
+  _registerLazySingletonIfAbsent<SalesRemoteDataSource>(
     () => SalesRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<SalesRepo>(
+  _registerLazySingletonIfAbsent<SalesRepo>(
     () => SalesRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<SalesCubit>(() => SalesCubit(salesRepo: getIt()));
+  _registerFactoryIfAbsent<SalesCubit>(() => SalesCubit(salesRepo: getIt()));
 }
 
 void _registerCustomerOrders() {
-  getIt.registerLazySingleton<CustomerOrdersRemoteDataSource>(
+  _registerLazySingletonIfAbsent<CustomerOrdersRemoteDataSource>(
     () => CustomerOrdersRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<CustomerOrdersRepo>(
+  _registerLazySingletonIfAbsent<CustomerOrdersRepo>(
     () => CustomerOrdersRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<CustomerOrdersCubit>(
+  _registerFactoryIfAbsent<CustomerOrdersCubit>(
     () => CustomerOrdersCubit(customerOrdersRepo: getIt()),
   );
 }
 
 void _registerPrescriptions() {
-  getIt.registerLazySingleton<PrescriptionsRemoteDataSource>(
+  _registerLazySingletonIfAbsent<PrescriptionsRemoteDataSource>(
     () => PrescriptionsRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<PrescriptionsRepo>(
+  _registerLazySingletonIfAbsent<PrescriptionsRepo>(
     () => PrescriptionsRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<PrescriptionsCubit>(
+  _registerFactoryIfAbsent<PrescriptionsCubit>(
     () => PrescriptionsCubit(prescriptionsRepo: getIt()),
   );
 }
 
 void _registerPurchaseOrders() {
-  getIt.registerLazySingleton<PurchaseOrdersRemoteDataSource>(
+  _registerLazySingletonIfAbsent<PurchaseOrdersRemoteDataSource>(
     () => PurchaseOrdersRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<PurchaseOrdersRepo>(
+  _registerLazySingletonIfAbsent<PurchaseOrdersRepo>(
     () => PurchaseOrdersRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<PurchaseOrdersCubit>(
+  _registerFactoryIfAbsent<PurchaseOrdersCubit>(
     () => PurchaseOrdersCubit(purchaseOrdersRepo: getIt()),
   );
 }
 
 void _registerShifts() {
-  getIt.registerLazySingleton<ShiftsRemoteDataSource>(
+  _registerLazySingletonIfAbsent<ShiftsRemoteDataSource>(
     () => ShiftsRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<ShiftsRepo>(
+  _registerLazySingletonIfAbsent<ShiftsRepo>(
     () => ShiftsRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<ShiftsCubit>(() => ShiftsCubit(shiftsRepo: getIt()));
+  _registerFactoryIfAbsent<ShiftsCubit>(() => ShiftsCubit(shiftsRepo: getIt()));
 }
 
 void _registerDashboard() {
-  getIt.registerLazySingleton<DashboardRemoteDataSource>(
+  _registerLazySingletonIfAbsent<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<DashboardRepo>(
+  _registerLazySingletonIfAbsent<DashboardRepo>(
     () => DashboardRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<DashboardCubit>(
+  _registerFactoryIfAbsent<DashboardCubit>(
     () => DashboardCubit(dashboardRepo: getIt()),
   );
 }
 
 void _registerReports() {
-  getIt.registerLazySingleton<ReportsRemoteDataSource>(
+  _registerLazySingletonIfAbsent<ReportsRemoteDataSource>(
     () => ReportsRemoteDataSource(firestore: getIt()),
   );
 
-  getIt.registerLazySingleton<ReportsRepo>(
+  _registerLazySingletonIfAbsent<ReportsRepo>(
     () => ReportsRepo(remoteDataSource: getIt()),
   );
 
-  getIt.registerFactory<ReportsCubit>(() => ReportsCubit(reportsRepo: getIt()));
+  _registerFactoryIfAbsent<ReportsCubit>(
+    () => ReportsCubit(reportsRepo: getIt()),
+  );
 }

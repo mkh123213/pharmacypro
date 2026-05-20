@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pharmacypro/core/routing/app_routes.dart';
+import '../../routing/app_routes.dart';
 
 import '../../theme/app_colors.dart';
 import 'text_app.dart';
@@ -32,6 +32,8 @@ class AppTopBar extends StatelessWidget {
             Expanded(
               child: TextApp(
                 text: 'PharmaChain',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 theme: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: MyColors.textPrimary,

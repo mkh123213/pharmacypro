@@ -1,5 +1,5 @@
-import 'package:pharmacypro/core/services/shared_pref/pref_keys.dart';
-import 'package:pharmacypro/core/services/shared_pref/shared_pref.dart';
+import '../../services/shared_pref/pref_keys.dart';
+import '../../services/shared_pref/shared_pref.dart';
 
 class FontFamilyHelper {
   const FontFamilyHelper._();

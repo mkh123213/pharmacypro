@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pharmacypro/core/routing/app_routes.dart';
+import '../../../../core/routing/app_routes.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_empty_state.dart';
@@ -12,6 +12,7 @@ import '../../../../core/common/widgets/app_primary_button.dart';
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
+import '../../../branches/data/models/branch_model.dart';
 import '../../data/models/inventory_model.dart';
 import '../cubit/inventory_cubit.dart';
 import '../cubit/inventory_state.dart';
@@ -19,44 +20,20 @@ import '../widgets/inventory_adjust_stock_bottom_sheet.dart';
 import '../widgets/inventory_form_bottom_sheet.dart';
 import '../widgets/inventory_table.dart';
 
+part 'inventory_body_branch_dropdown.dart';
+part 'inventory_body_inventory_error_view.dart';
+part 'inventory_body_inventory_filters.dart';
+part 'inventory_body_inventory_header_actions.dart';
+part 'inventory_body_stock_status_dropdown.dart';
+
+part 'inventory_body_build_inventory_error_message.dart';
+part 'inventory_body_open_adjust_stock.dart';
+part 'inventory_body_open_form.dart';
 class InventoryBody extends StatelessWidget {
   const InventoryBody({super.key});
 
-  void _openForm(
-    BuildContext context,
-    InventoryLoaded state, {
-    InventoryModel? item,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return BlocProvider.value(
-          value: context.read<InventoryCubit>(),
-          child: InventoryFormBottomSheet(
-            medications: state.medications,
-            branches: state.branches,
-            item: item,
-          ),
-        );
-      },
-    );
-  }
 
-  void _openAdjustStock(BuildContext context, InventoryModel item) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return BlocProvider.value(
-          value: context.read<InventoryCubit>(),
-          child: InventoryAdjustStockBottomSheet(item: item),
-        );
-      },
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -88,82 +65,46 @@ class InventoryBody extends StatelessWidget {
             return const SizedBox.shrink();
           }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppPageHeader(
-                title: context.translate(LangKeys.inventory),
-                subtitle: context.translate(
-                  LangKeys.trackStockLevelsAcrossBranches,
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppPageHeader(
+                  title: context.translate(LangKeys.inventory),
+                  subtitle: context.translate(
+                    LangKeys.trackStockLevelsAcrossBranches,
+                  ),
+                  action: _InventoryHeaderActions(
+                    isSubmitting: state.isSubmitting,
+                    onAddStock: () {
+                      this._openForm(context, state);
+                    },
+                  ),
                 ),
-                action: _InventoryHeaderActions(
-                  isSubmitting: state.isSubmitting,
-                  onAddStock: () {
-                    _openForm(context, state);
-                  },
-                ),
-              ),
-              SizedBox(height: 14.h),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 700;
-
-                  if (wide) {
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search),
-                              hintText: context.translate(
-                                LangKeys.searchInventory,
-                              ),
-                            ),
-                            onChanged: context
-                                .read<InventoryCubit>()
-                                .updateSearchQuery,
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        SizedBox(
-                          width: 220.w,
-                          child: _BranchDropdown(
-                            selectedBranchId: state.selectedBranchId,
-                            branches: state.branches,
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-
-                  return Column(
-                    children: [
-                      TextField(
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.search),
-                          hintText: context.translate(LangKeys.searchInventory),
-                        ),
-                        onChanged: context
-                            .read<InventoryCubit>()
-                            .updateSearchQuery,
+                SizedBox(height: 14.h),
+                _InventoryFilters(state: state),
+                SizedBox(height: 14.h),
+                if (state.errorMessage != null)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 12.h),
+                    child: TextApp(
+                      text: this._buildInventoryErrorMessage(
+                        context,
+                        state.errorMessage!,
                       ),
-                      SizedBox(height: 12.h),
-                      _BranchDropdown(
-                        selectedBranchId: state.selectedBranchId,
-                        branches: state.branches,
-                      ),
-                    ],
-                  );
-                },
-              ),
-              SizedBox(height: 14.h),
-              Expanded(
-                child: state.inventory.isEmpty
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle.copyWith(color: Colors.red),
+                    ),
+                  ),
+                state.inventory.isEmpty
                     ? AppEmptyState(
                         title: context.translate(LangKeys.noInventoryFound),
                         message:
                             state.searchQuery.trim().isEmpty &&
-                                state.selectedBranchId == 'all'
+                                state.selectedBranchId == 'all' &&
+                                state.selectedStockStatus == 'all'
                             ? context.translate(
                                 LangKeys.addYourFirstInventoryItem,
                               )
@@ -176,197 +117,17 @@ class InventoryBody extends StatelessWidget {
                         items: state.inventory,
                         isSubmitting: state.isSubmitting,
                         onTap: (item) {
-                          _openForm(context, state, item: item);
+                          this._openForm(context, state, item: item);
                         },
                         onAdjustStock: (item) {
-                          _openAdjustStock(context, item);
+                          this._openAdjustStock(context, item);
                         },
                       ),
-              ),
-            ],
+                SizedBox(height: 24.h),
+              ],
+            ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _InventoryHeaderActions extends StatelessWidget {
-  const _InventoryHeaderActions({
-    required this.isSubmitting,
-    required this.onAddStock,
-  });
-
-  final bool isSubmitting;
-  final VoidCallback onAddStock;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = MediaQuery.sizeOf(context).width;
-        final compact = screenWidth < 760;
-
-        if (compact) {
-          return PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              switch (value) {
-                case 'alerts':
-                  context.push(AppRoutes.inventoryAlerts);
-                  break;
-                case 'history':
-                  context.push(AppRoutes.stockHistory);
-                  break;
-                case 'add':
-                  if (!isSubmitting) {
-                    onAddStock();
-                  }
-                  break;
-              }
-            },
-            itemBuilder: (context) {
-              return [
-                PopupMenuItem<String>(
-                  value: 'alerts',
-                  child: TextApp(
-                    text: context.translate(LangKeys.alerts),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'history',
-                  child: TextApp(
-                    text: context.translate(LangKeys.stockHistory),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'add',
-                  enabled: !isSubmitting,
-                  child: TextApp(
-                    text: context.translate(LangKeys.addStock),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-              ];
-            },
-          );
-        }
-
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppPrimaryButton(
-              text: context.translate(LangKeys.alerts),
-              icon: Icons.notifications_outlined,
-              onPressed: () {
-                context.push(AppRoutes.inventoryAlerts);
-              },
-            ),
-            SizedBox(width: 8.w),
-            AppPrimaryButton(
-              text: context.translate(LangKeys.stockHistory),
-              icon: Icons.history,
-              onPressed: () {
-                context.push(AppRoutes.stockHistory);
-              },
-            ),
-            SizedBox(width: 8.w),
-            AppPrimaryButton(
-              text: context.translate(LangKeys.addStock),
-              icon: Icons.add,
-              onPressed: isSubmitting ? null : onAddStock,
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _BranchDropdown extends StatelessWidget {
-  const _BranchDropdown({
-    required this.selectedBranchId,
-    required this.branches,
-  });
-
-  final String selectedBranchId;
-  final List<dynamic> branches;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: selectedBranchId,
-      decoration: InputDecoration(
-        labelText: context.translate(LangKeys.branch),
-      ),
-      items: [
-        DropdownMenuItem<String>(
-          value: 'all',
-          child: TextApp(
-            text: context.translate(LangKeys.allBranches),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            theme: context.textStyle,
-          ),
-        ),
-        ...branches.map((branch) {
-          return DropdownMenuItem<String>(
-            value: branch.id,
-            child: TextApp(
-              text: branch.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              theme: context.textStyle,
-            ),
-          );
-        }),
-      ],
-      onChanged: (value) {
-        context.read<InventoryCubit>().updateSelectedBranch(value ?? 'all');
-      },
-    );
-  }
-}
-
-class _InventoryErrorView extends StatelessWidget {
-  const _InventoryErrorView({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 48.sp, color: Colors.red.shade400),
-            SizedBox(height: 12.h),
-            TextApp(
-              text: message,
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              theme: context.textStyle,
-            ),
-            SizedBox(height: 16.h),
-            AppPrimaryButton(
-              text: context.translate(LangKeys.retry),
-              icon: Icons.refresh,
-              onPressed: onRetry,
-            ),
-          ],
-        ),
       ),
     );
   }

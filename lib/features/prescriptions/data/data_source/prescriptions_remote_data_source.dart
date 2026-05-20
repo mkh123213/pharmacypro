@@ -51,11 +51,13 @@ class PrescriptionsRemoteDataSource {
   }
 
   Future<PrescriptionModel> createPrescription(PrescriptionModel item) async {
+    await _validatePrescriptionForCreate(item);
     await _validateActiveBranch(item.branchId);
     await _validateActivePrescriptionMedications(item);
 
     final document = await _prescriptions.add({
       ...item.toFirestoreJson(),
+      'status': 'pending',
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     });
@@ -69,14 +71,57 @@ class PrescriptionsRemoteDataSource {
   ) async {
     final newStatus = data['status'];
 
-    if (newStatus == 'dispensed') {
-      await _dispensePrescription(id);
+    if (newStatus is String) {
+      await _updatePrescriptionStatus(id: id, newStatus: newStatus);
       return;
     }
 
     await _prescriptions.doc(id).update({
       ...data,
       'updated_at': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> _updatePrescriptionStatus({
+    required String id,
+    required String newStatus,
+  }) async {
+    if (newStatus == 'dispensed') {
+      await _dispensePrescription(id);
+      return;
+    }
+
+    final prescriptionReference = _prescriptions.doc(id);
+
+    await _firestore.runTransaction((transaction) async {
+      final prescriptionSnapshot = await transaction.get(prescriptionReference);
+
+      if (!prescriptionSnapshot.exists) {
+        throw Exception('prescription_not_found');
+      }
+
+      final prescription = PrescriptionModel.fromFirestore(
+        prescriptionSnapshot,
+      );
+
+      _validateStatusTransition(
+        currentStatus: prescription.status,
+        nextStatus: newStatus,
+      );
+
+      await _validateActiveBranchInTransaction(
+        transaction,
+        prescription.branchId,
+      );
+      await _validateActivePrescriptionMedicationsInTransaction(
+        transaction,
+        prescription,
+      );
+
+      transaction.update(prescriptionReference, {
+        'status': newStatus,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
     });
   }
 
@@ -94,19 +139,26 @@ class PrescriptionsRemoteDataSource {
         prescriptionSnapshot,
       );
 
-      if (prescription.status == 'dispensed') {
-        throw Exception('prescription_already_dispensed');
-      }
+      _validateStatusTransition(
+        currentStatus: prescription.status,
+        nextStatus: 'dispensed',
+      );
 
       if (prescription.items.isEmpty) {
         throw Exception('prescription_has_no_items');
       }
 
-      await _validateActiveBranch(prescription.branchId);
-      await _validateActivePrescriptionMedications(prescription);
+      await _validateActiveBranchInTransaction(
+        transaction,
+        prescription.branchId,
+      );
+      await _validateActivePrescriptionMedicationsInTransaction(
+        transaction,
+        prescription,
+      );
 
-      final inventoryDocumentsByMedicationId =
-          <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+      final requestedQuantitiesByMedicationId = <String, int>{};
+      final medicationNamesByMedicationId = <String, String>{};
 
       for (final item in prescription.items) {
         final medicationId = item.medicationId;
@@ -121,18 +173,35 @@ class PrescriptionsRemoteDataSource {
           throw Exception('prescription_item_invalid_quantity');
         }
 
-        final inventoryQuery = await _inventory
-            .where('branch_id', isEqualTo: prescription.branchId)
-            .where('medication_id', isEqualTo: medicationId)
-            .limit(1)
-            .get();
+        requestedQuantitiesByMedicationId[medicationId] =
+            (requestedQuantitiesByMedicationId[medicationId] ?? 0) + quantity;
+        medicationNamesByMedicationId[medicationId] = medicationName;
+      }
 
-        if (inventoryQuery.docs.isEmpty) {
+      final inventorySnapshotsByMedicationId =
+          <String, DocumentSnapshot<Map<String, dynamic>>>{};
+
+      for (final entry in requestedQuantitiesByMedicationId.entries) {
+        final medicationId = entry.key;
+        final requestedQuantity = entry.value;
+        final medicationName =
+            medicationNamesByMedicationId[medicationId] ?? '';
+
+        final inventoryReference = _inventory.doc(
+          '${prescription.branchId}_$medicationId',
+        );
+
+        final inventorySnapshot = await transaction.get(inventoryReference);
+
+        if (!inventorySnapshot.exists) {
           throw Exception('not_enough_stock_for_medication:$medicationName');
         }
 
-        final inventoryDocument = inventoryQuery.docs.first;
-        final inventoryData = inventoryDocument.data();
+        final inventoryData = inventorySnapshot.data();
+
+        if (inventoryData == null) {
+          throw Exception('not_enough_stock_for_medication:$medicationName');
+        }
 
         if (_isExpired(inventoryData['expiry_date'])) {
           throw Exception('expired_stock_for_medication:$medicationName');
@@ -140,11 +209,11 @@ class PrescriptionsRemoteDataSource {
 
         final currentQuantity = _readInt(inventoryData['quantity']);
 
-        if (currentQuantity < quantity) {
+        if (currentQuantity < requestedQuantity) {
           throw Exception('not_enough_stock_for_medication:$medicationName');
         }
 
-        inventoryDocumentsByMedicationId[medicationId] = inventoryDocument;
+        inventorySnapshotsByMedicationId[medicationId] = inventorySnapshot;
       }
 
       transaction.update(prescriptionReference, {
@@ -152,19 +221,19 @@ class PrescriptionsRemoteDataSource {
         'updated_at': FieldValue.serverTimestamp(),
       });
 
-      for (final item in prescription.items) {
-        final medicationId = item.medicationId!;
-        final medicationName = item.medicationName ?? '';
-        final quantity = item.quantity ?? 0;
+      for (final entry in requestedQuantitiesByMedicationId.entries) {
+        final medicationId = entry.key;
+        final quantity = entry.value;
+        final medicationName =
+            medicationNamesByMedicationId[medicationId] ?? '';
 
-        final inventoryDocument =
-            inventoryDocumentsByMedicationId[medicationId]!;
-
-        final inventoryData = inventoryDocument.data();
+        final inventorySnapshot =
+            inventorySnapshotsByMedicationId[medicationId]!;
+        final inventoryData = inventorySnapshot.data()!;
         final currentQuantity = _readInt(inventoryData['quantity']);
         final newQuantity = currentQuantity - quantity;
 
-        transaction.update(inventoryDocument.reference, {
+        transaction.update(inventorySnapshot.reference, {
           'quantity': newQuantity,
           'updated_at': FieldValue.serverTimestamp(),
         });
@@ -188,8 +257,62 @@ class PrescriptionsRemoteDataSource {
     });
   }
 
+  Future<void> _validatePrescriptionForCreate(
+    PrescriptionModel prescription,
+  ) async {
+    if (prescription.patientName.trim().isEmpty) {
+      throw Exception('patient_name_required');
+    }
+
+    if ((prescription.doctorName ?? '').trim().isEmpty) {
+      throw Exception('doctor_name_required');
+    }
+
+    if (prescription.branchId.trim().isEmpty) {
+      throw Exception('prescription_missing_branch');
+    }
+
+    if (prescription.items.isEmpty) {
+      throw Exception('prescription_has_no_items');
+    }
+
+    for (final item in prescription.items) {
+      final medicationId = item.medicationId;
+      final quantity = item.quantity ?? 0;
+
+      if (medicationId == null || medicationId.trim().isEmpty) {
+        throw Exception('prescription_item_missing_medication_id');
+      }
+
+      if (quantity <= 0) {
+        throw Exception('prescription_item_invalid_quantity');
+      }
+    }
+  }
+
   Future<void> _validateActiveBranch(String branchId) async {
     final branchSnapshot = await _branches.doc(branchId).get();
+
+    if (!branchSnapshot.exists) {
+      throw Exception('branch_not_found');
+    }
+
+    final branchData = branchSnapshot.data();
+
+    if (branchData == null) {
+      throw Exception('branch_not_found');
+    }
+
+    if (branchData['is_active'] == false) {
+      throw Exception('inactive_branch');
+    }
+  }
+
+  Future<void> _validateActiveBranchInTransaction(
+    Transaction transaction,
+    String branchId,
+  ) async {
+    final branchSnapshot = await transaction.get(_branches.doc(branchId));
 
     if (!branchSnapshot.exists) {
       throw Exception('branch_not_found');
@@ -233,6 +356,74 @@ class PrescriptionsRemoteDataSource {
         throw Exception('inactive_medication:$medicationName');
       }
     }
+  }
+
+  Future<void> _validateActivePrescriptionMedicationsInTransaction(
+    Transaction transaction,
+    PrescriptionModel prescription,
+  ) async {
+    for (final item in prescription.items) {
+      final medicationId = item.medicationId;
+      final medicationName = item.medicationName ?? '';
+
+      if (medicationId == null || medicationId.trim().isEmpty) {
+        throw Exception('prescription_item_missing_medication_id');
+      }
+
+      final medicationSnapshot = await transaction.get(
+        _medications.doc(medicationId),
+      );
+
+      if (!medicationSnapshot.exists) {
+        throw Exception('medication_not_found:$medicationName');
+      }
+
+      final medicationData = medicationSnapshot.data();
+
+      if (medicationData == null) {
+        throw Exception('medication_not_found:$medicationName');
+      }
+
+      if (medicationData['is_active'] == false) {
+        throw Exception('inactive_medication:$medicationName');
+      }
+    }
+  }
+
+  void _validateStatusTransition({
+    required String currentStatus,
+    required String nextStatus,
+  }) {
+    if (currentStatus == 'dispensed') {
+      throw Exception('prescription_already_dispensed');
+    }
+
+    if (currentStatus == 'rejected') {
+      throw Exception('prescription_already_rejected');
+    }
+
+    if (currentStatus == 'expired') {
+      throw Exception('prescription_already_expired');
+    }
+
+    if (nextStatus == 'verified' && currentStatus == 'pending') {
+      return;
+    }
+
+    if (nextStatus == 'rejected' &&
+        (currentStatus == 'pending' || currentStatus == 'verified')) {
+      return;
+    }
+
+    if (nextStatus == 'dispensed' && currentStatus == 'verified') {
+      return;
+    }
+
+    if (nextStatus == 'dispensed' && currentStatus != 'verified') {
+      throw Exception('prescription_not_verified');
+    }
+
+    throw Exception('invalid_prescription_status_transition');
   }
 
   int _readInt(Object? value) {

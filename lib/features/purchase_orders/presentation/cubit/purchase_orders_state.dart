@@ -19,6 +19,8 @@ class PurchaseOrdersState with _$PurchaseOrdersState {
     required List<BranchModel> branches,
     required List<MedicationModel> medications,
     @Default('') String searchQuery,
+    @Default('all') String selectedStatus,
+    @Default('all') String selectedBranchId,
     @Default(false) bool isSubmitting,
     @Default(null) String? errorMessage,
   }) = PurchaseOrdersLoaded;

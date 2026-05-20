@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<SupplierModel> suppliers,  String searchQuery,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<SupplierModel> suppliers,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SuppliersInitial() when initial != null:
 return initial();case SuppliersLoading() when loading != null:
 return loading();case SuppliersLoaded() when loaded != null:
-return loaded(_that.suppliers,_that.searchQuery,_that.isSubmitting);case SuppliersFailure() when failure != null:
+return loaded(_that.suppliers,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case SuppliersFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<SupplierModel> suppliers,  String searchQuery,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<SupplierModel> suppliers,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case SuppliersInitial():
 return initial();case SuppliersLoading():
 return loading();case SuppliersLoaded():
-return loaded(_that.suppliers,_that.searchQuery,_that.isSubmitting);case SuppliersFailure():
+return loaded(_that.suppliers,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case SuppliersFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<SupplierModel> suppliers,  String searchQuery,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<SupplierModel> suppliers,  String searchQuery,  String selectedStatus,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case SuppliersInitial() when initial != null:
 return initial();case SuppliersLoading() when loading != null:
 return loading();case SuppliersLoaded() when loaded != null:
-return loaded(_that.suppliers,_that.searchQuery,_that.isSubmitting);case SuppliersFailure() when failure != null:
+return loaded(_that.suppliers,_that.searchQuery,_that.selectedStatus,_that.isSubmitting,_that.errorMessage);case SuppliersFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class SuppliersLoaded implements SuppliersState {
-  const SuppliersLoaded({required final  List<SupplierModel> suppliers, this.searchQuery = '', this.isSubmitting = false}): _suppliers = suppliers;
+  const SuppliersLoaded({required final  List<SupplierModel> suppliers, this.searchQuery = '', this.selectedStatus = 'all', this.isSubmitting = false, this.errorMessage = null}): _suppliers = suppliers;
   
 
  final  List<SupplierModel> _suppliers;
@@ -268,7 +268,9 @@ class SuppliersLoaded implements SuppliersState {
 }
 
 @JsonKey() final  String searchQuery;
+@JsonKey() final  String selectedStatus;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of SuppliersState
 /// with the given fields replaced by the non-null parameter values.
@@ -280,16 +282,16 @@ $SuppliersLoadedCopyWith<SuppliersLoaded> get copyWith => _$SuppliersLoadedCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuppliersLoaded&&const DeepCollectionEquality().equals(other._suppliers, _suppliers)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuppliersLoaded&&const DeepCollectionEquality().equals(other._suppliers, _suppliers)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedStatus, selectedStatus) || other.selectedStatus == selectedStatus)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_suppliers),searchQuery,isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_suppliers),searchQuery,selectedStatus,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'SuppliersState.loaded(suppliers: $suppliers, searchQuery: $searchQuery, isSubmitting: $isSubmitting)';
+  return 'SuppliersState.loaded(suppliers: $suppliers, searchQuery: $searchQuery, selectedStatus: $selectedStatus, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -300,7 +302,7 @@ abstract mixin class $SuppliersLoadedCopyWith<$Res> implements $SuppliersStateCo
   factory $SuppliersLoadedCopyWith(SuppliersLoaded value, $Res Function(SuppliersLoaded) _then) = _$SuppliersLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<SupplierModel> suppliers, String searchQuery, bool isSubmitting
+ List<SupplierModel> suppliers, String searchQuery, String selectedStatus, bool isSubmitting, String? errorMessage
 });
 
 
@@ -317,12 +319,14 @@ class _$SuppliersLoadedCopyWithImpl<$Res>
 
 /// Create a copy of SuppliersState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? suppliers = null,Object? searchQuery = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? suppliers = null,Object? searchQuery = null,Object? selectedStatus = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(SuppliersLoaded(
 suppliers: null == suppliers ? _self._suppliers : suppliers // ignore: cast_nullable_to_non_nullable
 as List<SupplierModel>,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
+as String,selectedStatus: null == selectedStatus ? _self.selectedStatus : selectedStatus // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

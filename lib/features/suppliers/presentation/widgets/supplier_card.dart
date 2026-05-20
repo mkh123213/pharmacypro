@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:pharmacypro/core/extensions/context_extension.dart';
 
+import '../../../../core/common/widgets/app_status_chip.dart';
 import '../../../../core/common/widgets/text_app.dart';
+import '../../../../core/extensions/context_extension.dart';
+import '../../../../core/language/lang_keys.dart';
 import '../../data/models/supplier_model.dart';
 
 class SupplierCard extends StatelessWidget {
@@ -21,7 +23,8 @@ class SupplierCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Padding(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
         padding: EdgeInsets.all(12.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -38,8 +41,21 @@ class SupplierCard extends StatelessWidget {
                     size: 20.sp,
                   ),
                 ),
-                const Spacer(),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: TextApp(
+                    text: supplier.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    theme: context.textStyle.copyWith(
+                      fontSize: 14.sp,
+                      height: 1.1,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
                 IconButton(
+                  tooltip: context.translate(LangKeys.edit),
                   onPressed: onEditPressed,
                   padding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
@@ -49,33 +65,26 @@ class SupplierCard extends StatelessWidget {
               ],
             ),
             SizedBox(height: 8.h),
-            Text(
-              supplier.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14.sp,
-                height: 1.1,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            if ((supplier.contactPerson ?? '').isNotEmpty)
+            if ((supplier.contactPerson ?? '').trim().isNotEmpty)
               _Info(icon: Icons.person_outline, text: supplier.contactPerson!),
-            if ((supplier.email ?? '').isNotEmpty)
+            if ((supplier.email ?? '').trim().isNotEmpty)
               _Info(icon: Icons.mail_outline, text: supplier.email!),
-            if ((supplier.phone ?? '').isNotEmpty)
+            if ((supplier.phone ?? '').trim().isNotEmpty)
               _Info(icon: Icons.phone_outlined, text: supplier.phone!),
+            if ((supplier.address ?? '').trim().isNotEmpty)
+              _Info(icon: Icons.location_on_outlined, text: supplier.address!),
+            if ((supplier.notes ?? '').trim().isNotEmpty)
+              _Info(icon: Icons.notes_outlined, text: supplier.notes!),
             SizedBox(height: 8.h),
             Row(
               children: [
-                if ((supplier.paymentTerms ?? '').isNotEmpty)
+                if ((supplier.paymentTerms ?? '').trim().isNotEmpty)
                   Expanded(
-                    child: Text(
-                      supplier.paymentTerms!,
+                    child: TextApp(
+                      text: supplier.paymentTerms!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      theme: context.textStyle.copyWith(
                         fontSize: 12.sp,
                         color: Colors.grey,
                         height: 1.1,
@@ -85,26 +94,13 @@ class SupplierCard extends StatelessWidget {
                 else
                   const Spacer(),
                 SizedBox(width: 8.w),
-                Chip(
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  labelPadding: EdgeInsets.symmetric(horizontal: 6.w),
-                  label: Text(
-                    supplier.isActive ? 'Active' : 'Inactive',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w600,
-                      color: supplier.isActive ? Colors.green : Colors.red,
-                    ),
-                  ),
-                  backgroundColor: supplier.isActive
-                      ? Colors.green.shade50
-                      : Colors.red.shade50,
-                  side: BorderSide(
-                    color: supplier.isActive
-                        ? Colors.green.shade100
-                        : Colors.red.shade100,
-                  ),
+                AppStatusChip(
+                  label: supplier.isActive
+                      ? context.translate(LangKeys.active)
+                      : context.translate(LangKeys.inactive),
+                  type: supplier.isActive
+                      ? AppStatusChipType.success
+                      : AppStatusChipType.error,
                 ),
               ],
             ),
@@ -126,6 +122,7 @@ class _Info extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: 5.h),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 14.sp, color: Colors.grey),
           SizedBox(width: 7.w),

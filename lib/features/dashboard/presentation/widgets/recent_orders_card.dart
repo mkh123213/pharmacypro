@@ -7,6 +7,10 @@ import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../../customer_orders/data/models/customer_order_model.dart';
 
+part 'recent_orders_card_order_amount_and_status.dart';
+part 'recent_orders_card_order_info.dart';
+part 'recent_orders_card_recent_order_item.dart';
+
 class RecentOrdersCard extends StatelessWidget {
   const RecentOrdersCard({required this.orders, super.key});
 
@@ -14,11 +18,15 @@ class RecentOrdersCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recentOrders = orders.take(5).toList();
+
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             TextApp(
               text: context.translate(LangKeys.recentCustomerOrders),
@@ -26,8 +34,8 @@ class RecentOrdersCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               theme: context.textStyle.copyWith(fontWeight: FontWeight.w700),
             ),
-            SizedBox(height: 8.h),
-            if (orders.isEmpty)
+            SizedBox(height: 10.h),
+            if (recentOrders.isEmpty)
               TextApp(
                 text: context.translate(LangKeys.noOrdersYet),
                 maxLines: 1,
@@ -35,100 +43,18 @@ class RecentOrdersCard extends StatelessWidget {
                 theme: context.textStyle,
               )
             else
-              ...orders.take(5).map((order) {
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: TextApp(
-                    text: order.customerName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                  subtitle: TextApp(
-                    text:
-                        '${order.branchName ?? ''} · ${_orderTypeLabel(context, order.orderType)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                  trailing: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      TextApp(
-                        text: '\$${order.totalAmount.toStringAsFixed(2)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        theme: context.textStyle.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      AppStatusChip(
-                        label: _orderStatusLabel(context, order.status),
-                        type: _statusType(order.status),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+              ListView.separated(
+                itemCount: recentOrders.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                separatorBuilder: (_, _) => Divider(height: 12.h),
+                itemBuilder: (context, index) {
+                  return _RecentOrderItem(order: recentOrders[index]);
+                },
+              ),
           ],
         ),
       ),
     );
-  }
-
-  String _orderTypeLabel(BuildContext context, String value) {
-    switch (value) {
-      case 'pickup':
-        return context.translate(LangKeys.pickup);
-      case 'delivery':
-        return context.translate(LangKeys.delivery);
-      default:
-        return value;
-    }
-  }
-
-  String _orderStatusLabel(BuildContext context, String value) {
-    switch (value) {
-      case 'pending':
-        return context.translate(LangKeys.pending);
-      case 'confirmed':
-        return context.translate(LangKeys.confirmed);
-      case 'processing':
-        return context.translate(LangKeys.processing);
-      case 'ready':
-        return context.translate(LangKeys.ready);
-      case 'out_for_delivery':
-        return context.translate(LangKeys.outForDelivery);
-      case 'delivered':
-        return context.translate(LangKeys.delivered);
-      case 'cancelled':
-        return context.translate(LangKeys.cancelled);
-      default:
-        return value;
-    }
-  }
-
-  AppStatusChipType _statusType(String status) {
-    switch (status) {
-      case 'pending':
-        return AppStatusChipType.warning;
-      case 'confirmed':
-        return AppStatusChipType.info;
-      case 'processing':
-        return AppStatusChipType.primary;
-      case 'ready':
-        return AppStatusChipType.success;
-      case 'out_for_delivery':
-        return AppStatusChipType.info;
-      case 'delivered':
-        return AppStatusChipType.success;
-      case 'cancelled':
-        return AppStatusChipType.error;
-      default:
-        return AppStatusChipType.neutral;
-    }
   }
 }

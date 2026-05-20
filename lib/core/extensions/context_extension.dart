@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacypro/core/language/app_localizations.dart';
-import 'package:pharmacypro/core/theme/app_colors.dart';
+
+import '../language/app_localizations.dart';
+import '../theme/app_colors.dart';
 
 extension ContextExt on BuildContext {
-  //color
   MyColors get color => Theme.of(this).extension<MyColors>()!;
 
-  // images
-  // MyAssets get assets => Theme.of(this).extension<MyAssets>()!;
-
-  // style
-  TextStyle get textStyle => Theme.of(this).textTheme.displaySmall!;
-
-  //Language
-  String translate(String langkey) {
-    return AppLocalizations.of(this)!.translate(langkey).toString();
+  TextStyle get textStyle {
+    return Theme.of(this).textTheme.displaySmall ?? const TextStyle();
   }
 
-  //Navigation
+  String translate(String langkey) {
+    return AppLocalizations.of(this)?.translate(langkey).toString() ?? langkey;
+  }
 
   Future<dynamic> pushName(String routeName, {Object? arguments}) {
     return Navigator.of(this).pushNamed(routeName, arguments: arguments);
@@ -38,5 +33,7 @@ extension ContextExt on BuildContext {
     ).pushNamedAndRemoveUntil(routeName, (route) => false);
   }
 
-  void pop() => Navigator.of(this).pop();
+  void pop() {
+    Navigator.of(this).pop();
+  }
 }

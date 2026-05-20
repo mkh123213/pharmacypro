@@ -53,13 +53,40 @@ class CustomerOrdersRemoteDataSource {
   Future<CustomerOrderModel> createCustomerOrder(
     CustomerOrderModel item,
   ) async {
-    final document = await _orders.add({
-      ...item.toFirestoreJson(),
-      'created_at': FieldValue.serverTimestamp(),
-      'updated_at': FieldValue.serverTimestamp(),
+    await _validateCustomerOrder(item);
+
+    final orderReference = _orders.doc();
+
+    await _firestore.runTransaction((transaction) async {
+      await _validateActiveBranchInTransaction(
+        transaction: transaction,
+        branchId: item.branchId,
+      );
+
+      for (final orderItem in item.items) {
+        await _validateActiveMedicationInTransaction(
+          transaction: transaction,
+          medicationId: orderItem.medicationId,
+          medicationName: orderItem.medicationName,
+        );
+
+        await _validateAvailableInventoryInTransaction(
+          transaction: transaction,
+          branchId: item.branchId,
+          medicationId: orderItem.medicationId,
+          medicationName: orderItem.medicationName,
+          requestedQuantity: orderItem.quantity,
+        );
+      }
+
+      transaction.set(orderReference, {
+        ...item.toFirestoreJson(),
+        'created_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
+      });
     });
 
-    return CustomerOrderModel.fromFirestore(await document.get());
+    return CustomerOrderModel.fromFirestore(await orderReference.get());
   }
 
   Future<void> updateCustomerOrderFields(
@@ -67,6 +94,10 @@ class CustomerOrdersRemoteDataSource {
     Map<String, dynamic> data,
   ) async {
     final newStatus = data['status'];
+
+    if (newStatus is String) {
+      await _validateStatusTransition(id: id, newStatus: newStatus);
+    }
 
     if (newStatus == 'delivered') {
       await _deliverCustomerOrder(id);
@@ -95,44 +126,39 @@ class CustomerOrdersRemoteDataSource {
         throw Exception('customer_order_already_delivered');
       }
 
+      if (order.status == 'cancelled') {
+        throw Exception('customer_order_already_cancelled');
+      }
+
       if (order.items.isEmpty) {
         throw Exception('customer_order_has_no_items');
       }
 
+      await _validateActiveBranchInTransaction(
+        transaction: transaction,
+        branchId: order.branchId,
+      );
+
       final inventoryDocumentsByMedicationId =
-          <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+          <String, DocumentSnapshot<Map<String, dynamic>>>{};
 
       for (final item in order.items) {
-        final inventoryQuery = await _inventory
-            .where('branch_id', isEqualTo: order.branchId)
-            .where('medication_id', isEqualTo: item.medicationId)
-            .limit(1)
-            .get();
+        await _validateActiveMedicationInTransaction(
+          transaction: transaction,
+          medicationId: item.medicationId,
+          medicationName: item.medicationName,
+        );
 
-        if (inventoryQuery.docs.isEmpty) {
-          throw Exception(
-            'not_enough_stock_for_medication:${item.medicationName}',
-          );
-        }
+        final inventorySnapshot =
+            await _validateAvailableInventoryInTransaction(
+              transaction: transaction,
+              branchId: order.branchId,
+              medicationId: item.medicationId,
+              medicationName: item.medicationName,
+              requestedQuantity: item.quantity,
+            );
 
-        final inventoryDocument = inventoryQuery.docs.first;
-        final inventoryData = inventoryDocument.data();
-
-        if (_isExpired(inventoryData['expiry_date'])) {
-          throw Exception(
-            'expired_stock_for_medication:${item.medicationName}',
-          );
-        }
-
-        final currentQuantity = _readInt(inventoryData['quantity']);
-
-        if (currentQuantity < item.quantity) {
-          throw Exception(
-            'not_enough_stock_for_medication:${item.medicationName}',
-          );
-        }
-
-        inventoryDocumentsByMedicationId[item.medicationId] = inventoryDocument;
+        inventoryDocumentsByMedicationId[item.medicationId] = inventorySnapshot;
       }
 
       transaction.update(orderReference, {
@@ -141,24 +167,10 @@ class CustomerOrdersRemoteDataSource {
       });
 
       for (final item in order.items) {
-        final medicationSnapshot = await transaction.get(
-          _medications.doc(item.medicationId),
-        );
-
-        if (!medicationSnapshot.exists) {
-          throw Exception('medication_not_found:${item.medicationName}');
-        }
-
-        final medicationData = medicationSnapshot.data() ?? <String, dynamic>{};
-
-        if (!_readBool(medicationData['is_active'], defaultValue: true)) {
-          throw Exception('inactive_medication:${item.medicationName}');
-        }
-
         final inventoryDocument =
             inventoryDocumentsByMedicationId[item.medicationId]!;
 
-        final inventoryData = inventoryDocument.data();
+        final inventoryData = inventoryDocument.data() ?? <String, dynamic>{};
         final currentQuantity = _readInt(inventoryData['quantity']);
         final newQuantity = currentQuantity - item.quantity;
 
@@ -186,12 +198,195 @@ class CustomerOrdersRemoteDataSource {
     });
   }
 
+  Future<void> _validateCustomerOrder(CustomerOrderModel order) async {
+    if (order.customerName.trim().isEmpty) {
+      throw Exception('customer_order_customer_name_required');
+    }
+
+    if (order.branchId.trim().isEmpty) {
+      throw Exception('customer_order_missing_branch');
+    }
+
+    if (order.items.isEmpty) {
+      throw Exception('customer_order_has_no_items');
+    }
+
+    if (!_validOrderTypes.contains(order.orderType)) {
+      throw Exception('customer_order_invalid_type');
+    }
+
+    if (!_validPaymentMethods.contains(order.paymentMethod)) {
+      throw Exception('customer_order_invalid_payment_method');
+    }
+
+    if (order.orderType == 'delivery' &&
+        (order.deliveryAddress == null ||
+            order.deliveryAddress!.trim().isEmpty)) {
+      throw Exception('customer_order_delivery_address_required');
+    }
+
+    if (order.totalAmount < 0) {
+      throw Exception('customer_order_invalid_total');
+    }
+
+    for (final item in order.items) {
+      if (item.medicationId.trim().isEmpty) {
+        throw Exception('customer_order_item_missing_medication');
+      }
+
+      if (item.quantity <= 0) {
+        throw Exception('customer_order_item_invalid_quantity');
+      }
+
+      if (item.unitPrice < 0) {
+        throw Exception('customer_order_item_invalid_unit_price');
+      }
+
+      if (item.total < 0) {
+        throw Exception('customer_order_item_invalid_total');
+      }
+    }
+  }
+
+  Future<void> _validateStatusTransition({
+    required String id,
+    required String newStatus,
+  }) async {
+    final snapshot = await _orders.doc(id).get();
+
+    if (!snapshot.exists) {
+      throw Exception('customer_order_not_found');
+    }
+
+    final order = CustomerOrderModel.fromFirestore(snapshot);
+
+    if (order.status == 'delivered') {
+      throw Exception('customer_order_already_delivered');
+    }
+
+    if (order.status == 'cancelled') {
+      throw Exception('customer_order_already_cancelled');
+    }
+
+    if (newStatus == 'cancelled') {
+      return;
+    }
+
+    final expectedNextStatus = _nextStatus(order.status);
+
+    if (expectedNextStatus == null || expectedNextStatus != newStatus) {
+      throw Exception('invalid_customer_order_status_transition');
+    }
+  }
+
+  String? _nextStatus(String status) {
+    switch (status) {
+      case 'pending':
+        return 'confirmed';
+      case 'confirmed':
+        return 'processing';
+      case 'processing':
+        return 'ready';
+      case 'ready':
+        return 'out_for_delivery';
+      case 'out_for_delivery':
+        return 'delivered';
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _validateActiveBranchInTransaction({
+    required Transaction transaction,
+    required String branchId,
+  }) async {
+    final branchSnapshot = await transaction.get(_branches.doc(branchId));
+
+    if (!branchSnapshot.exists) {
+      throw Exception('branch_not_found');
+    }
+
+    final branchData = branchSnapshot.data() ?? <String, dynamic>{};
+
+    if (!_readBool(branchData['is_active'], defaultValue: true)) {
+      throw Exception('inactive_branch');
+    }
+  }
+
+  Future<void> _validateActiveMedicationInTransaction({
+    required Transaction transaction,
+    required String medicationId,
+    required String medicationName,
+  }) async {
+    final medicationSnapshot = await transaction.get(
+      _medications.doc(medicationId),
+    );
+
+    if (!medicationSnapshot.exists) {
+      throw Exception('medication_not_found:$medicationName');
+    }
+
+    final medicationData = medicationSnapshot.data() ?? <String, dynamic>{};
+
+    if (!_readBool(medicationData['is_active'], defaultValue: true)) {
+      throw Exception('inactive_medication:$medicationName');
+    }
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>>
+  _validateAvailableInventoryInTransaction({
+    required Transaction transaction,
+    required String branchId,
+    required String medicationId,
+    required String medicationName,
+    required int requestedQuantity,
+  }) async {
+    final inventorySnapshot = await transaction.get(
+      _inventory.doc(
+        _inventoryDocumentId(branchId: branchId, medicationId: medicationId),
+      ),
+    );
+
+    if (!inventorySnapshot.exists) {
+      throw Exception('not_enough_stock_for_medication:$medicationName');
+    }
+
+    final inventoryData = inventorySnapshot.data() ?? <String, dynamic>{};
+
+    if (_isExpired(inventoryData['expiry_date'])) {
+      throw Exception('expired_stock_for_medication:$medicationName');
+    }
+
+    final currentQuantity = _readInt(inventoryData['quantity']);
+
+    if (currentQuantity < requestedQuantity) {
+      throw Exception('not_enough_stock_for_medication:$medicationName');
+    }
+
+    return inventorySnapshot;
+  }
+
+  String _inventoryDocumentId({
+    required String branchId,
+    required String medicationId,
+  }) {
+    return '${branchId}_$medicationId';
+  }
+
   int _readInt(Object? value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value) ?? 0;
 
     return 0;
+  }
+
+  bool _readBool(Object? value, {required bool defaultValue}) {
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase().trim() == 'true';
+    if (value is num) return value != 0;
+
+    return defaultValue;
   }
 
   bool _isExpired(Object? value) {
@@ -213,10 +408,5 @@ class CustomerOrdersRemoteDataSource {
   }
 }
 
-bool _readBool(Object? value, {required bool defaultValue}) {
-  if (value is bool) return value;
-  if (value is String) return value.toLowerCase().trim() == 'true';
-  if (value is num) return value != 0;
-
-  return defaultValue;
-}
+const _validOrderTypes = ['pickup', 'delivery'];
+const _validPaymentMethods = ['cash', 'card', 'online'];

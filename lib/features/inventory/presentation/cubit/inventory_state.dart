@@ -18,6 +18,7 @@ class InventoryState with _$InventoryState {
     required List<BranchModel> branches,
     @Default('') String searchQuery,
     @Default('all') String selectedBranchId,
+    @Default('all') String selectedStockStatus,
     @Default(false) bool isSubmitting,
     @Default(null) String? errorMessage,
   }) = InventoryLoaded;

@@ -21,8 +21,12 @@ class MedicationsRemoteDataSource {
   }
 
   Future<MedicationModel> createMedication(MedicationModel item) async {
-    final normalizedName = _normalizeText(item.name);
-    final normalizedBarcode = _normalizeText(item.barcode);
+    final normalizedItem = _normalizedMedication(item);
+
+    await _validateMedication(normalizedItem);
+
+    final normalizedName = _normalizeSearchText(normalizedItem.name);
+    final normalizedBarcode = _normalizeSearchText(normalizedItem.barcode);
 
     final duplicateNameQuery = await _collection
         .where('name_search', isEqualTo: normalizedName)
@@ -45,7 +49,7 @@ class MedicationsRemoteDataSource {
     }
 
     final document = await _collection.add({
-      ...item.toFirestoreJson(),
+      ...normalizedItem.toFirestoreJson(),
       'name_search': normalizedName,
       'barcode_search': normalizedBarcode.isEmpty ? null : normalizedBarcode,
       'created_at': FieldValue.serverTimestamp(),
@@ -58,8 +62,19 @@ class MedicationsRemoteDataSource {
   }
 
   Future<MedicationModel> updateMedication(MedicationModel item) async {
-    final normalizedName = _normalizeText(item.name);
-    final normalizedBarcode = _normalizeText(item.barcode);
+    final reference = _collection.doc(item.id);
+    final snapshot = await reference.get();
+
+    if (!snapshot.exists) {
+      throw Exception('medication_not_found');
+    }
+
+    final normalizedItem = _normalizedMedication(item);
+
+    await _validateMedication(normalizedItem);
+
+    final normalizedName = _normalizeSearchText(normalizedItem.name);
+    final normalizedBarcode = _normalizeSearchText(normalizedItem.barcode);
 
     final duplicateNameQuery = await _collection
         .where('name_search', isEqualTo: normalizedName)
@@ -89,32 +104,126 @@ class MedicationsRemoteDataSource {
       }
     }
 
-    await _collection.doc(item.id).update({
-      ...item.toFirestoreJson(),
+    await reference.update({
+      ...normalizedItem.toFirestoreJson(),
       'name_search': normalizedName,
       'barcode_search': normalizedBarcode.isEmpty ? null : normalizedBarcode,
       'updated_at': FieldValue.serverTimestamp(),
     });
 
-    final snapshot = await _collection.doc(item.id).get();
+    final updatedSnapshot = await reference.get();
 
-    return MedicationModel.fromFirestore(snapshot);
+    return MedicationModel.fromFirestore(updatedSnapshot);
   }
 
   Future<void> updateMedicationFields(
     String id,
     Map<String, dynamic> data,
   ) async {
+    final snapshot = await _collection.doc(id).get();
+
+    if (!snapshot.exists) {
+      throw Exception('medication_not_found');
+    }
+
     await _collection.doc(id).update({
       ...data,
       'updated_at': FieldValue.serverTimestamp(),
     });
   }
 
-  String _normalizeText(Object? value) {
-    return value.toString().trim().toLowerCase().replaceAll(
-      RegExp(r'\s+'),
-      ' ',
+  Future<void> _validateMedication(MedicationModel item) async {
+    if (item.name.trim().isEmpty) {
+      throw Exception('medication_name_required');
+    }
+
+    if (item.price < 0) {
+      throw Exception('medication_invalid_price');
+    }
+
+    if (item.costPrice != null && item.costPrice! < 0) {
+      throw Exception('medication_invalid_cost_price');
+    }
+
+    if (item.category != null && !_validCategories.contains(item.category)) {
+      throw Exception('medication_invalid_category');
+    }
+
+    if (item.dosageForm != null && !_validForms.contains(item.dosageForm)) {
+      throw Exception('medication_invalid_dosage_form');
+    }
+
+    final imageUrl = item.imageUrl;
+
+    if (imageUrl != null && !_isValidUrl(imageUrl)) {
+      throw Exception('medication_invalid_image_url');
+    }
+  }
+
+  MedicationModel _normalizedMedication(MedicationModel item) {
+    return MedicationModel(
+      id: item.id.trim(),
+      name: item.name.trim(),
+      genericName: _emptyToNull(item.genericName),
+      category: _emptyToNull(item.category),
+      dosageForm: _emptyToNull(item.dosageForm),
+      strength: _emptyToNull(item.strength),
+      manufacturer: _emptyToNull(item.manufacturer),
+      barcode: _emptyToNull(item.barcode),
+      requiresPrescription: item.requiresPrescription,
+      price: item.price,
+      costPrice: item.costPrice,
+      description: _emptyToNull(item.description),
+      imageUrl: _emptyToNull(item.imageUrl),
+      isActive: item.isActive,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
     );
   }
+
+  String? _emptyToNull(String? value) {
+    final text = value?.trim();
+
+    if (text == null || text.isEmpty) return null;
+
+    return text;
+  }
+
+  String _normalizeSearchText(String? value) {
+    return value?.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ') ?? '';
+  }
+
+  bool _isValidUrl(String value) {
+    final uri = Uri.tryParse(value);
+
+    return uri != null && uri.hasScheme && uri.host.isNotEmpty;
+  }
 }
+
+const _validCategories = [
+  'analgesic',
+  'antibiotic',
+  'antiviral',
+  'antifungal',
+  'cardiovascular',
+  'diabetes',
+  'respiratory',
+  'gastrointestinal',
+  'dermatology',
+  'vitamins_supplements',
+  'otc',
+  'other',
+];
+
+const _validForms = [
+  'tablet',
+  'capsule',
+  'syrup',
+  'injection',
+  'cream',
+  'drops',
+  'inhaler',
+  'patch',
+  'suppository',
+  'other',
+];

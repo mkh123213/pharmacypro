@@ -57,6 +57,8 @@ class AppPrimaryButton extends StatelessWidget {
                   ],
                   TextApp(
                     text: text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     theme: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w700,

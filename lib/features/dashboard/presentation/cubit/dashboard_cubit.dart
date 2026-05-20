@@ -17,7 +17,7 @@ class DashboardCubit extends Cubit<DashboardState> {
       final summary = await _dashboardRepo.getDashboardSummary();
 
       emit(DashboardState.loaded(summary: summary));
-    } catch (error) {
+    } catch (_) {
       emit(
         const DashboardState.failure(message: 'could_not_load_dashboard_data'),
       );
@@ -25,14 +25,27 @@ class DashboardCubit extends Cubit<DashboardState> {
   }
 
   Future<void> refreshDashboard() async {
-    try {
-      final summary = await _dashboardRepo.getDashboardSummary();
+    final current = state;
 
-      emit(DashboardState.loaded(summary: summary));
-    } catch (error) {
-      emit(
-        const DashboardState.failure(message: 'could_not_refresh_dashboard'),
-      );
+    if (current is DashboardLoaded) {
+      emit(current.copyWith(isRefreshing: true, errorMessage: null));
+
+      try {
+        final summary = await _dashboardRepo.getDashboardSummary();
+
+        emit(DashboardState.loaded(summary: summary));
+      } catch (_) {
+        emit(
+          current.copyWith(
+            isRefreshing: false,
+            errorMessage: 'could_not_refresh_dashboard',
+          ),
+        );
+      }
+
+      return;
     }
+
+    await getDashboardSummary();
   }
 }

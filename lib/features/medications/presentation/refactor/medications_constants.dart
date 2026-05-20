@@ -2,41 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
+import 'medication_filter_values.dart';
 
-const allMedicationCategoriesValue = 'all';
-
-const medicationCategories = [
-  'analgesic',
-  'antibiotic',
-  'antiviral',
-  'antifungal',
-  'cardiovascular',
-  'diabetes',
-  'respiratory',
-  'gastrointestinal',
-  'dermatology',
-  'vitamins_supplements',
-  'otc',
-  'other',
-];
-
-const medicationCategoryOptions = [
-  allMedicationCategoriesValue,
-  ...medicationCategories,
-];
-
-const medicationForms = [
-  'tablet',
-  'capsule',
-  'syrup',
-  'injection',
-  'cream',
-  'drops',
-  'inhaler',
-  'patch',
-  'suppository',
-  'other',
-];
+export 'medication_filter_values.dart';
 
 String medicationCategoryLabel(BuildContext context, String value) {
   switch (value) {
@@ -93,6 +61,19 @@ String medicationFormLabel(BuildContext context, String value) {
       return context.translate(LangKeys.suppository);
     case 'other':
       return context.translate(LangKeys.other);
+    default:
+      return value;
+  }
+}
+
+String medicationStatusLabel(BuildContext context, String value) {
+  switch (value) {
+    case allMedicationStatusesValue:
+      return context.translate(LangKeys.allStatuses);
+    case activeMedicationStatusValue:
+      return context.translate(LangKeys.active);
+    case inactiveMedicationStatusValue:
+      return context.translate(LangKeys.inactive);
     default:
       return value;
   }

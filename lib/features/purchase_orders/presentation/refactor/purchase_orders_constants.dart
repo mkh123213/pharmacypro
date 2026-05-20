@@ -1,6 +1,10 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 
 const allPurchaseOrderStatusesValue = 'all';
+const allPurchaseOrderBranchesValue = 'all';
 
 const purchaseOrderStatuses = [
   allPurchaseOrderStatusesValue,
@@ -17,7 +21,7 @@ const nextPurchaseOrderStatus = {
   'confirmed': 'received',
 };
 
-String purchaseOrderStatusLabel(context, String status) {
+String purchaseOrderStatusLabel(BuildContext context, String status) {
   switch (status) {
     case allPurchaseOrderStatusesValue:
       return context.translate(LangKeys.allStatuses);

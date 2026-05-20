@@ -25,29 +25,81 @@ class ReportsCubit extends Cubit<ReportsState> {
           selectedBranchId: _branchId,
         ),
       );
-    } catch (error) {
+    } catch (_) {
       emit(const ReportsState.failure(message: 'could_not_load_reports'));
     }
   }
 
   Future<void> refreshReports() async {
-    try {
-      final result = await _repo.getReports(branchId: _branchId);
+    final current = state;
 
-      emit(
-        ReportsState.loaded(
-          summary: result.summary,
-          branches: result.branches,
-          selectedBranchId: _branchId,
-        ),
-      );
-    } catch (error) {
-      emit(const ReportsState.failure(message: 'could_not_refresh_reports'));
+    if (current is ReportsLoaded) {
+      emit(current.copyWith(isRefreshing: true, errorMessage: null));
+
+      try {
+        final result = await _repo.getReports(branchId: _branchId);
+
+        emit(
+          ReportsState.loaded(
+            summary: result.summary,
+            branches: result.branches,
+            selectedBranchId: _branchId,
+          ),
+        );
+      } catch (_) {
+        emit(
+          current.copyWith(
+            isRefreshing: false,
+            errorMessage: 'could_not_refresh_reports',
+          ),
+        );
+      }
+
+      return;
     }
+
+    await getReports();
   }
 
   Future<void> updateBranch(String value) async {
+    if (_branchId == value) return;
+
     _branchId = value;
+
+    final current = state;
+
+    if (current is ReportsLoaded) {
+      emit(
+        current.copyWith(
+          selectedBranchId: value,
+          isRefreshing: true,
+          errorMessage: null,
+        ),
+      );
+
+      try {
+        final result = await _repo.getReports(branchId: _branchId);
+
+        emit(
+          ReportsState.loaded(
+            summary: result.summary,
+            branches: result.branches,
+            selectedBranchId: _branchId,
+          ),
+        );
+      } catch (_) {
+        emit(
+          current.copyWith(
+            selectedBranchId: current.selectedBranchId,
+            isRefreshing: false,
+            errorMessage: 'could_not_load_reports',
+          ),
+        );
+      }
+
+      return;
+    }
+
     await getReports();
   }
 }

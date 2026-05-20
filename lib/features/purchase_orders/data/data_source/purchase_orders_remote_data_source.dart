@@ -64,17 +64,49 @@ class PurchaseOrdersRemoteDataSource {
   Future<PurchaseOrderModel> createPurchaseOrder(
     PurchaseOrderModel item,
   ) async {
+    await _validatePurchaseOrderItems(item);
     await _validateActiveSupplier(item.supplierId);
     await _validateActiveBranch(item.branchId);
     await _validateActivePurchaseOrderMedications(item);
 
     final document = await _orders.add({
       ...item.toFirestoreJson(),
+      'status': 'draft',
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     });
 
     return PurchaseOrderModel.fromFirestore(await document.get());
+  }
+
+  Future<PurchaseOrderModel> updatePurchaseOrder(
+    PurchaseOrderModel item,
+  ) async {
+    final reference = _orders.doc(item.id);
+    final snapshot = await reference.get();
+
+    if (!snapshot.exists) {
+      throw Exception('purchase_order_not_found');
+    }
+
+    final currentOrder = PurchaseOrderModel.fromFirestore(snapshot);
+
+    if (currentOrder.status != 'draft') {
+      throw Exception('only_draft_purchase_orders_can_be_edited');
+    }
+
+    await _validatePurchaseOrderItems(item);
+    await _validateActiveSupplier(item.supplierId);
+    await _validateActiveBranch(item.branchId);
+    await _validateActivePurchaseOrderMedications(item);
+
+    await reference.update({
+      ...item.toFirestoreJson(),
+      'status': 'draft',
+      'updated_at': FieldValue.serverTimestamp(),
+    });
+
+    return PurchaseOrderModel.fromFirestore(await reference.get());
   }
 
   Future<void> updatePurchaseOrderFields(
@@ -84,17 +116,52 @@ class PurchaseOrdersRemoteDataSource {
     final newStatus = data['status'];
 
     if (newStatus is String) {
-      await _validateStatusTransition(id: id, newStatus: newStatus);
-    }
+      if (newStatus == 'received') {
+        await _receivePurchaseOrder(id);
+        return;
+      }
 
-    if (newStatus == 'received') {
-      await _receivePurchaseOrder(id);
+      await _updatePurchaseOrderStatus(id: id, newStatus: newStatus);
       return;
     }
 
     await _orders.doc(id).update({
       ...data,
       'updated_at': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> _updatePurchaseOrderStatus({
+    required String id,
+    required String newStatus,
+  }) async {
+    final orderReference = _orders.doc(id);
+
+    await _firestore.runTransaction((transaction) async {
+      final orderSnapshot = await transaction.get(orderReference);
+
+      if (!orderSnapshot.exists) {
+        throw Exception('purchase_order_not_found');
+      }
+
+      final order = PurchaseOrderModel.fromFirestore(orderSnapshot);
+
+      _validateStatusTransition(
+        currentStatus: order.status,
+        newStatus: newStatus,
+      );
+
+      await _validateActiveSupplierInTransaction(transaction, order.supplierId);
+      await _validateActiveBranchInTransaction(transaction, order.branchId);
+      await _validateActivePurchaseOrderMedicationsInTransaction(
+        transaction,
+        order,
+      );
+
+      transaction.update(orderReference, {
+        'status': newStatus,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
     });
   }
 
@@ -110,21 +177,18 @@ class PurchaseOrdersRemoteDataSource {
 
       final order = PurchaseOrderModel.fromFirestore(orderSnapshot);
 
-      if (order.status == 'received') {
-        throw Exception('purchase_order_already_received');
-      }
+      _validateStatusTransition(
+        currentStatus: order.status,
+        newStatus: 'received',
+      );
 
-      if (order.status == 'cancelled') {
-        throw Exception('purchase_order_already_cancelled');
-      }
-
-      if (order.items.isEmpty) {
-        throw Exception('purchase_order_has_no_items');
-      }
-
-      await _validateActiveSupplier(order.supplierId);
-      await _validateActiveBranch(order.branchId);
-      await _validateActivePurchaseOrderMedications(order);
+      await _validatePurchaseOrderItems(order);
+      await _validateActiveSupplierInTransaction(transaction, order.supplierId);
+      await _validateActiveBranchInTransaction(transaction, order.branchId);
+      await _validateActivePurchaseOrderMedicationsInTransaction(
+        transaction,
+        order,
+      );
 
       final inventoryDocumentsByMedicationId =
           <String, DocumentSnapshot<Map<String, dynamic>>>{};
@@ -144,6 +208,7 @@ class PurchaseOrdersRemoteDataSource {
 
       transaction.update(orderReference, {
         'status': 'received',
+        'received_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
 
@@ -220,6 +285,84 @@ class PurchaseOrdersRemoteDataSource {
     });
   }
 
+  void _validateStatusTransition({
+    required String currentStatus,
+    required String newStatus,
+  }) {
+    if (currentStatus == 'cancelled') {
+      throw Exception('purchase_order_already_cancelled');
+    }
+
+    if (currentStatus == 'received' && newStatus != 'received') {
+      throw Exception('purchase_order_already_received');
+    }
+
+    if (newStatus == 'cancelled') {
+      if (currentStatus == 'received') {
+        throw Exception('cannot_cancel_received_purchase_order');
+      }
+
+      return;
+    }
+
+    final expectedNextStatus = _nextStatus(currentStatus);
+
+    if (expectedNextStatus == null || expectedNextStatus != newStatus) {
+      throw Exception('invalid_purchase_order_status_transition');
+    }
+  }
+
+  String? _nextStatus(String status) {
+    switch (status) {
+      case 'draft':
+        return 'sent';
+      case 'sent':
+        return 'confirmed';
+      case 'confirmed':
+        return 'received';
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _validatePurchaseOrderItems(PurchaseOrderModel order) async {
+    if (order.items.isEmpty) {
+      throw Exception('purchase_order_has_no_items');
+    }
+
+    if (order.totalAmount <= 0) {
+      throw Exception('purchase_order_invalid_total');
+    }
+
+    double calculatedTotal = 0;
+
+    for (final item in order.items) {
+      if (item.medicationId.trim().isEmpty) {
+        throw Exception('purchase_order_item_missing_medication');
+      }
+
+      if (item.quantity <= 0) {
+        throw Exception('purchase_order_item_invalid_quantity');
+      }
+
+      if (item.unitCost <= 0) {
+        throw Exception('purchase_order_item_invalid_unit_cost');
+      }
+
+      final expectedItemTotal = item.quantity * item.unitCost;
+
+      if (item.total <= 0 || (item.total - expectedItemTotal).abs() > 0.01) {
+        throw Exception('purchase_order_item_invalid_total');
+      }
+
+      calculatedTotal += item.total;
+    }
+
+    if ((order.totalAmount - calculatedTotal).abs() > 0.01) {
+      throw Exception('purchase_order_invalid_total');
+    }
+  }
+
   Future<void> _validateActiveSupplier(String supplierId) async {
     final supplierSnapshot = await _suppliers.doc(supplierId).get();
 
@@ -238,8 +381,50 @@ class PurchaseOrdersRemoteDataSource {
     }
   }
 
+  Future<void> _validateActiveSupplierInTransaction(
+    Transaction transaction,
+    String supplierId,
+  ) async {
+    final supplierSnapshot = await transaction.get(_suppliers.doc(supplierId));
+
+    if (!supplierSnapshot.exists) {
+      throw Exception('supplier_not_found');
+    }
+
+    final supplierData = supplierSnapshot.data();
+
+    if (supplierData == null) {
+      throw Exception('supplier_not_found');
+    }
+
+    if (!_readBool(supplierData['is_active'], defaultValue: true)) {
+      throw Exception('inactive_supplier');
+    }
+  }
+
   Future<void> _validateActiveBranch(String branchId) async {
     final branchSnapshot = await _branches.doc(branchId).get();
+
+    if (!branchSnapshot.exists) {
+      throw Exception('branch_not_found');
+    }
+
+    final branchData = branchSnapshot.data();
+
+    if (branchData == null) {
+      throw Exception('branch_not_found');
+    }
+
+    if (!_readBool(branchData['is_active'], defaultValue: true)) {
+      throw Exception('inactive_branch');
+    }
+  }
+
+  Future<void> _validateActiveBranchInTransaction(
+    Transaction transaction,
+    String branchId,
+  ) async {
+    final branchSnapshot = await transaction.get(_branches.doc(branchId));
 
     if (!branchSnapshot.exists) {
       throw Exception('branch_not_found');
@@ -280,6 +465,31 @@ class PurchaseOrdersRemoteDataSource {
     }
   }
 
+  Future<void> _validateActivePurchaseOrderMedicationsInTransaction(
+    Transaction transaction,
+    PurchaseOrderModel order,
+  ) async {
+    for (final item in order.items) {
+      final medicationSnapshot = await transaction.get(
+        _medications.doc(item.medicationId),
+      );
+
+      if (!medicationSnapshot.exists) {
+        throw Exception('medication_not_found:${item.medicationName}');
+      }
+
+      final medicationData = medicationSnapshot.data();
+
+      if (medicationData == null) {
+        throw Exception('medication_not_found:${item.medicationName}');
+      }
+
+      if (!_readBool(medicationData['is_active'], defaultValue: true)) {
+        throw Exception('inactive_medication:${item.medicationName}');
+      }
+    }
+  }
+
   String _inventoryDocumentId({
     required String branchId,
     required String medicationId,
@@ -301,53 +511,5 @@ class PurchaseOrdersRemoteDataSource {
     if (value is num) return value != 0;
 
     return defaultValue;
-  }
-
-  Future<void> _validateStatusTransition({
-    required String id,
-    required String newStatus,
-  }) async {
-    final snapshot = await _orders.doc(id).get();
-
-    if (!snapshot.exists) {
-      throw Exception('purchase_order_not_found');
-    }
-
-    final order = PurchaseOrderModel.fromFirestore(snapshot);
-
-    if (order.status == 'cancelled') {
-      throw Exception('purchase_order_already_cancelled');
-    }
-
-    if (order.status == 'received' && newStatus != 'received') {
-      throw Exception('purchase_order_already_received');
-    }
-
-    if (newStatus == 'cancelled') {
-      if (order.status == 'received') {
-        throw Exception('cannot_cancel_received_purchase_order');
-      }
-
-      return;
-    }
-
-    final expectedNextStatus = _nextStatus(order.status);
-
-    if (expectedNextStatus == null || expectedNextStatus != newStatus) {
-      throw Exception('invalid_purchase_order_status_transition');
-    }
-  }
-
-  String? _nextStatus(String status) {
-    switch (status) {
-      case 'draft':
-        return 'sent';
-      case 'sent':
-        return 'confirmed';
-      case 'confirmed':
-        return 'received';
-      default:
-        return null;
-    }
   }
 }

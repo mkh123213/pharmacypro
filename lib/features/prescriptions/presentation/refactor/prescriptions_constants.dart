@@ -4,6 +4,7 @@ import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 
 const allPrescriptionStatusesValue = 'all';
+const allPrescriptionBranchesValue = 'all';
 
 const prescriptionStatuses = [
   allPrescriptionStatusesValue,

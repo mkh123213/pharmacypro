@@ -587,4 +587,167 @@ class LangKeys {
       'cannot_cancel_received_purchase_order';
   static const String invalidPurchaseOrderStatusTransition =
       'invalid_purchase_order_status_transition';
+  static const String receivePurchaseOrder = 'receive_purchase_order';
+  static const String receivePurchaseOrderConfirmation =
+      'receive_purchase_order_confirmation';
+  static const String yesReceive = 'yes_receive';
+  static const String receivedAt = 'received_at';
+  static const String send = 'send';
+  static const String confirm = 'confirm';
+  static const String receive = 'receive';
+  static const String totalValue = 'total_value';
+  static const String editPurchaseOrder = 'edit_purchase_order';
+  static const String updatePurchaseOrder = 'update_purchase_order';
+  static const String purchaseOrderUpdatedSuccessfully =
+      'purchase_order_updated_successfully';
+  static const String onlyDraftPurchaseOrdersCanBeEdited =
+      'only_draft_purchase_orders_can_be_edited';
+  static const String edit = 'edit';
+  static const String createdAt = 'created_at';
+  static const String updatedAt = 'updated_at';
+  static const String purchaseOrderItemMissingMedication =
+      'purchase_order_item_missing_medication';
+  static const String purchaseOrderItemInvalidQuantity =
+      'purchase_order_item_invalid_quantity';
+  static const String purchaseOrderItemInvalidUnitCost =
+      'purchase_order_item_invalid_unit_cost';
+  static const String purchaseOrderItemInvalidTotal =
+      'purchase_order_item_invalid_total';
+  static const String purchaseOrderInvalidTotal =
+      'purchase_order_invalid_total';
+  static const String staffNotFound = 'staff_not_found';
+  static const String inactiveStaff = 'inactive_staff';
+  static const String noActiveStaffFound = 'no_active_staff_found';
+
+  static const String shiftNotFound = 'shift_not_found';
+  static const String shiftMissingStaff = 'shift_missing_staff';
+  static const String shiftMissingBranch = 'shift_missing_branch';
+  static const String shiftInvalidDate = 'shift_invalid_date';
+  static const String shiftInvalidTime = 'shift_invalid_time';
+  static const String shiftEndTimeMustBeAfterStartTime =
+      'shift_end_time_must_be_after_start_time';
+
+  static const String shiftAlreadyCompleted = 'shift_already_completed';
+  static const String shiftAlreadyCancelled = 'shift_already_cancelled';
+  static const String cannotCancelCompletedShift =
+      'cannot_cancel_completed_shift';
+  static const String invalidShiftStatusTransition =
+      'invalid_shift_status_transition';
+  static const String staffNameRequired = 'staff_name_required';
+  static const String staffEmailRequired = 'staff_email_required';
+  static const String staffInvalidEmail = 'staff_invalid_email';
+  static const String staffEmailAlreadyExists = 'staff_email_already_exists';
+  static const String staffRoleRequired = 'staff_role_required';
+  static const String staffInvalidRole = 'staff_invalid_role';
+  static const String staffBranchRequired = 'staff_branch_required';
+  static const String staffInvalidPhone = 'staff_invalid_phone';
+  static const String staffInvalidHireDate = 'staff_invalid_hire_date';
+
+  static const String branchNameRequired = 'branch_name_required';
+  static const String branchAddressRequired = 'branch_address_required';
+  static const String branchInvalidPhone = 'branch_invalid_phone';
+  static const String branchInvalidEmail = 'branch_invalid_email';
+  static const String branchNameAlreadyExists = 'branch_name_already_exists';
+  static const String searchBranches = 'search_branches';
+  static const String noBranchesMatchYourFilters =
+      'no_branches_match_your_filters';
+  static const String supplierNameRequired = 'supplier_name_required';
+  static const String supplierInvalidPhone = 'supplier_invalid_phone';
+  static const String supplierInvalidEmail = 'supplier_invalid_email';
+  static const String supplierNameAlreadyExists =
+      'supplier_name_already_exists';
+  static const String supplierEmailAlreadyExists =
+      'supplier_email_already_exists';
+  static const String noSuppliersMatchYourFilters =
+      'no_suppliers_match_your_filters';
+  static const String medicationNotFoundPlain = 'medication_not_found_plain';
+  static const String medicationNameRequired = 'medication_name_required';
+  static const String medicationInvalidPrice = 'medication_invalid_price';
+  static const String medicationInvalidCostPrice =
+      'medication_invalid_cost_price';
+  static const String medicationInvalidCategory = 'medication_invalid_category';
+  static const String medicationInvalidDosageForm =
+      'medication_invalid_dosage_form';
+  static const String medicationInvalidImageUrl =
+      'medication_invalid_image_url';
+  static const String stockStatus = 'stock_status';
+  static const String healthy = 'healthy';
+
+  static const String inactiveMedicationPlain = 'inactive_medication_plain';
+
+  static const String inventoryMissingMedication =
+      'inventory_missing_medication';
+  static const String inventoryMissingBranch = 'inventory_missing_branch';
+  static const String inventoryInvalidQuantity = 'inventory_invalid_quantity';
+  static const String inventoryInvalidMinStockLevel =
+      'inventory_invalid_min_stock_level';
+  static const String inventoryInvalidExpiryDate =
+      'inventory_invalid_expiry_date';
+  static const String inventoryAdjustmentQuantityRequired =
+      'inventory_adjustment_quantity_required';
+  static const String inventoryAdjustmentReasonRequired =
+      'inventory_adjustment_reason_required';
+  static const String allPaymentMethods = 'all_payment_methods';
+
+  static const String saleMissingBranch = 'sale_missing_branch';
+  static const String saleHasNoItems = 'sale_has_no_items';
+  static const String saleInvalidPaymentMethod = 'sale_invalid_payment_method';
+  static const String saleInvalidSubtotal = 'sale_invalid_subtotal';
+  static const String saleInvalidDiscount = 'sale_invalid_discount';
+  static const String saleInvalidTotal = 'sale_invalid_total';
+
+  static const String saleItemMissingMedication =
+      'sale_item_missing_medication';
+  static const String saleItemInvalidQuantity = 'sale_item_invalid_quantity';
+  static const String saleItemInvalidUnitPrice = 'sale_item_invalid_unit_price';
+  static const String saleItemInvalidTotal = 'sale_item_invalid_total';
+  static const String customerOrderCustomerNameRequired =
+      'customer_order_customer_name_required';
+  static const String customerOrderMissingBranch =
+      'customer_order_missing_branch';
+  static const String customerOrderInvalidType = 'customer_order_invalid_type';
+  static const String customerOrderInvalidPaymentMethod =
+      'customer_order_invalid_payment_method';
+  static const String customerOrderDeliveryAddressRequired =
+      'customer_order_delivery_address_required';
+  static const String customerOrderInvalidTotal =
+      'customer_order_invalid_total';
+
+  static const String customerOrderItemMissingMedication =
+      'customer_order_item_missing_medication';
+  static const String customerOrderItemInvalidQuantity =
+      'customer_order_item_invalid_quantity';
+  static const String customerOrderItemInvalidUnitPrice =
+      'customer_order_item_invalid_unit_price';
+  static const String customerOrderItemInvalidTotal =
+      'customer_order_item_invalid_total';
+
+  static const String customerOrderAlreadyCancelled =
+      'customer_order_already_cancelled';
+  static const String invalidCustomerOrderStatusTransition =
+      'invalid_customer_order_status_transition';
+  static const String patientNameRequired = 'patient_name_required';
+  static const String doctorNameRequired = 'doctor_name_required';
+  static const String prescriptionMissingBranch = 'prescription_missing_branch';
+  static const String prescriptionAlreadyRejected =
+      'prescription_already_rejected';
+  static const String prescriptionAlreadyExpired =
+      'prescription_already_expired';
+  static const String prescriptionNotVerified = 'prescription_not_verified';
+  static const String invalidPrescriptionStatusTransition =
+      'invalid_prescription_status_transition';
+  static const String verify = 'verify';
+  static const String reject = 'reject';
+  static const String allStaff = 'all_staff';
+  static const String searchShifts = 'search_shifts';
+  static const String addYourFirstShift = 'add_your_first_shift';
+  static const String noShiftsMatchYourFilters = 'no_shifts_match_your_filters';
+  static const String cancelShift = 'cancel_shift';
+  static const String cancelShiftConfirmation = 'cancel_shift_confirmation';
+  static const String startShift = 'start_shift';
+  static const String completeShift = 'complete_shift';
+  static const String refreshing = 'refreshing';
+  static const String sales = 'sales';
+  static const String reports = 'reports';
+  static const String menu = 'menu';
 }

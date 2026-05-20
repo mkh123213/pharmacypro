@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacypro/core/style/images/app_images.dart';
+import '../images/app_images.dart';
 
 class MyAssets extends ThemeExtension<MyAssets> {
   const MyAssets({required this.bigNavBar, required this.homeBg});

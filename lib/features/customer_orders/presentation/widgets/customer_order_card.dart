@@ -9,6 +9,11 @@ import '../../../../core/language/lang_keys.dart';
 import '../../data/models/customer_order_model.dart';
 import '../refactor/customer_orders_constants.dart';
 
+part 'customer_order_card_compact_order_card.dart';
+part 'customer_order_card_info_row.dart';
+part 'customer_order_card_order_header.dart';
+part 'customer_order_card_wide_order_card.dart';
+
 class CustomerOrderCard extends StatelessWidget {
   const CustomerOrderCard({
     required this.order,
@@ -22,105 +27,63 @@ class CustomerOrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: EdgeInsets.all(12.w),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(child: Icon(Icons.shopping_bag_outlined, size: 20.sp)),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextApp(
-                    text: order.customerName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                  SizedBox(height: 4.h),
-                  TextApp(
-                    text:
-                        '${order.branchName ?? ''} · ${customerOrderTypeLabel(context, order.orderType)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                  SizedBox(height: 6.h),
-                  TextApp(
-                    text: order.items
-                        .map(
-                          (item) => '${item.medicationName} x${item.quantity}',
-                        )
-                        .join(', '),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextApp(
-                  text: '\$${order.totalAmount.toStringAsFixed(2)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
-                ),
-                TextApp(
-                  text: order.createdAt == null
-                      ? ''
-                      : DateFormat('MMM d').format(order.createdAt!),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
-                ),
-                SizedBox(height: 4.h),
-                AppStatusChip(
-                  label: customerOrderStatusLabel(context, order.status),
-                  type: _statusType(order.status),
-                ),
-                if (onNextStatus != null)
-                  TextButton(
-                    onPressed: onNextStatus,
-                    child: TextApp(
-                      text: context.translate(LangKeys.next),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      theme: context.textStyle,
-                    ),
-                  ),
-              ],
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 520;
+
+            if (compact) {
+              return _CompactOrderCard(
+                order: order,
+                onNextStatus: onNextStatus,
+              );
+            }
+
+            return _WideOrderCard(order: order, onNextStatus: onNextStatus);
+          },
         ),
       ),
     );
   }
+}
 
-  AppStatusChipType _statusType(String status) {
-    switch (status) {
-      case 'pending':
-        return AppStatusChipType.warning;
-      case 'confirmed':
-        return AppStatusChipType.info;
-      case 'processing':
-        return AppStatusChipType.primary;
-      case 'ready':
-        return AppStatusChipType.success;
-      case 'out_for_delivery':
-        return AppStatusChipType.info;
-      case 'delivered':
-        return AppStatusChipType.success;
-      case 'cancelled':
-        return AppStatusChipType.error;
-      default:
-        return AppStatusChipType.neutral;
-    }
+
+
+
+
+String _itemsText(CustomerOrderModel order) {
+  if (order.items.isEmpty) return '-';
+
+  return order.items
+      .map((item) => '${item.medicationName} x${item.quantity}')
+      .join(', ');
+}
+
+String _dateText(CustomerOrderModel order) {
+  if (order.createdAt == null) return '-';
+
+  return DateFormat('MMM d').format(order.createdAt!);
+}
+
+AppStatusChipType _statusType(String status) {
+  switch (status) {
+    case 'pending':
+      return AppStatusChipType.warning;
+    case 'confirmed':
+      return AppStatusChipType.info;
+    case 'processing':
+      return AppStatusChipType.primary;
+    case 'ready':
+      return AppStatusChipType.success;
+    case 'out_for_delivery':
+      return AppStatusChipType.info;
+    case 'delivered':
+      return AppStatusChipType.success;
+    case 'cancelled':
+      return AppStatusChipType.error;
+    default:
+      return AppStatusChipType.neutral;
   }
 }

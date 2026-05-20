@@ -1,128 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacypro/features/shifts/presentation/refactor/shifts_constants.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/common/widgets/app_status_chip.dart';
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../data/models/shift_model.dart';
+import '../refactor/shifts_constants.dart';
+
+part 'shifts_table_info_row.dart';
+part 'shifts_table_shift_actions.dart';
+part 'shifts_table_shift_list_card.dart';
+
+part 'shifts_table_columns.dart';
+part 'shifts_table_rows.dart';
 
 class ShiftsTable extends StatelessWidget {
-  const ShiftsTable({required this.shifts, super.key});
+  const ShiftsTable({
+    required this.shifts,
+    required this.onNextStatus,
+    required this.onCancel,
+    this.isSubmitting = false,
+    super.key,
+  });
 
   final List<ShiftModel> shifts;
+  final ValueChanged<ShiftModel> onNextStatus;
+  final ValueChanged<ShiftModel> onCancel;
+  final bool isSubmitting;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: [
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.staff),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.branch),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.date),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.time),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-            DataColumn(
-              label: TextApp(
-                text: context.translate(LangKeys.status),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
-              ),
-            ),
-          ],
-          rows: shifts.map((shift) {
-            return DataRow(
-              cells: [
-                DataCell(
-                  TextApp(
-                    text: shift.staffName ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text: shift.branchName ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text: shift.date,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  TextApp(
-                    text: '${shift.startTime} - ${shift.endTime}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                ),
-                DataCell(
-                  AppStatusChip(
-                    label: shiftStatusLabel(context, shift.status),
-                    type: _statusType(shift.status),
-                  ),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 720;
 
-  AppStatusChipType _statusType(String status) {
-    switch (status) {
-      case 'scheduled':
-        return AppStatusChipType.info;
-      case 'in_progress':
-        return AppStatusChipType.warning;
-      case 'completed':
-        return AppStatusChipType.success;
-      case 'absent':
-        return AppStatusChipType.error;
-      case 'cancelled':
-        return AppStatusChipType.error;
-      default:
-        return AppStatusChipType.neutral;
-    }
+        if (compact) {
+          return ListView.separated(
+            itemCount: shifts.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            separatorBuilder: (_, _) => SizedBox(height: 10.h),
+            itemBuilder: (context, index) {
+              final shift = shifts[index];
+
+              return _ShiftListCard(
+                shift: shift,
+                isSubmitting: isSubmitting,
+                onNextStatus: onNextStatus,
+                onCancel: onCancel,
+              );
+            },
+          );
+        }
+
+        return Card(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: this._buildShiftsTableColumns(context),
+              rows: this._buildShiftsTableRows(context),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

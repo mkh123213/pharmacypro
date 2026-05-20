@@ -14,6 +14,7 @@ class MedicationsState with _$MedicationsState {
     required List<MedicationModel> medications,
     @Default('') String searchQuery,
     @Default('all') String selectedCategory,
+    @Default('all') String selectedStatus,
     @Default(false) bool isSubmitting,
     @Default(null) String? errorMessage,
   }) = MedicationsLoaded;

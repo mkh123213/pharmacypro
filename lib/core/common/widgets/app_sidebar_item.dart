@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../theme/app_colors.dart';
+import 'text_app.dart';
 
 class AppSidebarItem extends StatelessWidget {
   const AppSidebarItem({
@@ -24,12 +25,13 @@ class AppSidebarItem extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          context.go(route);
-
           final scaffold = Scaffold.maybeOf(context);
+
           if (scaffold?.isDrawerOpen ?? false) {
             Navigator.pop(context);
           }
+
+          context.go(route);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
@@ -42,11 +44,11 @@ class AppSidebarItem extends StatelessWidget {
               Icon(icon, size: 20, color: Colors.white),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  label,
+                child: TextApp(
+                  text: label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  theme: TextStyle(
                     color: Colors.white,
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                   ),

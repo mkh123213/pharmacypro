@@ -32,6 +32,7 @@ class StaffCubit extends Cubit<StaffState> {
           branches: results[1] as dynamic,
           searchQuery: _searchQuery,
           selectedRole: _selectedRole,
+          errorMessage: null,
         ),
       );
     } catch (error) {
@@ -56,7 +57,7 @@ class StaffCubit extends Cubit<StaffState> {
 
     final oldStaff = List<StaffModel>.from(_allStaff);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final created = await _staffRepo.createStaff(staff);
@@ -69,7 +70,13 @@ class StaffCubit extends Cubit<StaffState> {
     } catch (error) {
       _allStaff = oldStaff;
 
-      emit(current.copyWith(staff: _filteredStaff, isSubmitting: false));
+      emit(
+        current.copyWith(
+          staff: _filteredStaff,
+          isSubmitting: false,
+          errorMessage: _staffErrorMessage(error),
+        ),
+      );
 
       return false;
     }
@@ -82,7 +89,7 @@ class StaffCubit extends Cubit<StaffState> {
 
     final oldStaff = List<StaffModel>.from(_allStaff);
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, errorMessage: null));
 
     try {
       final updated = await _staffRepo.updateStaff(staff);
@@ -97,10 +104,70 @@ class StaffCubit extends Cubit<StaffState> {
     } catch (error) {
       _allStaff = oldStaff;
 
-      emit(current.copyWith(staff: _filteredStaff, isSubmitting: false));
+      emit(
+        current.copyWith(
+          staff: _filteredStaff,
+          isSubmitting: false,
+          errorMessage: _staffErrorMessage(error),
+        ),
+      );
 
       return false;
     }
+  }
+
+  String _staffErrorMessage(Object error) {
+    final text = error.toString();
+
+    if (text.contains('staff_not_found')) {
+      return 'staff_not_found';
+    }
+
+    if (text.contains('staff_name_required')) {
+      return 'staff_name_required';
+    }
+
+    if (text.contains('staff_email_required')) {
+      return 'staff_email_required';
+    }
+
+    if (text.contains('staff_invalid_email')) {
+      return 'staff_invalid_email';
+    }
+
+    if (text.contains('staff_email_already_exists')) {
+      return 'staff_email_already_exists';
+    }
+
+    if (text.contains('staff_role_required')) {
+      return 'staff_role_required';
+    }
+
+    if (text.contains('staff_invalid_role')) {
+      return 'staff_invalid_role';
+    }
+
+    if (text.contains('staff_branch_required')) {
+      return 'staff_branch_required';
+    }
+
+    if (text.contains('staff_invalid_phone')) {
+      return 'staff_invalid_phone';
+    }
+
+    if (text.contains('staff_invalid_hire_date')) {
+      return 'staff_invalid_hire_date';
+    }
+
+    if (text.contains('branch_not_found')) {
+      return 'branch_not_found';
+    }
+
+    if (text.contains('inactive_branch')) {
+      return 'inactive_branch';
+    }
+
+    return 'could_not_save_staff_member';
   }
 
   List<StaffModel> get _filteredStaff {
@@ -108,8 +175,11 @@ class StaffCubit extends Cubit<StaffState> {
 
     return _allStaff.where((member) {
       final matchSearch =
+          query.isEmpty ||
           member.fullName.toLowerCase().contains(query) ||
-          member.email.toLowerCase().contains(query);
+          member.email.toLowerCase().contains(query) ||
+          (member.phone?.toLowerCase().contains(query) ?? false) ||
+          (member.branchName?.toLowerCase().contains(query) ?? false);
 
       final matchRole = _selectedRole == 'all' || member.role == _selectedRole;
 
@@ -127,6 +197,7 @@ class StaffCubit extends Cubit<StaffState> {
           searchQuery: _searchQuery,
           selectedRole: _selectedRole,
           isSubmitting: false,
+          errorMessage: null,
         ),
       );
     }

@@ -1,5 +1,5 @@
-import 'package:pharmacypro/features/inventory/data/models/inventory_alert_model.dart';
-import 'package:pharmacypro/features/inventory/data/models/stock_movement_model.dart';
+import '../models/inventory_alert_model.dart';
+import '../models/stock_movement_model.dart';
 
 import '../../../branches/data/models/branch_model.dart';
 import '../../../medications/data/models/medication_model.dart';

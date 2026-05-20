@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<ShiftModel> shifts,  List<StaffModel> staff,  List<BranchModel> branches,  DateTime weekStart,  bool isSubmitting)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<ShiftModel> shifts,  List<StaffModel> staff,  List<BranchModel> branches,  DateTime weekStart,  String searchQuery,  String selectedStatus,  String selectedBranchId,  String selectedStaffId,  bool isSubmitting,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ShiftsInitial() when initial != null:
 return initial();case ShiftsLoading() when loading != null:
 return loading();case ShiftsLoaded() when loaded != null:
-return loaded(_that.shifts,_that.staff,_that.branches,_that.weekStart,_that.isSubmitting);case ShiftsFailure() when failure != null:
+return loaded(_that.shifts,_that.staff,_that.branches,_that.weekStart,_that.searchQuery,_that.selectedStatus,_that.selectedBranchId,_that.selectedStaffId,_that.isSubmitting,_that.errorMessage);case ShiftsFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<ShiftModel> shifts,  List<StaffModel> staff,  List<BranchModel> branches,  DateTime weekStart,  bool isSubmitting)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<ShiftModel> shifts,  List<StaffModel> staff,  List<BranchModel> branches,  DateTime weekStart,  String searchQuery,  String selectedStatus,  String selectedBranchId,  String selectedStaffId,  bool isSubmitting,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case ShiftsInitial():
 return initial();case ShiftsLoading():
 return loading();case ShiftsLoaded():
-return loaded(_that.shifts,_that.staff,_that.branches,_that.weekStart,_that.isSubmitting);case ShiftsFailure():
+return loaded(_that.shifts,_that.staff,_that.branches,_that.weekStart,_that.searchQuery,_that.selectedStatus,_that.selectedBranchId,_that.selectedStaffId,_that.isSubmitting,_that.errorMessage);case ShiftsFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<ShiftModel> shifts,  List<StaffModel> staff,  List<BranchModel> branches,  DateTime weekStart,  bool isSubmitting)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<ShiftModel> shifts,  List<StaffModel> staff,  List<BranchModel> branches,  DateTime weekStart,  String searchQuery,  String selectedStatus,  String selectedBranchId,  String selectedStaffId,  bool isSubmitting,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case ShiftsInitial() when initial != null:
 return initial();case ShiftsLoading() when loading != null:
 return loading();case ShiftsLoaded() when loaded != null:
-return loaded(_that.shifts,_that.staff,_that.branches,_that.weekStart,_that.isSubmitting);case ShiftsFailure() when failure != null:
+return loaded(_that.shifts,_that.staff,_that.branches,_that.weekStart,_that.searchQuery,_that.selectedStatus,_that.selectedBranchId,_that.selectedStaffId,_that.isSubmitting,_that.errorMessage);case ShiftsFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class ShiftsLoaded implements ShiftsState {
-  const ShiftsLoaded({required final  List<ShiftModel> shifts, required final  List<StaffModel> staff, required final  List<BranchModel> branches, required this.weekStart, this.isSubmitting = false}): _shifts = shifts,_staff = staff,_branches = branches;
+  const ShiftsLoaded({required final  List<ShiftModel> shifts, required final  List<StaffModel> staff, required final  List<BranchModel> branches, required this.weekStart, this.searchQuery = '', this.selectedStatus = 'all', this.selectedBranchId = 'all', this.selectedStaffId = 'all', this.isSubmitting = false, this.errorMessage = null}): _shifts = shifts,_staff = staff,_branches = branches;
   
 
  final  List<ShiftModel> _shifts;
@@ -282,7 +282,12 @@ class ShiftsLoaded implements ShiftsState {
 }
 
  final  DateTime weekStart;
+@JsonKey() final  String searchQuery;
+@JsonKey() final  String selectedStatus;
+@JsonKey() final  String selectedBranchId;
+@JsonKey() final  String selectedStaffId;
 @JsonKey() final  bool isSubmitting;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of ShiftsState
 /// with the given fields replaced by the non-null parameter values.
@@ -294,16 +299,16 @@ $ShiftsLoadedCopyWith<ShiftsLoaded> get copyWith => _$ShiftsLoadedCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShiftsLoaded&&const DeepCollectionEquality().equals(other._shifts, _shifts)&&const DeepCollectionEquality().equals(other._staff, _staff)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.weekStart, weekStart) || other.weekStart == weekStart)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShiftsLoaded&&const DeepCollectionEquality().equals(other._shifts, _shifts)&&const DeepCollectionEquality().equals(other._staff, _staff)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.weekStart, weekStart) || other.weekStart == weekStart)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedStatus, selectedStatus) || other.selectedStatus == selectedStatus)&&(identical(other.selectedBranchId, selectedBranchId) || other.selectedBranchId == selectedBranchId)&&(identical(other.selectedStaffId, selectedStaffId) || other.selectedStaffId == selectedStaffId)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_shifts),const DeepCollectionEquality().hash(_staff),const DeepCollectionEquality().hash(_branches),weekStart,isSubmitting);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_shifts),const DeepCollectionEquality().hash(_staff),const DeepCollectionEquality().hash(_branches),weekStart,searchQuery,selectedStatus,selectedBranchId,selectedStaffId,isSubmitting,errorMessage);
 
 @override
 String toString() {
-  return 'ShiftsState.loaded(shifts: $shifts, staff: $staff, branches: $branches, weekStart: $weekStart, isSubmitting: $isSubmitting)';
+  return 'ShiftsState.loaded(shifts: $shifts, staff: $staff, branches: $branches, weekStart: $weekStart, searchQuery: $searchQuery, selectedStatus: $selectedStatus, selectedBranchId: $selectedBranchId, selectedStaffId: $selectedStaffId, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
 }
 
 
@@ -314,7 +319,7 @@ abstract mixin class $ShiftsLoadedCopyWith<$Res> implements $ShiftsStateCopyWith
   factory $ShiftsLoadedCopyWith(ShiftsLoaded value, $Res Function(ShiftsLoaded) _then) = _$ShiftsLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<ShiftModel> shifts, List<StaffModel> staff, List<BranchModel> branches, DateTime weekStart, bool isSubmitting
+ List<ShiftModel> shifts, List<StaffModel> staff, List<BranchModel> branches, DateTime weekStart, String searchQuery, String selectedStatus, String selectedBranchId, String selectedStaffId, bool isSubmitting, String? errorMessage
 });
 
 
@@ -331,14 +336,19 @@ class _$ShiftsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of ShiftsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? shifts = null,Object? staff = null,Object? branches = null,Object? weekStart = null,Object? isSubmitting = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? shifts = null,Object? staff = null,Object? branches = null,Object? weekStart = null,Object? searchQuery = null,Object? selectedStatus = null,Object? selectedBranchId = null,Object? selectedStaffId = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
   return _then(ShiftsLoaded(
 shifts: null == shifts ? _self._shifts : shifts // ignore: cast_nullable_to_non_nullable
 as List<ShiftModel>,staff: null == staff ? _self._staff : staff // ignore: cast_nullable_to_non_nullable
 as List<StaffModel>,branches: null == branches ? _self._branches : branches // ignore: cast_nullable_to_non_nullable
 as List<BranchModel>,weekStart: null == weekStart ? _self.weekStart : weekStart // ignore: cast_nullable_to_non_nullable
-as DateTime,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,
+as DateTime,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
+as String,selectedStatus: null == selectedStatus ? _self.selectedStatus : selectedStatus // ignore: cast_nullable_to_non_nullable
+as String,selectedBranchId: null == selectedBranchId ? _self.selectedBranchId : selectedBranchId // ignore: cast_nullable_to_non_nullable
+as String,selectedStaffId: null == selectedStaffId ? _self.selectedStaffId : selectedStaffId // ignore: cast_nullable_to_non_nullable
+as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

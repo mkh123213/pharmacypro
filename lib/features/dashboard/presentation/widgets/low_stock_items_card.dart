@@ -14,6 +14,8 @@ class LowStockItemsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final visibleItems = items.take(5).toList();
+
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16.w),
@@ -27,7 +29,7 @@ class LowStockItemsCard extends StatelessWidget {
               theme: context.textStyle.copyWith(fontWeight: FontWeight.w700),
             ),
             SizedBox(height: 8.h),
-            if (items.isEmpty)
+            if (visibleItems.isEmpty)
               TextApp(
                 text: context.translate(LangKeys.allStockLevelsAreHealthy),
                 maxLines: 2,
@@ -35,30 +37,41 @@ class LowStockItemsCard extends StatelessWidget {
                 theme: context.textStyle,
               )
             else
-              ...items.take(5).map((item) {
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: TextApp(
-                    text: item.medicationName ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                  subtitle: TextApp(
-                    text: item.branchName ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                  trailing: AppStatusChip(
-                    label: context
-                        .translate(LangKeys.quantityLeft)
-                        .replaceAll('{quantity}', item.quantity.toString()),
-                    type: AppStatusChipType.error,
-                  ),
-                );
-              }),
+              ListView.separated(
+                itemCount: visibleItems.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                separatorBuilder: (_, _) => Divider(height: 12.h),
+                itemBuilder: (context, index) {
+                  final item = visibleItems[index];
+
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: TextApp(
+                      text: item.medicationName ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle,
+                    ),
+                    subtitle: TextApp(
+                      text: item.branchName ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle,
+                    ),
+                    trailing: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: AppStatusChip(
+                        label: context
+                            .translate(LangKeys.quantityLeft)
+                            .replaceAll('{quantity}', item.quantity.toString()),
+                        type: AppStatusChipType.error,
+                      ),
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),

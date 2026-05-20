@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacypro/core/extensions/context_extension.dart';
-import 'package:pharmacypro/core/language/lang_keys.dart';
+import '../../../../core/extensions/context_extension.dart';
+import '../../../../core/language/lang_keys.dart';
 
 import '../../../../core/common/widgets/app_status_chip.dart';
 

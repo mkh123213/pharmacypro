@@ -1,4 +1,6 @@
 class AppRoutes {
+  const AppRoutes._();
+
   static const String dashboard = '/';
   static const String inventory = '/inventory';
   static const String medications = '/medications';

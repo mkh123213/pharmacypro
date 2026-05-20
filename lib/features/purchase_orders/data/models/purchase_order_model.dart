@@ -20,6 +20,7 @@ class PurchaseOrderModel {
     this.totalAmount = 0,
     this.items = const [],
     this.notes,
+    this.receivedAt,
     this.createdAt,
     this.updatedAt,
   });
@@ -53,34 +54,56 @@ class PurchaseOrderModel {
   final double totalAmount;
 
   final List<PurchaseOrderItemModel> items;
+
   final String? notes;
 
-  @JsonKey(name: 'created_at', fromJson: dateTimeFromJson, toJson: dateTimeToJson)
+  @JsonKey(
+    name: 'received_at',
+    fromJson: dateTimeFromJson,
+    toJson: dateTimeToJson,
+  )
+  final DateTime? receivedAt;
+
+  @JsonKey(
+    name: 'created_at',
+    fromJson: dateTimeFromJson,
+    toJson: dateTimeToJson,
+  )
   final DateTime? createdAt;
 
-  @JsonKey(name: 'updated_at', fromJson: dateTimeFromJson, toJson: dateTimeToJson)
+  @JsonKey(
+    name: 'updated_at',
+    fromJson: dateTimeFromJson,
+    toJson: dateTimeToJson,
+  )
   final DateTime? updatedAt;
 
-  factory PurchaseOrderModel.fromJson(Map<String, dynamic> json) => _$PurchaseOrderModelFromJson(json);
+  factory PurchaseOrderModel.fromJson(Map<String, dynamic> json) {
+    return _$PurchaseOrderModelFromJson(json);
+  }
 
-  factory PurchaseOrderModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> document) {
+  factory PurchaseOrderModel.fromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> document,
+  ) {
     final data = document.data() ?? <String, dynamic>{};
+
     return PurchaseOrderModel.fromJson({...data, 'id': document.id});
   }
 
-  Map<String, dynamic> toJson() => _$PurchaseOrderModelToJson(this);
+  Map<String, dynamic> toJson() {
+    return _$PurchaseOrderModelToJson(this);
+  }
 
   Map<String, dynamic> toFirestoreJson() {
     final json = toJson()
       ..remove('id')
       ..remove('created_at')
       ..remove('updated_at');
+
     return json;
   }
 
-  PurchaseOrderModel copyWith({
-    String? status,
-  }) {
+  PurchaseOrderModel copyWith({String? status, DateTime? receivedAt}) {
     return PurchaseOrderModel(
       id: id,
       orderNumber: orderNumber,
@@ -94,21 +117,23 @@ class PurchaseOrderModel {
       totalAmount: totalAmount,
       items: items,
       notes: notes,
+      receivedAt: receivedAt ?? this.receivedAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
   }
-
 }
 
 DateTime? dateTimeFromJson(Object? value) {
   if (value == null) return null;
   if (value is Timestamp) return value.toDate();
   if (value is String) return DateTime.tryParse(value);
+
   return null;
 }
 
 Object? dateTimeToJson(DateTime? value) {
   if (value == null) return null;
+
   return Timestamp.fromDate(value);
 }

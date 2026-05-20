@@ -128,12 +128,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( ReportsSummaryModel summary,  List<BranchModel> branches,  String selectedBranchId)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( ReportsSummaryModel summary,  List<BranchModel> branches,  String selectedBranchId,  bool isRefreshing,  String? errorMessage)?  loaded,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ReportsInitial() when initial != null:
 return initial();case ReportsLoading() when loading != null:
 return loading();case ReportsLoaded() when loaded != null:
-return loaded(_that.summary,_that.branches,_that.selectedBranchId);case ReportsFailure() when failure != null:
+return loaded(_that.summary,_that.branches,_that.selectedBranchId,_that.isRefreshing,_that.errorMessage);case ReportsFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -152,12 +152,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( ReportsSummaryModel summary,  List<BranchModel> branches,  String selectedBranchId)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( ReportsSummaryModel summary,  List<BranchModel> branches,  String selectedBranchId,  bool isRefreshing,  String? errorMessage)  loaded,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case ReportsInitial():
 return initial();case ReportsLoading():
 return loading();case ReportsLoaded():
-return loaded(_that.summary,_that.branches,_that.selectedBranchId);case ReportsFailure():
+return loaded(_that.summary,_that.branches,_that.selectedBranchId,_that.isRefreshing,_that.errorMessage);case ReportsFailure():
 return failure(_that.message);case _:
   throw StateError('Unexpected subclass');
 
@@ -175,12 +175,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( ReportsSummaryModel summary,  List<BranchModel> branches,  String selectedBranchId)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( ReportsSummaryModel summary,  List<BranchModel> branches,  String selectedBranchId,  bool isRefreshing,  String? errorMessage)?  loaded,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case ReportsInitial() when initial != null:
 return initial();case ReportsLoading() when loading != null:
 return loading();case ReportsLoaded() when loaded != null:
-return loaded(_that.summary,_that.branches,_that.selectedBranchId);case ReportsFailure() when failure != null:
+return loaded(_that.summary,_that.branches,_that.selectedBranchId,_that.isRefreshing,_that.errorMessage);case ReportsFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -257,7 +257,7 @@ String toString() {
 
 
 class ReportsLoaded implements ReportsState {
-  const ReportsLoaded({required this.summary, required final  List<BranchModel> branches, this.selectedBranchId = 'all'}): _branches = branches;
+  const ReportsLoaded({required this.summary, required final  List<BranchModel> branches, this.selectedBranchId = 'all', this.isRefreshing = false, this.errorMessage = null}): _branches = branches;
   
 
  final  ReportsSummaryModel summary;
@@ -269,6 +269,8 @@ class ReportsLoaded implements ReportsState {
 }
 
 @JsonKey() final  String selectedBranchId;
+@JsonKey() final  bool isRefreshing;
+@JsonKey() final  String? errorMessage;
 
 /// Create a copy of ReportsState
 /// with the given fields replaced by the non-null parameter values.
@@ -280,16 +282,16 @@ $ReportsLoadedCopyWith<ReportsLoaded> get copyWith => _$ReportsLoadedCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportsLoaded&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.selectedBranchId, selectedBranchId) || other.selectedBranchId == selectedBranchId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportsLoaded&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other._branches, _branches)&&(identical(other.selectedBranchId, selectedBranchId) || other.selectedBranchId == selectedBranchId)&&(identical(other.isRefreshing, isRefreshing) || other.isRefreshing == isRefreshing)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,summary,const DeepCollectionEquality().hash(_branches),selectedBranchId);
+int get hashCode => Object.hash(runtimeType,summary,const DeepCollectionEquality().hash(_branches),selectedBranchId,isRefreshing,errorMessage);
 
 @override
 String toString() {
-  return 'ReportsState.loaded(summary: $summary, branches: $branches, selectedBranchId: $selectedBranchId)';
+  return 'ReportsState.loaded(summary: $summary, branches: $branches, selectedBranchId: $selectedBranchId, isRefreshing: $isRefreshing, errorMessage: $errorMessage)';
 }
 
 
@@ -300,7 +302,7 @@ abstract mixin class $ReportsLoadedCopyWith<$Res> implements $ReportsStateCopyWi
   factory $ReportsLoadedCopyWith(ReportsLoaded value, $Res Function(ReportsLoaded) _then) = _$ReportsLoadedCopyWithImpl;
 @useResult
 $Res call({
- ReportsSummaryModel summary, List<BranchModel> branches, String selectedBranchId
+ ReportsSummaryModel summary, List<BranchModel> branches, String selectedBranchId, bool isRefreshing, String? errorMessage
 });
 
 
@@ -317,12 +319,14 @@ class _$ReportsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of ReportsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? summary = null,Object? branches = null,Object? selectedBranchId = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? summary = null,Object? branches = null,Object? selectedBranchId = null,Object? isRefreshing = null,Object? errorMessage = freezed,}) {
   return _then(ReportsLoaded(
 summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
 as ReportsSummaryModel,branches: null == branches ? _self._branches : branches // ignore: cast_nullable_to_non_nullable
 as List<BranchModel>,selectedBranchId: null == selectedBranchId ? _self.selectedBranchId : selectedBranchId // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isRefreshing: null == isRefreshing ? _self.isRefreshing : isRefreshing // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

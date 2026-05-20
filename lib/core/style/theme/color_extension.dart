@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacypro/core/style/colors/colors_dark.dart';
-import 'package:pharmacypro/core/style/colors/colors_light.dart';
+import '../colors/colors_dark.dart';
+import '../colors/colors_light.dart';
 
 class MyColors extends ThemeExtension<MyColors> {
   const MyColors({

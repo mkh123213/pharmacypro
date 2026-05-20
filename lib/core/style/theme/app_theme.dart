@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacypro/core/style/colors/colors_dark.dart';
-import 'package:pharmacypro/core/style/colors/colors_light.dart';
-import 'package:pharmacypro/core/style/fonts/font_family_helper.dart';
-import 'package:pharmacypro/core/style/theme/assets_extension.dart';
-import 'package:pharmacypro/core/style/theme/color_extension.dart';
+import '../colors/colors_dark.dart';
+import '../colors/colors_light.dart';
+import '../fonts/font_family_helper.dart';
+import './assets_extension.dart';
+import './color_extension.dart';
 
 ThemeData themeDark() {
   final fontFamily = FontFamilyHelper.geLocalozedFontFamily();

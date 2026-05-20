@@ -35,35 +35,45 @@ class RecentStockMovementsCard extends StatelessWidget {
                 theme: context.textStyle,
               )
             else
-              ...movements.map((movement) {
-                final isIncrease = movement.quantityChange > 0;
+              ListView.separated(
+                itemCount: movements.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                separatorBuilder: (_, _) => Divider(height: 12.h),
+                itemBuilder: (context, index) {
+                  final movement = movements[index];
+                  final isIncrease = movement.quantityChange > 0;
 
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  title: TextApp(
-                    text: movement.medicationName ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                  subtitle: TextApp(
-                    text:
-                        '${movement.branchName ?? ''} · ${_movementTypeLabel(context, movement.type)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    theme: context.textStyle,
-                  ),
-                  trailing: AppStatusChip(
-                    label: isIncrease
-                        ? '+${movement.quantityChange}'
-                        : '${movement.quantityChange}',
-                    type: isIncrease
-                        ? AppStatusChipType.success
-                        : AppStatusChipType.error,
-                  ),
-                );
-              }),
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: TextApp(
+                      text: movement.medicationName ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle,
+                    ),
+                    subtitle: TextApp(
+                      text:
+                          '${movement.branchName ?? ''} · ${_movementTypeLabel(context, movement.type)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      theme: context.textStyle,
+                    ),
+                    trailing: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: AppStatusChip(
+                        label: isIncrease
+                            ? '+${movement.quantityChange}'
+                            : '${movement.quantityChange}',
+                        type: isIncrease
+                            ? AppStatusChipType.success
+                            : AppStatusChipType.error,
+                      ),
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),

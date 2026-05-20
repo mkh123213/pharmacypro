@@ -34,4 +34,8 @@ class PurchaseOrdersRepo {
   Future<void> updatePurchaseOrderFields(String id, Map<String, dynamic> data) {
     return _remoteDataSource.updatePurchaseOrderFields(id, data);
   }
+
+  Future<PurchaseOrderModel> updatePurchaseOrder(PurchaseOrderModel item) {
+    return _remoteDataSource.updatePurchaseOrder(item);
+  }
 }

@@ -9,6 +9,8 @@ import '../../../../core/language/lang_keys.dart';
 import '../../data/models/staff_model.dart';
 import '../refactor/staff_constants.dart';
 
+part 'staff_card_info.dart';
+
 class StaffCard extends StatelessWidget {
   const StaffCard({
     required this.staff,
@@ -50,14 +52,20 @@ class StaffCard extends StatelessWidget {
                     children: [
                       TextApp(
                         text: staff.fullName,
-                        theme: context.textStyle,
+                        theme: context.textStyle.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       SizedBox(height: 4.h),
-                      AppStatusChip(
-                        label: formatStaffRole(context, staff.role),
-                        type: roleChipType(staff.role),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: AppStatusChip(
+                          label: formatStaffRole(context, staff.role),
+                          type: roleChipType(staff.role),
+                        ),
                       ),
                     ],
                   ),
@@ -94,7 +102,7 @@ class StaffCard extends StatelessWidget {
                   Flexible(
                     child: TextApp(
                       text: staff.hireDate!,
-                      theme: context.textStyle,
+                      theme: context.textStyle.copyWith(fontSize: 12.sp),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -108,7 +116,7 @@ class StaffCard extends StatelessWidget {
   }
 
   String _initials(String name) {
-    return name
+    final initials = name
         .trim()
         .split(RegExp(r'\s+'))
         .where((item) => item.isNotEmpty)
@@ -116,33 +124,9 @@ class StaffCard extends StatelessWidget {
         .take(2)
         .join()
         .toUpperCase();
-  }
-}
 
-class _Info extends StatelessWidget {
-  const _Info({required this.icon, required this.text});
+    if (initials.isEmpty) return '?';
 
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 6.h),
-      child: Row(
-        children: [
-          Icon(icon, size: 14.sp, color: Colors.grey.shade600),
-          SizedBox(width: 7.w),
-          Expanded(
-            child: TextApp(
-              text: text,
-              theme: context.textStyle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
+    return initials;
   }
 }

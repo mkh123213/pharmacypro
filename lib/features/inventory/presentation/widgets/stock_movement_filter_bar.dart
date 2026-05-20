@@ -5,6 +5,9 @@ import '../../../../core/common/widgets/app_dropdown_field.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 
+part 'stock_movement_filter_bar_search_field.dart';
+part 'stock_movement_filter_bar_type_dropdown.dart';
+
 class StockMovementFilterBar extends StatelessWidget {
   const StockMovementFilterBar({
     required this.selectedType,
@@ -54,49 +57,7 @@ class StockMovementFilterBar extends StatelessWidget {
   }
 }
 
-class _SearchField extends StatelessWidget {
-  const _SearchField({required this.onSearchChanged});
 
-  final ValueChanged<String> onSearchChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      onChanged: onSearchChanged,
-      decoration: InputDecoration(
-        prefixIcon: const Icon(Icons.search),
-        hintText: context.translate(LangKeys.searchStockMovements),
-      ),
-    );
-  }
-}
-
-class _TypeDropdown extends StatelessWidget {
-  const _TypeDropdown({
-    required this.selectedType,
-    required this.onTypeChanged,
-  });
-
-  final String selectedType;
-  final ValueChanged<String> onTypeChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppDropdownField<String>(
-      value: selectedType,
-      label: context.translate(LangKeys.movementType),
-      items: stockMovementTypes.map((type) {
-        return AppDropdownItem<String>(
-          value: type,
-          label: stockMovementTypeLabel(context, type),
-        );
-      }).toList(),
-      onChanged: (value) {
-        onTypeChanged(value ?? 'all');
-      },
-    );
-  }
-}
 
 const stockMovementTypes = [
   'all',

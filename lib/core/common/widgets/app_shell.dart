@@ -25,7 +25,13 @@ class AppShell extends StatelessWidget {
                   const AppTopBar(),
                   const Divider(height: 1),
                   Expanded(
-                    child: Padding(padding: EdgeInsets.all(24.w), child: child),
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: EdgeInsets.all(24.w),
+                        child: child,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -37,11 +43,14 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(56),
+        preferredSize: Size.fromHeight(64),
         child: AppTopBar(showMenuButton: true),
       ),
       drawer: const Drawer(child: AppSidebar()),
-      body: Padding(padding: EdgeInsets.all(16.w), child: child),
+      body: SafeArea(
+        top: false,
+        child: Padding(padding: EdgeInsets.all(16.w), child: child),
+      ),
     );
   }
 }
