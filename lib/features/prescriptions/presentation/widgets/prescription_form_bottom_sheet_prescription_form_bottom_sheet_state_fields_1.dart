@@ -3,20 +3,8 @@ part of 'prescription_form_bottom_sheet.dart';
 extension PrescriptionFormBottomSheetStateFields1 on _PrescriptionFormBottomSheetState {
   List<Widget> _buildPrescriptionFormBottomSheetFields1(BuildContext context) {
     return [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: context.translate(LangKeys.newPrescription),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
+                AppBottomSheetHeader(
+                  title: context.translate(LangKeys.newPrescription),
                 ),
                 SizedBox(height: 16.h),
                 AppTextField(

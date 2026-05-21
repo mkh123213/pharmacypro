@@ -3,22 +3,10 @@ part of 'branch_form_bottom_sheet.dart';
 extension BranchFormBottomSheetStateFields1 on _BranchFormBottomSheetState {
   List<Widget> _buildBranchFormBottomSheetFields1(BuildContext context) {
     return [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: _isEditing
+                AppBottomSheetHeader(
+                  title: _isEditing
                       ? context.translate(LangKeys.editBranch)
                       : context.translate(LangKeys.addBranch),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
                 ),
                 SizedBox(height: 16.h),
                 AppTextField(

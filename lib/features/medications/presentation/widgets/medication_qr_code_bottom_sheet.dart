@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../../core/common/widgets/app_bottom_sheet_header.dart';
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
@@ -30,11 +31,8 @@ void showMedicationQrCodeBottomSheet(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextApp(
-                text: context.translate(LangKeys.qrCode),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                theme: context.textStyle,
+              AppBottomSheetHeader(
+                title: context.translate(LangKeys.qrCode),
               ),
               SizedBox(height: 16.h),
               QrImageView(data: code, version: QrVersions.auto, size: 180.w),

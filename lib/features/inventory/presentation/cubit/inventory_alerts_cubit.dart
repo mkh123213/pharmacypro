@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/models/inventory_alert_model.dart';
 import '../../data/models/inventory_model.dart';
 import '../../data/repos/inventory_repo.dart';
+import '../refactor/inventory_alert_filter_values.dart';
 import 'inventory_alerts_state.dart';
 
 class InventoryAlertsCubit extends Cubit<InventoryAlertsState> {
@@ -13,10 +14,14 @@ class InventoryAlertsCubit extends Cubit<InventoryAlertsState> {
   final InventoryRepo _inventoryRepo;
 
   List<InventoryAlertModel> _allAlerts = [];
-  String _selectedType = 'all';
+  String _selectedType = InventoryAlertFilterValues.all;
   String _searchQuery = '';
 
-  Future<void> getInventoryAlerts() async {
+  Future<void> getInventoryAlerts({String? initialType}) async {
+    _selectedType = InventoryAlertFilterValues.normalize(
+      initialType ?? _selectedType,
+    );
+
     emit(const InventoryAlertsState.loading());
 
     try {
@@ -41,7 +46,7 @@ class InventoryAlertsCubit extends Cubit<InventoryAlertsState> {
   }
 
   void updateSelectedType(String value) {
-    _selectedType = value;
+    _selectedType = InventoryAlertFilterValues.normalize(value);
     _emitLoaded();
   }
 
@@ -109,7 +114,9 @@ class InventoryAlertsCubit extends Cubit<InventoryAlertsState> {
     return _allAlerts.where((alert) {
       final item = alert.inventoryItem;
 
-      final matchesType = _selectedType == 'all' || alert.type == _selectedType;
+      final matchesType =
+          _selectedType == InventoryAlertFilterValues.all ||
+          alert.type == _selectedType;
 
       final matchesSearch =
           (item.medicationName?.toLowerCase().contains(query) ?? false) ||

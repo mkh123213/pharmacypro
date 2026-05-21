@@ -3,22 +3,10 @@ part of 'supplier_form_bottom_sheet.dart';
 extension SupplierFormBottomSheetStateFields1 on _SupplierFormBottomSheetState {
   List<Widget> _buildSupplierFormBottomSheetFields1(BuildContext context) {
     return [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: _isEditing
+                AppBottomSheetHeader(
+                  title: _isEditing
                       ? context.translate(LangKeys.editSupplier)
                       : context.translate(LangKeys.addSupplier),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
                 ),
                 SizedBox(height: 16.h),
                 AppTextField(

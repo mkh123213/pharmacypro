@@ -3,22 +3,10 @@ part of 'purchase_order_form_bottom_sheet.dart';
 extension PurchaseOrderFormBottomSheetStateFields1 on _PurchaseOrderFormBottomSheetState {
   List<Widget> _buildPurchaseOrderFormBottomSheetFields1(BuildContext context) {
     return [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: _isEditing
+                AppBottomSheetHeader(
+                  title: _isEditing
                       ? context.translate(LangKeys.editPurchaseOrder)
                       : context.translate(LangKeys.newPurchaseOrder),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
                 ),
                 if (!_canEdit) ...[
                   SizedBox(height: 8.h),

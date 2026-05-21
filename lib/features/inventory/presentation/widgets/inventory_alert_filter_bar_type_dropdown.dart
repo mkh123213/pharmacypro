@@ -12,16 +12,16 @@ class _TypeDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppDropdownField<String>(
-      value: selectedType,
+      value: InventoryAlertFilterValues.normalize(selectedType),
       label: context.translate(LangKeys.alertType),
-      items: inventoryAlertTypes.map((type) {
+      items: InventoryAlertFilterValues.values.map((type) {
         return AppDropdownItem<String>(
           value: type,
-          label: inventoryAlertTypeLabel(context, type),
+          label: InventoryAlertFilterValues.label(context, type),
         );
       }).toList(),
       onChanged: (value) {
-        onTypeChanged(value ?? 'all');
+        onTypeChanged(InventoryAlertFilterValues.normalize(value));
       },
     );
   }

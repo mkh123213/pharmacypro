@@ -5,7 +5,7 @@ import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../data/models/inventory_alert_model.dart';
-import 'inventory_alert_filter_bar.dart';
+import '../refactor/inventory_alert_filter_values.dart';
 
 part 'inventory_alerts_table_columns.dart';
 part 'inventory_alerts_table_rows.dart';

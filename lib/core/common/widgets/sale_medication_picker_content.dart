@@ -5,10 +5,10 @@ import '../../../features/medications/data/models/medication_model.dart';
 import '../../extensions/context_extension.dart';
 import '../../language/lang_keys.dart';
 import '../../utils/app_validators.dart';
+import 'app_bottom_sheet_header.dart';
 import 'app_primary_button.dart';
 import 'app_text_field.dart';
 import 'sale_medication_picker_list.dart';
-import 'text_app.dart';
 
 class SaleMedicationPickerContent extends StatelessWidget {
   const SaleMedicationPickerContent({
@@ -50,13 +50,8 @@ class SaleMedicationPickerContent extends StatelessWidget {
             height: MediaQuery.sizeOf(context).height * .78,
             child: Column(
               children: [
-                _DragHandle(),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: context.translate(LangKeys.selectMedication),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
+                AppBottomSheetHeader(
+                  title: context.translate(LangKeys.selectMedication),
                 ),
                 SizedBox(height: 16.h),
                 AppTextField(
@@ -93,20 +88,6 @@ class SaleMedicationPickerContent extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DragHandle extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44.w,
-      height: 4.h,
-      decoration: BoxDecoration(
-        color: context.color.border,
-        borderRadius: BorderRadius.circular(999.r),
       ),
     );
   }

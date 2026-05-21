@@ -15,4 +15,11 @@ class AppRoutes {
   static const String reports = '/reports';
   static const String stockHistory = '/stock-history';
   static const String inventoryAlerts = '/inventory-alerts';
+
+  static String inventoryAlertsByType(String type) {
+    return Uri(
+      path: inventoryAlerts,
+      queryParameters: {'type': type},
+    ).toString();
+  }
 }

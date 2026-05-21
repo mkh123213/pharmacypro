@@ -3,20 +3,8 @@ part of 'shift_form_bottom_sheet.dart';
 extension ShiftFormBottomSheetStateFields1 on _ShiftFormBottomSheetState {
   List<Widget> _buildShiftFormBottomSheetFields1(BuildContext context) {
     return [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: context.translate(LangKeys.addShift),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
+                AppBottomSheetHeader(
+                  title: context.translate(LangKeys.addShift),
                 ),
                 SizedBox(height: 16.h),
                 AppDropdownField<String>(

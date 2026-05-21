@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../core/common/widgets/app_bottom_sheet_header.dart';
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
@@ -35,13 +36,8 @@ void showPrescriptionDetailsBottomSheet(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextApp(
-                  text: context.translate(LangKeys.prescriptionDetails),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                AppBottomSheetHeader(
+                  title: context.translate(LangKeys.prescriptionDetails),
                 ),
                 SizedBox(height: 12.h),
                 _DetailRow(

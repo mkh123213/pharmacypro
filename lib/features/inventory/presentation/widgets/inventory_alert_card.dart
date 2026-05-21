@@ -7,7 +7,7 @@ import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../data/models/inventory_alert_model.dart';
-import 'inventory_alert_filter_bar.dart';
+import '../refactor/inventory_alert_filter_values.dart';
 
 class InventoryAlertCard extends StatelessWidget {
   const InventoryAlertCard({
@@ -42,7 +42,7 @@ class InventoryAlertCard extends StatelessWidget {
                   ),
                 ),
                 AppStatusChip(
-                  label: inventoryAlertTypeLabel(context, alert.type),
+                  label: InventoryAlertFilterValues.label(context, alert.type),
                   type: _chipType(alert.type),
                 ),
               ],

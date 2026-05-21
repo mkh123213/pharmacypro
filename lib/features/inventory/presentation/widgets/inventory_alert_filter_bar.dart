@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/common/widgets/app_dropdown_field.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/language/lang_keys.dart';
+import '../refactor/inventory_alert_filter_values.dart';
 
 part 'inventory_alert_filter_bar_search_field.dart';
 part 'inventory_alert_filter_bar_type_dropdown.dart';
@@ -54,24 +55,5 @@ class InventoryAlertFilterBar extends StatelessWidget {
         );
       },
     );
-  }
-}
-
-
-
-const inventoryAlertTypes = ['all', 'low_stock', 'expiring_soon', 'expired'];
-
-String inventoryAlertTypeLabel(BuildContext context, String value) {
-  switch (value) {
-    case 'all':
-      return context.translate(LangKeys.allAlerts);
-    case 'low_stock':
-      return context.translate(LangKeys.lowStock);
-    case 'expiring_soon':
-      return context.translate(LangKeys.expiringSoon);
-    case 'expired':
-      return context.translate(LangKeys.expired);
-    default:
-      return value;
   }
 }

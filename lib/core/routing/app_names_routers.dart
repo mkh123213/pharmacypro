@@ -96,7 +96,11 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: AppRoutes.inventoryAlerts,
-          builder: (context, state) => const InventoryAlertsScreen(),
+          builder: (context, state) {
+            return InventoryAlertsScreen(
+              initialType: state.uri.queryParameters['type'],
+            );
+          },
         ),
       ],
     ),

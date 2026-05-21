@@ -41,20 +41,8 @@ class _PrescriptionItemFormBottomSheetState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: context.translate(LangKeys.addPrescriptionItem),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
+                AppBottomSheetHeader(
+                  title: context.translate(LangKeys.addPrescriptionItem),
                 ),
                 SizedBox(height: 16.h),
                 AppDropdownField<String>(

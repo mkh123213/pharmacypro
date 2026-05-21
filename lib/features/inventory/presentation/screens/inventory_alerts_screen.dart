@@ -6,12 +6,15 @@ import '../cubit/inventory_alerts_cubit.dart';
 import '../refactor/inventory_alerts_body.dart';
 
 class InventoryAlertsScreen extends StatelessWidget {
-  const InventoryAlertsScreen({super.key});
+  const InventoryAlertsScreen({this.initialType, super.key});
+
+  final String? initialType;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<InventoryAlertsCubit>()..getInventoryAlerts(),
+      create: (_) => getIt<InventoryAlertsCubit>()
+        ..getInventoryAlerts(initialType: initialType),
       child: const InventoryAlertsBody(),
     );
   }

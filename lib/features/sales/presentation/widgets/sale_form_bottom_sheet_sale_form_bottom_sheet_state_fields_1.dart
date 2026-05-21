@@ -5,20 +5,8 @@ extension SaleFormBottomSheetStateFields1 on _SaleFormBottomSheetState {
     final availableBranches = activeBranches;
 
     return [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: context.translate(LangKeys.newSale),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
+                AppBottomSheetHeader(
+                  title: context.translate(LangKeys.newSale),
                 ),
                 SizedBox(height: 16.h),
                 if (availableBranches.isEmpty)

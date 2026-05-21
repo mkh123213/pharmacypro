@@ -38,22 +38,8 @@ class _InventoryAdjustStockBottomSheetState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: context.translate(LangKeys.adjustStock),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                AppBottomSheetHeader(
+                  title: context.translate(LangKeys.adjustStock),
                 ),
                 SizedBox(height: 12.h),
                 TextApp(

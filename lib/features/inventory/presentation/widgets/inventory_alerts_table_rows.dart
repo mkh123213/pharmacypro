@@ -9,7 +9,7 @@ extension InventoryAlertsTableRows on InventoryAlertsTable {
               cells: [
                 DataCell(
                   AppStatusChip(
-                    label: inventoryAlertTypeLabel(context, alert.type),
+                    label: InventoryAlertFilterValues.label(context, alert.type),
                     type: _chipType(alert.type),
                   ),
                 ),

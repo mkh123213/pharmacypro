@@ -3,22 +3,10 @@ part of 'staff_form_bottom_sheet.dart';
 extension StaffFormBottomSheetStateFields1 on _StaffFormBottomSheetState {
   List<Widget> _buildStaffFormBottomSheetFields1(BuildContext context) {
     return [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: _isEditing
+                AppBottomSheetHeader(
+                  title: _isEditing
                       ? context.translate(LangKeys.editStaff)
                       : context.translate(LangKeys.addStaffMember),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle,
                 ),
                 SizedBox(height: 16.h),
                 AppTextField(

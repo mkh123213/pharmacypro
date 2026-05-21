@@ -3,22 +3,8 @@ part of 'customer_order_form_bottom_sheet.dart';
 extension CustomerOrderFormBottomSheetStateFields1 on _CustomerOrderFormBottomSheetState {
   List<Widget> _buildCustomerOrderFormBottomSheetFields1(BuildContext context) {
     return [
-                Container(
-                  width: 44.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: context.color.border,
-                    borderRadius: BorderRadius.circular(999.r),
-                  ),
-                ),
-                SizedBox(height: 18.h),
-                TextApp(
-                  text: context.translate(LangKeys.newOrder),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  theme: context.textStyle.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                AppBottomSheetHeader(
+                  title: context.translate(LangKeys.newOrder),
                 ),
                 SizedBox(height: 16.h),
                 AppTextField(
