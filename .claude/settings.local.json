@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(flutter *)",
+      "PowerShell(dart run *)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(Rename-Item *)",
+      "PowerShell(Test-Path *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\IRD-83\\\\Desktop\\\\my apps\\\\pharmacy\\\\pharmacypro-update4\" -Directory)",
+      "Bash(Select-Object Name)"
+    ]
+  }
+}
