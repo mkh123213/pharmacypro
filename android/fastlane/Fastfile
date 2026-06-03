@@ -1,0 +1,20 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build and distribute to Firebase App Distribution"
+  lane :firebase_distribution do
+    token = ENV["FIREBASE_CLI_TOKEN"]
+    UI.user_error!("FIREBASE_CLI_TOKEN is not set. Add it as a GitHub secret.") if token.nil? || token.strip.empty?
+
+    sh "flutter clean"
+    sh "flutter build apk --release --flavor Production --split-per-abi --target lib/main.dart --no-tree-shake-icons"
+    firebase_app_distribution(
+        app: "1:940046231017:android:72fbf7afc7465128635778",
+        firebase_cli_token: token,
+        android_artifact_type: "APK",
+        android_artifact_path: "../build/app/outputs/flutter-apk/app-armeabi-v7a-production-release.apk",
+        testers: "mohammadwork199700@gmail.com",
+        release_notes: "New build from CI",
+    )
+  end
+end
