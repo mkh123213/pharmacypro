@@ -41,13 +41,26 @@ class CustomerOrdersRemoteDataSource {
     await reference.delete();
   }
 
-  Future<List<CustomerOrderModel>> getCustomerOrders() async {
-    final snapshot = await _orders
-        .orderBy('created_at', descending: true)
-        .limit(500)
-        .get();
+  static const int pageSize = 20;
 
-    return snapshot.docs.map(CustomerOrderModel.fromFirestore).toList();
+  Future<(List<CustomerOrderModel>, DocumentSnapshot?)> getCustomerOrders({
+    DocumentSnapshot? startAfter,
+    int limit = pageSize,
+  }) async {
+    Query<Map<String, dynamic>> query = _orders
+        .orderBy('created_at', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    final snapshot = await query.get();
+
+    final orders = snapshot.docs.map(CustomerOrderModel.fromFirestore).toList();
+    final lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+    return (orders, lastDocument);
   }
 
   Future<List<BranchModel>> getBranches() async {

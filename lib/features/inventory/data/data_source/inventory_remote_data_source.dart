@@ -39,13 +39,26 @@ class InventoryRemoteDataSource {
     await reference.delete();
   }
 
-  Future<List<InventoryModel>> getInventory() async {
-    final snapshot = await _inventory
-        .orderBy('created_at', descending: true)
-        .limit(500)
-        .get();
+  static const int pageSize = 20;
 
-    return snapshot.docs.map(InventoryModel.fromFirestore).toList();
+  Future<(List<InventoryModel>, DocumentSnapshot?)> getInventory({
+    DocumentSnapshot? startAfter,
+    int limit = pageSize,
+  }) async {
+    Query<Map<String, dynamic>> query = _inventory
+        .orderBy('created_at', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    final snapshot = await query.get();
+
+    final inventory = snapshot.docs.map(InventoryModel.fromFirestore).toList();
+    final lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+    return (inventory, lastDocument);
   }
 
   Future<List<BranchModel>> getBranches() async {

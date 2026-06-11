@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/sale_model.dart';
 import '../../data/repos/sales_repo.dart';
+import '../../data/data_source/sales_remote_data_source.dart';
 import 'sales_state.dart';
 
 class SalesCubit extends Cubit<SalesState> {
@@ -12,6 +14,8 @@ class SalesCubit extends Cubit<SalesState> {
   final SalesRepo _salesRepo;
 
   List<SaleModel> _allSales = [];
+  DocumentSnapshot? _lastSaleDocument;
+  bool _hasMoreSales = true;
   String _searchQuery = '';
   String _selectedPaymentMethod = 'all';
 
@@ -25,7 +29,10 @@ class SalesCubit extends Cubit<SalesState> {
         _salesRepo.getBranches(),
       ]);
 
-      _allSales = results[0] as List<SaleModel>;
+      final (sales, lastDocument) = results[0] as (List<SaleModel>, DocumentSnapshot?);
+      _allSales = sales;
+      _lastSaleDocument = lastDocument;
+      _hasMoreSales = sales.length >= SalesRemoteDataSource.pageSize;
 
       emit(
         SalesState.loaded(
@@ -34,11 +41,45 @@ class SalesCubit extends Cubit<SalesState> {
           branches: results[2] as dynamic,
           searchQuery: _searchQuery,
           selectedPaymentMethod: _selectedPaymentMethod,
+          hasMore: _hasMoreSales,
           errorMessage: null,
         ),
       );
     } catch (error) {
       emit(const SalesState.failure(message: 'could_not_load_sales'));
+    }
+  }
+
+  Future<void> loadMoreSales() async {
+    final current = state;
+    if (current is! SalesLoaded || !_hasMoreSales || current.isLoadingMore) {
+      return;
+    }
+
+    emit(current.copyWith(isLoadingMore: true));
+
+    try {
+      final (newSales, lastDocument) = await _salesRepo.getSales(
+        startAfter: _lastSaleDocument,
+      );
+
+      if (newSales.length < SalesRemoteDataSource.pageSize) {
+        _hasMoreSales = false;
+      }
+
+      if (newSales.isNotEmpty) {
+        _lastSaleDocument = lastDocument;
+        _allSales = [..._allSales, ...newSales];
+      }
+
+      _emitFromLoaded();
+    } catch (error) {
+      emit(
+        current.copyWith(
+          isLoadingMore: false,
+          errorMessage: 'could_not_load_more_sales',
+        ),
+      );
     }
   }
 
@@ -245,6 +286,8 @@ class SalesCubit extends Cubit<SalesState> {
           searchQuery: _searchQuery,
           selectedPaymentMethod: _selectedPaymentMethod,
           isSubmitting: false,
+          isLoadingMore: false,
+          hasMore: _hasMoreSales,
           errorMessage: null,
         ),
       );

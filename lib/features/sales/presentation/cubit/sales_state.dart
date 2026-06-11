@@ -19,6 +19,8 @@ class SalesState with _$SalesState {
     @Default('') String searchQuery,
     @Default('all') String selectedPaymentMethod,
     @Default(false) bool isSubmitting,
+    @Default(false) bool isLoadingMore,
+    @Default(true) bool hasMore,
     @Default(null) String? errorMessage,
   }) = SalesLoaded;
 

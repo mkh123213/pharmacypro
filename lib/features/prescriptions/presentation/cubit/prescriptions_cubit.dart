@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/prescription_model.dart';
 import '../../data/repos/prescriptions_repo.dart';
+import '../../data/data_source/prescriptions_remote_data_source.dart';
 import '../refactor/prescriptions_constants.dart';
 import 'prescriptions_state.dart';
 
@@ -12,40 +14,78 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
 
   final PrescriptionsRepo _prescriptionsRepo;
 
+  DocumentSnapshot? _lastDocument;
+  bool _hasMore = true;
+
   List<PrescriptionModel> _allPrescriptions = [];
   String _searchQuery = '';
   String _selectedStatus = allPrescriptionStatusesValue;
   String _selectedBranchId = allPrescriptionBranchesValue;
 
-  Future<void> getPrescriptionsData() async {
-    emit(const PrescriptionsState.loading());
+  Future<void> getPrescriptionsData({bool loadMore = false}) async {
+    if (loadMore) {
+      if (!_hasMore || state is! PrescriptionsLoaded) return;
+      
+      final current = state as PrescriptionsLoaded;
+      emit(current.copyWith(isLoadingMore: true));
+    } else {
+      _allPrescriptions = [];
+      _lastDocument = null;
+      _hasMore = true;
+      emit(const PrescriptionsState.loading());
+    }
 
     try {
-      final results = await Future.wait([
-        _prescriptionsRepo.getPrescriptions(),
-        _prescriptionsRepo.getBranches(),
-        _prescriptionsRepo.getMedications(),
-      ]);
+      if (loadMore) {
+        final (newPrescriptions, lastDocument) = await _prescriptionsRepo.getPrescriptions(
+            startAfter: _lastDocument,
+        );
+        
+        if (newPrescriptions.length < PrescriptionsRemoteDataSource.pageSize) {
+            _hasMore = false;
+        }
 
-      _allPrescriptions = results[0] as List<PrescriptionModel>;
+        if (newPrescriptions.isNotEmpty) {
+            _lastDocument = lastDocument;
+            _allPrescriptions = [..._allPrescriptions, ...newPrescriptions];
+        }
 
-      emit(
-        PrescriptionsState.loaded(
-          prescriptions: _filteredPrescriptions,
-          branches: results[1] as dynamic,
-          medications: results[2] as dynamic,
-          searchQuery: _searchQuery,
-          selectedStatus: _selectedStatus,
-          selectedBranchId: _selectedBranchId,
-          errorMessage: null,
-        ),
-      );
+        _emitFromLoaded();
+      } else {
+        final results = await Future.wait([
+          _prescriptionsRepo.getPrescriptions(),
+          _prescriptionsRepo.getBranches(),
+          _prescriptionsRepo.getMedications(),
+        ]);
+
+        final prescriptionsResult = results[0] as (List<PrescriptionModel>, DocumentSnapshot?);
+        _allPrescriptions = prescriptionsResult.$1;
+        _lastDocument = prescriptionsResult.$2;
+        _hasMore = _allPrescriptions.length >= PrescriptionsRemoteDataSource.pageSize;
+
+        emit(
+          PrescriptionsState.loaded(
+            prescriptions: _filteredPrescriptions,
+            branches: results[1] as dynamic,
+            medications: results[2] as dynamic,
+            searchQuery: _searchQuery,
+            selectedStatus: _selectedStatus,
+            selectedBranchId: _selectedBranchId,
+            errorMessage: null,
+            hasMore: _hasMore,
+          ),
+        );
+      }
     } catch (_) {
-      emit(
-        const PrescriptionsState.failure(
-          message: 'could_not_load_prescriptions',
-        ),
-      );
+      if (loadMore) {
+         _emitFromLoaded();
+      } else {
+        emit(
+          const PrescriptionsState.failure(
+            message: 'could_not_load_prescriptions',
+          ),
+        );
+      }
     }
   }
 
@@ -305,6 +345,8 @@ class PrescriptionsCubit extends Cubit<PrescriptionsState> {
           selectedBranchId: _selectedBranchId,
           isSubmitting: false,
           errorMessage: null,
+          isLoadingMore: false,
+          hasMore: _hasMore,
         ),
       );
     }

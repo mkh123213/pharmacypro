@@ -16,6 +16,8 @@ class MedicationsState with _$MedicationsState {
     @Default('all') String selectedCategory,
     @Default('all') String selectedStatus,
     @Default(false) bool isSubmitting,
+    @Default(false) bool isLoadingMore,
+    @Default(true) bool hasMore,
     @Default(null) String? errorMessage,
   }) = MedicationsLoaded;
 

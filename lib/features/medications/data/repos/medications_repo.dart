@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data_source/medications_remote_data_source.dart';
 import '../models/medication_model.dart';
 
@@ -6,7 +7,7 @@ class MedicationsRepo {
 
   final MedicationsRemoteDataSource _remoteDataSource;
 
-  Future<List<MedicationModel>> getMedications() => _remoteDataSource.getMedications();
+  Future<(List<MedicationModel>, DocumentSnapshot?)> getMedications({DocumentSnapshot? startAfter}) => _remoteDataSource.getMedications(startAfter: startAfter);
 
   Future<MedicationModel> createMedication(MedicationModel item) => _remoteDataSource.createMedication(item);
 

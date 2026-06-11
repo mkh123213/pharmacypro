@@ -14,7 +14,7 @@ class MedicationsRemoteDataSource {
 
   static const int pageSize = 30;
 
-  Future<List<MedicationModel>> getMedications({
+  Future<(List<MedicationModel>, DocumentSnapshot?)> getMedications({
     DocumentSnapshot? startAfter,
     int limit = pageSize,
   }) async {
@@ -28,7 +28,10 @@ class MedicationsRemoteDataSource {
 
     final snapshot = await query.get();
 
-    return snapshot.docs.map(MedicationModel.fromFirestore).toList();
+    final medications = snapshot.docs.map(MedicationModel.fromFirestore).toList();
+    final lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+    return (medications, lastDocument);
   }
 
   Future<MedicationModel> createMedication(MedicationModel item) async {

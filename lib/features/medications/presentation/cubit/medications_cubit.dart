@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/models/medication_model.dart';
 import '../../data/repos/medications_repo.dart';
+import '../../data/data_source/medications_remote_data_source.dart'; // Needed for pageSize
 import '../refactor/medication_error_mapper.dart';
 import '../refactor/medication_filter_values.dart';
 import 'medications_state.dart';
@@ -14,26 +16,49 @@ class MedicationsCubit extends Cubit<MedicationsState> {
   final MedicationsRepo _medicationsRepo;
 
   List<MedicationModel> _allMedications = [];
+  DocumentSnapshot? _lastDocument;
+  bool _hasMore = true;
   String _searchQuery = '';
   String _selectedCategory = allMedicationCategoriesValue;
   String _selectedStatus = allMedicationStatusesValue;
 
-  Future<void> getMedications() async {
-    final current = state;
-
-    if (current is! MedicationsLoaded) {
+  Future<void> getMedications({bool loadMore = false}) async {
+    if (loadMore) {
+      if (!_hasMore || (state is MedicationsLoaded && (state as MedicationsLoaded).isLoadingMore)) {
+        return;
+      }
+      
+      final current = state as MedicationsLoaded;
+      emit(current.copyWith(isLoadingMore: true));
+    } else {
+      _allMedications = [];
+      _lastDocument = null;
+      _hasMore = true;
       emit(const MedicationsState.loading());
     }
 
     try {
-      _allMedications = await _medicationsRepo.getMedications();
+      final (newMedications, lastDocument) = await _medicationsRepo.getMedications(
+        startAfter: _lastDocument,
+      );
+
+      if (newMedications.length < MedicationsRemoteDataSource.pageSize) {
+        _hasMore = false;
+      }
+
+      if (newMedications.isNotEmpty) {
+        _lastDocument = lastDocument;
+        _allMedications = [..._allMedications, ...newMedications];
+      }
+
       _emitLoaded();
     } catch (error) {
+      final current = state;
       if (current is MedicationsLoaded) {
         emit(
           current.copyWith(
             medications: _filteredMedications,
-            isSubmitting: false,
+            isLoadingMore: false,
             errorMessage: MedicationErrorKeys.couldNotLoad,
           ),
         );
@@ -225,6 +250,8 @@ class MedicationsCubit extends Cubit<MedicationsState> {
         searchQuery: _searchQuery,
         selectedCategory: _selectedCategory,
         selectedStatus: _selectedStatus,
+        isLoadingMore: false,
+        hasMore: _hasMore,
         errorMessage: null,
       ),
     );

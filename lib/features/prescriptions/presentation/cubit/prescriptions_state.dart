@@ -21,6 +21,8 @@ class PrescriptionsState with _$PrescriptionsState {
     @Default('all') String selectedBranchId,
     @Default(false) bool isSubmitting,
     @Default(null) String? errorMessage,
+    @Default(false) bool isLoadingMore,
+    @Default(true) bool hasMore,
   }) = PrescriptionsLoaded;
 
   const factory PrescriptionsState.failure({required String message}) =

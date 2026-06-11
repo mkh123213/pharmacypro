@@ -41,13 +41,26 @@ class PrescriptionsRemoteDataSource {
     await reference.delete();
   }
 
-  Future<List<PrescriptionModel>> getPrescriptions() async {
-    final snapshot = await _prescriptions
-        .orderBy('created_at', descending: true)
-        .limit(500)
-        .get();
+  static const int pageSize = 20;
 
-    return snapshot.docs.map(PrescriptionModel.fromFirestore).toList();
+  Future<(List<PrescriptionModel>, DocumentSnapshot?)> getPrescriptions({
+    DocumentSnapshot? startAfter,
+    int limit = pageSize,
+  }) async {
+    Query<Map<String, dynamic>> query = _prescriptions
+        .orderBy('created_at', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    final snapshot = await query.get();
+
+    final prescriptions = snapshot.docs.map(PrescriptionModel.fromFirestore).toList();
+    final lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+    return (prescriptions, lastDocument);
   }
 
   Future<List<BranchModel>> getBranches() async {

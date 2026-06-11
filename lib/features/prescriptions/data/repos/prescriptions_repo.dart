@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../../branches/data/models/branch_model.dart';
 import '../../../medications/data/models/medication_model.dart';
 import '../data_source/prescriptions_remote_data_source.dart';
@@ -10,8 +12,10 @@ class PrescriptionsRepo {
 
   final PrescriptionsRemoteDataSource _remoteDataSource;
 
-  Future<List<PrescriptionModel>> getPrescriptions() {
-    return _remoteDataSource.getPrescriptions();
+  Future<(List<PrescriptionModel>, DocumentSnapshot?)> getPrescriptions({
+    DocumentSnapshot? startAfter,
+  }) {
+    return _remoteDataSource.getPrescriptions(startAfter: startAfter);
   }
 
   Future<List<BranchModel>> getBranches() {

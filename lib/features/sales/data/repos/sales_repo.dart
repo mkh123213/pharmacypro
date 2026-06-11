@@ -9,8 +9,8 @@ class SalesRepo {
 
   final SalesRemoteDataSource _remoteDataSource;
 
-  Future<List<SaleModel>> getSales() {
-    return _remoteDataSource.getSales();
+  Future<(List<SaleModel>, DocumentSnapshot?)> getSales({DocumentSnapshot? startAfter}) {
+    return _remoteDataSource.getSales(startAfter: startAfter);
   }
 
   Future<List<BranchModel>> getBranches() {

@@ -30,13 +30,26 @@ class SalesRemoteDataSource {
     return _firestore.collection('stock_movements');
   }
 
-  Future<List<SaleModel>> getSales() async {
-    final snapshot = await _sales
-        .orderBy('created_at', descending: true)
-        .limit(100)
-        .get();
+  static const int pageSize = 20;
 
-    return snapshot.docs.map(SaleModel.fromFirestore).toList();
+  Future<(List<SaleModel>, DocumentSnapshot?)> getSales({
+    DocumentSnapshot? startAfter,
+    int limit = pageSize,
+  }) async {
+    Query<Map<String, dynamic>> query = _sales
+        .orderBy('created_at', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    final snapshot = await query.get();
+
+    final sales = snapshot.docs.map(SaleModel.fromFirestore).toList();
+    final lastDocument = snapshot.docs.isNotEmpty ? snapshot.docs.last : null;
+
+    return (sales, lastDocument);
   }
 
   Future<List<BranchModel>> getBranches() async {
