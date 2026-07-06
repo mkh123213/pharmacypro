@@ -20,11 +20,10 @@ import '../widgets/remove_expired_stock_bottom_sheet.dart';
 
 part 'inventory_alerts_body_alerts_summary.dart';
 part 'inventory_alerts_body_inventory_alerts_error_view.dart';
-
 part 'inventory_alerts_body_open_remove_expired_stock_sheet.dart';
+
 class InventoryAlertsBody extends StatelessWidget {
   const InventoryAlertsBody({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +97,7 @@ class InventoryAlertsBody extends StatelessWidget {
                         message: context.translate(
                           LangKeys.allInventoryLooksHealthy,
                         ),
-                        icon: Icons.notifications_none_outlined,
+                        imagePath: context.assets.noInventoryAlertsFound,
                       )
                     : LayoutBuilder(
                         builder: (context, constraints) {
@@ -106,7 +105,7 @@ class InventoryAlertsBody extends StatelessWidget {
                             return InventoryAlertsTable(
                               alerts: state.filteredAlerts,
                               onRemoveExpiredStock: (alert) {
-                                this._openRemoveExpiredStockSheet(context, alert);
+                                _openRemoveExpiredStockSheet(context, alert);
                               },
                             );
                           }
@@ -121,7 +120,7 @@ class InventoryAlertsBody extends StatelessWidget {
                                 alert: alert,
                                 onRemoveExpiredStock: alert.type == 'expired'
                                     ? () {
-                                        this._openRemoveExpiredStockSheet(
+                                        _openRemoveExpiredStockSheet(
                                           context,
                                           alert,
                                         );

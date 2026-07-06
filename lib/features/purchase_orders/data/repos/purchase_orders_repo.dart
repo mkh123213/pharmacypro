@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../../branches/data/models/branch_model.dart';
 import '../../../medications/data/models/medication_model.dart';
 import '../../../suppliers/data/models/supplier_model.dart';
@@ -11,8 +13,10 @@ class PurchaseOrdersRepo {
 
   final PurchaseOrdersRemoteDataSource _remoteDataSource;
 
-  Future<List<PurchaseOrderModel>> getPurchaseOrders() {
-    return _remoteDataSource.getPurchaseOrders();
+  Future<(List<PurchaseOrderModel>, DocumentSnapshot?)> getPurchaseOrders({
+    DocumentSnapshot? startAfter,
+  }) {
+    return _remoteDataSource.getPurchaseOrders(startAfter: startAfter);
   }
 
   Future<List<BranchModel>> getBranches() {

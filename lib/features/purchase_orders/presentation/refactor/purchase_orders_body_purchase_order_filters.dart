@@ -14,7 +14,7 @@ class _PurchaseOrderFilters extends StatelessWidget {
         final search = TextFormField(
           initialValue: state.searchQuery,
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchPurchaseOrders),
           ),
           onChanged: context.read<PurchaseOrdersCubit>().updateSearchQuery,

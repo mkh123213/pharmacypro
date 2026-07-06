@@ -45,6 +45,7 @@ import '../../features/suppliers/data/data_source/suppliers_remote_data_source.d
 import '../../features/suppliers/data/repos/suppliers_repo.dart';
 import '../../features/suppliers/presentation/cubit/suppliers_cubit.dart';
 import '../app/app_cubit/app_cubit.dart';
+import '../services/push_notification_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -53,9 +54,7 @@ void setupDependencies() {
     () => FirebaseFirestore.instance,
   );
 
-  _registerLazySingletonIfAbsent<FirebaseAuth>(
-    () => FirebaseAuth.instance,
-  );
+  _registerLazySingletonIfAbsent<FirebaseAuth>(() => FirebaseAuth.instance);
 
   _registerAuth();
   _registerCore();
@@ -73,7 +72,9 @@ void setupDependencies() {
   _registerReports();
 }
 
-void _registerLazySingletonIfAbsent<T extends Object>(T Function() factoryFunc) {
+void _registerLazySingletonIfAbsent<T extends Object>(
+  T Function() factoryFunc,
+) {
   if (!getIt.isRegistered<T>()) {
     getIt.registerLazySingleton<T>(factoryFunc);
   }
@@ -93,24 +94,25 @@ void _registerSingletonIfAbsent<T extends Object>(T instance) {
 
 void _registerAuth() {
   _registerLazySingletonIfAbsent<AuthRemoteDataSource>(
-    () => AuthRemoteDataSource(
-      firebaseAuth: getIt(),
-      firestore: getIt(),
-    ),
+    () => AuthRemoteDataSource(firebaseAuth: getIt(), firestore: getIt()),
   );
 
   _registerLazySingletonIfAbsent<AuthRepo>(
     () => AuthRepo(remoteDataSource: getIt()),
   );
 
-  _registerLazySingletonIfAbsent<AuthCubit>(
-    () => AuthCubit(authRepo: getIt()),
-  );
+  _registerLazySingletonIfAbsent<AuthCubit>(() => AuthCubit(authRepo: getIt()));
 }
 
 void _registerCore() {
+  // final navigatorKey = GlobalKey<NavigatorState>();
+
   _registerSingletonIfAbsent<GlobalKey<NavigatorState>>(
     GlobalKey<NavigatorState>(),
+  );
+
+  _registerLazySingletonIfAbsent<PushNotificationService>(
+    () => PushNotificationService(),
   );
 
   _registerFactoryIfAbsent<AppCubit>(AppCubit.new);

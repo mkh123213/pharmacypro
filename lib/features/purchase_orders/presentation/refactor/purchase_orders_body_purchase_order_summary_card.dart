@@ -16,9 +16,11 @@ class _PurchaseOrderSummaryCard extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              radius: 20.r,
-              backgroundColor: primary.withOpacity(0.10),
-              child: Icon(data.icon, color: primary, size: 20.sp),
+              backgroundColor: primary.withValues(alpha: 0.10),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: AppImageAssetPreviewer(data.imagePath),
+              ),
             ),
             SizedBox(width: 10.w),
             Expanded(

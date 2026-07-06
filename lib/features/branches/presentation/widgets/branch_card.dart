@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../../../core/common/widgets/app_status_chip.dart';
 import '../../../../core/common/widgets/text_app.dart';
@@ -54,21 +55,23 @@ class BranchCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                IconButton(
-                  tooltip: context.translate(LangKeys.edit),
-                  onPressed: onEditPressed,
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  constraints: BoxConstraints(minWidth: 34.w, minHeight: 34.w),
-                  icon: Icon(Icons.edit_outlined, size: 19.sp),
+                GestureDetector(
+                  onTap: () => onEditPressed(),
+                  child: AppImageAssetPreviewer(
+                    context.assets.edit,
+                    width: 20.w,
+                  ),
                 ),
-                IconButton(
-                  tooltip: context.translate(LangKeys.delete),
-                  onPressed: onDeletePressed,
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  constraints: BoxConstraints(minWidth: 34.w, minHeight: 34.w),
-                  icon: Icon(Icons.delete_outline, size: 19.sp, color: Colors.red),
+                SizedBox(width: 10),
+                Tooltip(
+                  message: context.translate(LangKeys.delete),
+                  child: GestureDetector(
+                    onTap: () => onDeletePressed(),
+                    child: AppImageAssetPreviewer(
+                      context.assets.delete,
+                      width: 20.w,
+                    ),
+                  ),
                 ),
               ],
             ),

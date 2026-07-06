@@ -4,10 +4,10 @@ class _PurchaseOrderSummaryCardData {
   const _PurchaseOrderSummaryCardData({
     required this.title,
     required this.value,
-    required this.icon,
+    required this.imagePath,
   });
 
   final String title;
   final String value;
-  final IconData icon;
+  final String imagePath;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../app/app_cubit/app_cubit.dart';
 import '../../extensions/context_extension.dart';
@@ -22,10 +23,21 @@ class AppThemeToggleButton extends StatelessWidget {
             : Icons.dark_mode_outlined;
         final color = inverted ? Colors.white : context.color.textPrimary;
 
-        return IconButton(
-          tooltip: context.translate(labelKey),
-          onPressed: () => cubit.changeAppThemeMode(),
-          icon: Icon(icon, color: color),
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Tooltip(
+            message: context.translate(context.translate(labelKey)),
+            child: GestureDetector(
+              onTap: () => cubit.changeAppThemeMode(),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: AppImageAssetPreviewer(
+                  context.assets.themeMode,
+                  fit: BoxFit.fill,
+                ),
+              ),
+            ),
+          ),
         );
       },
     );

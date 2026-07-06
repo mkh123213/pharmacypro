@@ -20,6 +20,8 @@ class CustomerOrdersState with _$CustomerOrdersState {
     @Default('all') String selectedStatus,
     @Default('all') String selectedBranchId,
     @Default(false) bool isSubmitting,
+    @Default(false) bool isLoadingMore,
+    @Default(true) bool hasMore,
     @Default(null) String? errorMessage,
   }) = CustomerOrdersLoaded;
 

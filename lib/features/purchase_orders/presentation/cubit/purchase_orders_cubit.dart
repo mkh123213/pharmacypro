@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../data/data_source/purchase_orders_remote_data_source.dart';
 import '../../data/models/purchase_order_model.dart';
 import '../../data/repos/purchase_orders_repo.dart';
 import 'purchase_orders_state.dart';
@@ -12,6 +14,8 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
   final PurchaseOrdersRepo _purchaseOrdersRepo;
 
   List<PurchaseOrderModel> _allPurchaseOrders = [];
+  DocumentSnapshot? _lastPurchaseOrderDocument;
+  bool _hasMorePurchaseOrders = true;
   String _searchQuery = '';
   String _selectedStatus = 'all';
   String _selectedBranchId = 'all';
@@ -27,7 +31,12 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
         _purchaseOrdersRepo.getMedications(),
       ]);
 
-      _allPurchaseOrders = results[0] as List<PurchaseOrderModel>;
+      final (purchaseOrders, lastDocument) =
+          results[0] as (List<PurchaseOrderModel>, DocumentSnapshot?);
+      _allPurchaseOrders = purchaseOrders;
+      _lastPurchaseOrderDocument = lastDocument;
+      _hasMorePurchaseOrders =
+          purchaseOrders.length >= PurchaseOrdersRemoteDataSource.pageSize;
 
       emit(
         PurchaseOrdersState.loaded(
@@ -38,6 +47,7 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
           searchQuery: _searchQuery,
           selectedStatus: _selectedStatus,
           selectedBranchId: _selectedBranchId,
+          hasMore: _hasMorePurchaseOrders,
           errorMessage: null,
         ),
       );
@@ -45,6 +55,40 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
       emit(
         const PurchaseOrdersState.failure(
           message: 'could_not_load_purchase_orders',
+        ),
+      );
+    }
+  }
+
+  Future<void> loadMorePurchaseOrders() async {
+    final current = state;
+    if (current is! PurchaseOrdersLoaded ||
+        !_hasMorePurchaseOrders ||
+        current.isLoadingMore) {
+      return;
+    }
+
+    emit(current.copyWith(isLoadingMore: true));
+
+    try {
+      final (newPurchaseOrders, lastDocument) = await _purchaseOrdersRepo
+          .getPurchaseOrders(startAfter: _lastPurchaseOrderDocument);
+
+      if (newPurchaseOrders.length < PurchaseOrdersRemoteDataSource.pageSize) {
+        _hasMorePurchaseOrders = false;
+      }
+
+      if (newPurchaseOrders.isNotEmpty) {
+        _lastPurchaseOrderDocument = lastDocument;
+        _allPurchaseOrders = [..._allPurchaseOrders, ...newPurchaseOrders];
+      }
+
+      _emitFromLoaded();
+    } catch (error) {
+      emit(
+        current.copyWith(
+          isLoadingMore: false,
+          errorMessage: 'could_not_load_more_purchase_orders',
         ),
       );
     }
@@ -329,6 +373,8 @@ class PurchaseOrdersCubit extends Cubit<PurchaseOrdersState> {
           selectedStatus: _selectedStatus,
           selectedBranchId: _selectedBranchId,
           isSubmitting: false,
+          isLoadingMore: false,
+          hasMore: _hasMorePurchaseOrders,
           errorMessage: null,
         ),
       );

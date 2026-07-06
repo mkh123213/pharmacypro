@@ -13,7 +13,7 @@ class _CustomerOrderFilters extends StatelessWidget {
 
         final search = TextField(
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchOrders),
           ),
           onChanged: context.read<CustomerOrdersCubit>().updateSearchQuery,

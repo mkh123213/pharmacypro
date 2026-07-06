@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../../branches/data/models/branch_model.dart';
 import '../../../medications/data/models/medication_model.dart';
 import '../data_source/sales_remote_data_source.dart';

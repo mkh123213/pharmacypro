@@ -14,7 +14,7 @@ class _StaffFilters extends StatelessWidget {
         final search = TextField(
           onChanged: context.read<StaffCubit>().updateSearchQuery,
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchStaff),
           ),
         );

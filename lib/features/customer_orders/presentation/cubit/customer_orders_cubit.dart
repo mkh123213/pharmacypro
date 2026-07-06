@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../data/data_source/customer_orders_remote_data_source.dart';
 import '../../data/models/customer_order_model.dart';
 import '../../data/repos/customer_orders_repo.dart';
 import 'customer_orders_state.dart';
@@ -12,6 +14,8 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
   final CustomerOrdersRepo _customerOrdersRepo;
 
   List<CustomerOrderModel> _allOrders = [];
+  DocumentSnapshot? _lastOrderDocument;
+  bool _hasMoreOrders = true;
   String _searchQuery = '';
   String _selectedStatus = 'all';
   String _selectedBranchId = 'all';
@@ -26,7 +30,12 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
         _customerOrdersRepo.getBranches(),
       ]);
 
-      _allOrders = results[0] as List<CustomerOrderModel>;
+      final (orders, lastDocument) =
+          results[0] as (List<CustomerOrderModel>, DocumentSnapshot?);
+      _allOrders = orders;
+      _lastOrderDocument = lastDocument;
+      _hasMoreOrders =
+          orders.length >= CustomerOrdersRemoteDataSource.pageSize;
 
       emit(
         CustomerOrdersState.loaded(
@@ -36,6 +45,7 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
           searchQuery: _searchQuery,
           selectedStatus: _selectedStatus,
           selectedBranchId: _selectedBranchId,
+          hasMore: _hasMoreOrders,
           errorMessage: null,
         ),
       );
@@ -43,6 +53,40 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
       emit(
         const CustomerOrdersState.failure(
           message: 'could_not_load_customer_orders',
+        ),
+      );
+    }
+  }
+
+  Future<void> loadMoreCustomerOrders() async {
+    final current = state;
+    if (current is! CustomerOrdersLoaded ||
+        !_hasMoreOrders ||
+        current.isLoadingMore) {
+      return;
+    }
+
+    emit(current.copyWith(isLoadingMore: true));
+
+    try {
+      final (newOrders, lastDocument) = await _customerOrdersRepo
+          .getCustomerOrders(startAfter: _lastOrderDocument);
+
+      if (newOrders.length < CustomerOrdersRemoteDataSource.pageSize) {
+        _hasMoreOrders = false;
+      }
+
+      if (newOrders.isNotEmpty) {
+        _lastOrderDocument = lastDocument;
+        _allOrders = [..._allOrders, ...newOrders];
+      }
+
+      _emitFromLoaded();
+    } catch (error) {
+      emit(
+        current.copyWith(
+          isLoadingMore: false,
+          errorMessage: 'could_not_load_more_customer_orders',
         ),
       );
     }
@@ -314,6 +358,8 @@ class CustomerOrdersCubit extends Cubit<CustomerOrdersState> {
           selectedStatus: _selectedStatus,
           selectedBranchId: _selectedBranchId,
           isSubmitting: false,
+          isLoadingMore: false,
+          hasMore: _hasMoreOrders,
           errorMessage: null,
         ),
       );

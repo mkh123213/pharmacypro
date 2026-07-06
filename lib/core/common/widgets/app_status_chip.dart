@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../extensions/context_extension.dart';
 import 'text_app.dart';
@@ -11,12 +12,14 @@ class AppStatusChip extends StatelessWidget {
     required this.label,
     this.type = AppStatusChipType.neutral,
     this.color,
+    this.roleImagePath,
     super.key,
   });
 
   final String label;
   final AppStatusChipType type;
   final Color? color;
+  final String? roleImagePath;
 
   Color _statusColor(BuildContext context) {
     if (color != null) return color!;
@@ -45,20 +48,35 @@ class AppStatusChip extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: chipColor.withOpacity(0.10),
+        color: chipColor.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(color: chipColor.withOpacity(0.18)),
+        border: Border.all(color: chipColor.withValues(alpha: 0.18)),
       ),
-      child: TextApp(
-        text: label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        theme: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w600,
-          color: chipColor,
-          height: 1.2,
-        ),
+      child: Row(
+        children: [
+          roleImagePath != null
+              ? FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AppImageAssetPreviewer(
+                    roleImagePath!,
+                    width: 20.w,
+                    height: 20.h,
+                  ),
+                )
+              : SizedBox.shrink(),
+
+          TextApp(
+            text: label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            theme: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+              color: chipColor,
+              height: 1.2,
+            ),
+          ),
+        ],
       ),
     );
   }

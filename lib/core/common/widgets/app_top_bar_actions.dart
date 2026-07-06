@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../extensions/context_extension.dart';
@@ -23,25 +24,24 @@ class AppTopBarActions extends StatelessWidget {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const SmartBarcodeScannerButton(),
+
         IconButton(
           onPressed: () => context.push(AppRoutes.inventoryAlerts),
-          icon: Icon(
-            Icons.notifications_none_outlined,
-            color: colors.textPrimary,
-          ),
+          icon: AppImageAssetPreviewer(context.assets.notifications),
         ),
         const AppThemeToggleButton(),
-        SizedBox(width: 4.w),
+        // SizedBox(width: 4.w),
         const AppLanguageToggleButton(),
         if (showAvatar) ...[
-          SizedBox(width: 10.w),
+          // SizedBox(width: 10.w),
           Tooltip(
             message: userName,
             child: CircleAvatar(
               radius: 18.r,
-              backgroundColor: colors.primary.withOpacity(0.12),
+              backgroundColor: colors.primary.withValues(alpha: 0.12),
               child: Icon(
                 Icons.person_outline,
                 color: colors.primary,

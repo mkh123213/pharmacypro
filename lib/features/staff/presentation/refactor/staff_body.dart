@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
+import 'package:pharmacypro/core/common/widgets/app_search_icon.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_delete_confirmation_dialog.dart';
@@ -18,15 +20,14 @@ import '../widgets/staff_card.dart';
 import '../widgets/staff_form_bottom_sheet.dart';
 import 'staff_constants.dart';
 
+part 'staff_body_open_form.dart';
 part 'staff_body_role_dropdown.dart';
 part 'staff_body_staff_error_view.dart';
 part 'staff_body_staff_filters.dart';
 part 'staff_body_staff_grid.dart';
 
-part 'staff_body_open_form.dart';
 class StaffBody extends StatelessWidget {
   const StaffBody({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +75,7 @@ class StaffBody extends StatelessWidget {
                     onPressed: state.isSubmitting
                         ? null
                         : () {
-                            this._openForm(context, state);
+                            _openForm(context, state);
                           },
                   ),
                 ),
@@ -93,29 +94,35 @@ class StaffBody extends StatelessWidget {
                             : context.translate(
                                 LangKeys.noStaffMembersMatchYourFilters,
                               ),
-                        icon: Icons.people_outline,
+                        imagePath: context.assets.noStaffFound,
                       )
                     : _StaffGrid(
                         staff: state.staff,
                         onEditPressed: (staffMember) {
-                          this._openForm(context, state, staff: staffMember);
+                          _openForm(context, state, staff: staffMember);
                         },
                         onDeletePressed: (staffMember) async {
                           final confirmed = await showDeleteConfirmationDialog(
                             context: context,
                             title: context.translate(LangKeys.deleteStaff),
-                            message: context.translate(LangKeys.deleteStaffConfirmation),
+                            message: context.translate(
+                              LangKeys.deleteStaffConfirmation,
+                            ),
                           );
 
                           if (confirmed != true || !context.mounted) return;
 
-                          final success = await context.read<StaffCubit>().deleteStaff(staffMember.id);
+                          final success = await context
+                              .read<StaffCubit>()
+                              .deleteStaff(staffMember.id);
 
                           if (!context.mounted) return;
 
                           if (success) {
                             ShowToast.showToastSuccessTop(
-                              message: context.translate(LangKeys.staffDeletedSuccessfully),
+                              message: context.translate(
+                                LangKeys.staffDeletedSuccessfully,
+                              ),
                             );
                           }
                         },

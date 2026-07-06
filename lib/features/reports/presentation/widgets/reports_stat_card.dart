@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
@@ -8,13 +9,13 @@ class ReportsStatCard extends StatelessWidget {
   const ReportsStatCard({
     required this.title,
     required this.value,
-    required this.icon,
+    required this.imagePath,
     super.key,
   });
 
   final String title;
   final String value;
-  final IconData icon;
+  final String imagePath;
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +71,8 @@ class ReportsStatCard extends StatelessWidget {
             SizedBox(width: 10.w),
             CircleAvatar(
               radius: 20.r,
-              backgroundColor: primary.withOpacity(0.10),
-              child: Icon(icon, color: primary, size: 20.sp),
+              backgroundColor: primary.withValues(alpha: 0.10),
+              child: AppImageAssetPreviewer(imagePath),
             ),
           ],
         ),

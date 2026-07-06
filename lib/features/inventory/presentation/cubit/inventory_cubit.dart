@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../data/data_source/inventory_remote_data_source.dart';
 import '../../data/models/inventory_model.dart';
 import '../../data/repos/inventory_repo.dart';
 import 'inventory_state.dart';
@@ -12,6 +14,8 @@ class InventoryCubit extends Cubit<InventoryState> {
   final InventoryRepo _inventoryRepo;
 
   List<InventoryModel> _allInventory = [];
+  DocumentSnapshot? _lastInventoryDocument;
+  bool _hasMoreInventory = true;
   String _searchQuery = '';
   String _selectedBranchId = 'all';
   String _selectedStockStatus = 'all';
@@ -26,7 +30,12 @@ class InventoryCubit extends Cubit<InventoryState> {
         _inventoryRepo.getBranches(),
       ]);
 
-      _allInventory = results[0] as List<InventoryModel>;
+      final (inventory, lastDocument) =
+          results[0] as (List<InventoryModel>, DocumentSnapshot?);
+      _allInventory = inventory;
+      _lastInventoryDocument = lastDocument;
+      _hasMoreInventory =
+          inventory.length >= InventoryRemoteDataSource.pageSize;
 
       emit(
         InventoryState.loaded(
@@ -36,11 +45,47 @@ class InventoryCubit extends Cubit<InventoryState> {
           searchQuery: _searchQuery,
           selectedBranchId: _selectedBranchId,
           selectedStockStatus: _selectedStockStatus,
+          hasMore: _hasMoreInventory,
           errorMessage: null,
         ),
       );
     } catch (error) {
       emit(const InventoryState.failure(message: 'could_not_load_inventory'));
+    }
+  }
+
+  Future<void> loadMoreInventory() async {
+    final current = state;
+    if (current is! InventoryLoaded ||
+        !_hasMoreInventory ||
+        current.isLoadingMore) {
+      return;
+    }
+
+    emit(current.copyWith(isLoadingMore: true));
+
+    try {
+      final (newInventory, lastDocument) = await _inventoryRepo.getInventory(
+        startAfter: _lastInventoryDocument,
+      );
+
+      if (newInventory.length < InventoryRemoteDataSource.pageSize) {
+        _hasMoreInventory = false;
+      }
+
+      if (newInventory.isNotEmpty) {
+        _lastInventoryDocument = lastDocument;
+        _allInventory = [..._allInventory, ...newInventory];
+      }
+
+      _emitFromLoaded();
+    } catch (error) {
+      emit(
+        current.copyWith(
+          isLoadingMore: false,
+          errorMessage: 'could_not_load_more_inventory',
+        ),
+      );
     }
   }
 
@@ -300,6 +345,8 @@ class InventoryCubit extends Cubit<InventoryState> {
           selectedBranchId: _selectedBranchId,
           selectedStockStatus: _selectedStockStatus,
           isSubmitting: false,
+          isLoadingMore: false,
+          hasMore: _hasMoreInventory,
           errorMessage: null,
         ),
       );

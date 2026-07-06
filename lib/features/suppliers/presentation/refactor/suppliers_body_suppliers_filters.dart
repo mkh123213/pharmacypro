@@ -14,7 +14,7 @@ class _SuppliersFilters extends StatelessWidget {
         final search = TextFormField(
           initialValue: state.searchQuery,
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchSuppliers),
           ),
           onChanged: context.read<SuppliersCubit>().updateSearchQuery,

@@ -55,6 +55,7 @@ class _PharmaChainAppState extends State<PharmaChainApp> {
             final cubit = context.read<AppCubit>();
 
             return MaterialApp.router(
+              
               title: 'PharmaChain',
               debugShowCheckedModeBanner: false,
               theme: themeLight(),
@@ -74,6 +75,7 @@ class _PharmaChainAppState extends State<PharmaChainApp> {
                   valueListenable: ConnectivityController.instance.isConnected,
                   builder: (_, isConnected, __) {
                     return Scaffold(
+                      
                       body: Column(
                         children: [
                           if (!isConnected) const OfflineIndicatorBanner(),

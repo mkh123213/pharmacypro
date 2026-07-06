@@ -23,7 +23,9 @@ class AppShell extends StatelessWidget {
                 children: [
                   const AppTopBar(),
                   const Divider(height: 1),
-                  Expanded(child: _ShellContent(width: width, child: child)),
+                  Expanded(
+                    child: _ShellContent(width: width, child: child),
+                  ),
                 ],
               ),
             ),
@@ -55,10 +57,7 @@ class _ShellContent extends StatelessWidget {
 
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: EdgeInsets.all(padding),
-        child: child,
-      ),
+      child: Padding(padding: EdgeInsets.all(padding), child: child),
     );
   }
 }

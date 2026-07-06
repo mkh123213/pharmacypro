@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../../../core/common/widgets/app_card.dart';
 import '../../../../core/common/widgets/app_status_chip.dart';
@@ -38,7 +39,7 @@ class StaffCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 19.r,
-                  backgroundColor: primary.withOpacity(.12),
+                  backgroundColor: primary.withValues(alpha: .12),
                   child: TextApp(
                     text: _initials(staff.fullName),
                     maxLines: 1,
@@ -65,6 +66,10 @@ class StaffCard extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         alignment: AlignmentDirectional.centerStart,
                         child: AppStatusChip(
+                          roleImagePath: formatStaffImagePath(
+                            context,
+                            staff.role,
+                          ),
                           label: formatStaffRole(context, staff.role),
                           type: roleChipType(staff.role),
                         ),
@@ -72,19 +77,33 @@ class StaffCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: onEditPressed,
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  constraints: BoxConstraints(minWidth: 34.w, minHeight: 34.w),
-                  icon: Icon(Icons.edit_outlined, size: 19.sp),
+                Tooltip(
+                  message: context.translate(LangKeys.delete),
+                  child: GestureDetector(
+                    onTap: () => onDeletePressed,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: AppImageAssetPreviewer(
+                        context.assets.delete,
+                        width: 20.w,
+                        height: 20.h,
+                      ),
+                    ),
+                  ),
                 ),
-                IconButton(
-                  onPressed: onDeletePressed,
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  constraints: BoxConstraints(minWidth: 34.w, minHeight: 34.w),
-                  icon: Icon(Icons.delete_outline, size: 19.sp, color: Colors.red),
+                Tooltip(
+                  message: context.translate(LangKeys.delete),
+                  child: GestureDetector(
+                    onTap: () => onDeletePressed,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: AppImageAssetPreviewer(
+                        context.assets.delete,
+                        width: 20.w,
+                        height: 20.h,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

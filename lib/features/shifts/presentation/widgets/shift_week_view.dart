@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/common/widgets/text_app.dart';
@@ -35,15 +36,13 @@ class ShiftWeekView extends StatelessWidget {
         final isToday = DateUtils.isSameDay(day, DateTime.now());
 
         return SizedBox(
-          width: 128,
+          width: 128.w,
           child: Column(
             children: [
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
-                color: isToday
-                    ? Theme.of(context).colorScheme.primary
-                    : context.color.surface,
+                color: isToday ? context.color.primary : context.color.surface,
                 child: Column(
                   children: [
                     TextApp(
@@ -67,7 +66,7 @@ class ShiftWeekView extends StatelessWidget {
                 ),
               ),
               ListView.separated(
-                shrinkWrap: true,
+                shrinkWrap: false,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: dayShifts.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 4),

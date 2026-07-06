@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../app/app_cubit/app_cubit.dart';
 import '../../extensions/context_extension.dart';
 import '../../language/lang_keys.dart';
+import 'app_image_asset_previewer.dart' show AppImageAssetPreviewer;
 import 'text_app.dart';
 
 class AppLanguageToggleButton extends StatelessWidget {
@@ -25,28 +26,34 @@ class AppLanguageToggleButton extends StatelessWidget {
             : context.translate(LangKeys.switchToEnglish);
         final foreground = inverted ? Colors.white : context.color.primary;
         final background = inverted
-            ? Colors.white.withOpacity(0.08)
-            : context.color.primary.withOpacity(0.08);
+            ? Colors.white.withValues(alpha: 0.08)
+            : context.color.primary.withValues(alpha: 0.08);
 
-        return Tooltip(
-          message: tooltip,
-          child: TextButton.icon(
-            onPressed: () => cubit.toggleLanguage(),
-            style: TextButton.styleFrom(
-              minimumSize: Size(62.w, 38.h),
-              padding: EdgeInsets.symmetric(horizontal: 10.w),
-              foregroundColor: foreground,
-              backgroundColor: background,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(999.r),
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Tooltip(
+            message: tooltip,
+            child: TextButton.icon(
+              onPressed: () => cubit.toggleLanguage(),
+              style: TextButton.styleFrom(
+                minimumSize: Size(62.w, 38.h),
+                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                foregroundColor: foreground,
+                backgroundColor: background,
               ),
-            ),
-            icon: Icon(Icons.language_outlined, size: 18.sp),
-            label: TextApp(
-              text: label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              theme: TextStyle(fontWeight: FontWeight.w800, color: foreground),
+              icon: FittedBox(
+                fit: BoxFit.scaleDown,
+                child:AppImageAssetPreviewer(context.assets.appLanguageButton),
+              ),
+              label: TextApp(
+                text: label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: foreground,
+                ),
+              ),
             ),
           ),
         );

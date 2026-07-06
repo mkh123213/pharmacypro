@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_search_icon.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_delete_confirmation_dialog.dart';
@@ -17,17 +18,15 @@ import '../cubit/suppliers_state.dart';
 import '../widgets/supplier_card.dart';
 import '../widgets/supplier_form_bottom_sheet.dart';
 
+part 'suppliers_body_build_supplier_error_message.dart';
+part 'suppliers_body_open_form.dart';
 part 'suppliers_body_supplier_status_dropdown.dart';
 part 'suppliers_body_suppliers_error_view.dart';
 part 'suppliers_body_suppliers_filters.dart';
 part 'suppliers_body_suppliers_grid.dart';
 
-part 'suppliers_body_build_supplier_error_message.dart';
-
-part 'suppliers_body_open_form.dart';
 class SuppliersBody extends StatelessWidget {
   const SuppliersBody({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +77,7 @@ class SuppliersBody extends StatelessWidget {
                       onPressed: state.isSubmitting
                           ? null
                           : () {
-                              this._openForm(context);
+                              _openForm(context);
                             },
                     ),
                   ),
@@ -108,29 +107,38 @@ class SuppliersBody extends StatelessWidget {
                               : context.translate(
                                   LangKeys.noSuppliersMatchYourFilters,
                                 ),
-                          icon: Icons.local_shipping_outlined,
+                          imagePath: context.assets.noSuppliersFound,
                         )
                       : _SuppliersGrid(
                           suppliers: state.suppliers,
                           onEditPressed: (supplier) {
-                            this._openForm(context, supplier: supplier);
+                            _openForm(context, supplier: supplier);
                           },
                           onDeletePressed: (supplier) async {
-                            final confirmed = await showDeleteConfirmationDialog(
-                              context: context,
-                              title: context.translate(LangKeys.deleteSupplier),
-                              message: context.translate(LangKeys.deleteSupplierConfirmation),
-                            );
+                            final confirmed =
+                                await showDeleteConfirmationDialog(
+                                  context: context,
+                                  title: context.translate(
+                                    LangKeys.deleteSupplier,
+                                  ),
+                                  message: context.translate(
+                                    LangKeys.deleteSupplierConfirmation,
+                                  ),
+                                );
 
                             if (confirmed != true || !context.mounted) return;
 
-                            final success = await context.read<SuppliersCubit>().deleteSupplier(supplier.id);
+                            final success = await context
+                                .read<SuppliersCubit>()
+                                .deleteSupplier(supplier.id);
 
                             if (!context.mounted) return;
 
                             if (success) {
                               ShowToast.showToastSuccessTop(
-                                message: context.translate(LangKeys.supplierDeletedSuccessfully),
+                                message: context.translate(
+                                  LangKeys.supplierDeletedSuccessfully,
+                                ),
                               );
                             }
                           },

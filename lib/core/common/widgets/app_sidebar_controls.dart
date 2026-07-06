@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../app/app_cubit/app_cubit.dart';
@@ -17,6 +18,7 @@ class AppSidebarControls extends StatelessWidget {
       builder: (context, state) {
         final cubit = context.read<AppCubit>();
         final authCubit = context.read<AuthCubit>();
+        final colors = context.color;
         final langLabel = cubit.currentLangCode == 'ar' ? 'EN' : 'AR';
         final themeLabel = cubit.isDark
             ? context.translate(LangKeys.lightMode)
@@ -33,9 +35,9 @@ class AppSidebarControls extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.person_outline,
-                        color: Colors.white70,
+                        color: colors.textSecondary,
                         size: 16,
                       ),
                       const SizedBox(width: 6),
@@ -44,8 +46,8 @@ class AppSidebarControls extends StatelessWidget {
                           text: userName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          theme: const TextStyle(
-                            color: Colors.white70,
+                          theme: TextStyle(
+                            color: colors.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -57,9 +59,8 @@ class AppSidebarControls extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _SidebarControlButton(
-                      icon: cubit.isDark
-                          ? Icons.light_mode_outlined
-                          : Icons.dark_mode_outlined,
+                      imagePath: context.assets.themeMode,
+
                       label: themeLabel,
                       onPressed: () => cubit.changeAppThemeMode(),
                     ),
@@ -67,7 +68,7 @@ class AppSidebarControls extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _SidebarControlButton(
-                      icon: Icons.language_outlined,
+                      imagePath: context.assets.language,
                       label: langLabel,
                       onPressed: () => cubit.toggleLanguage(),
                     ),
@@ -78,7 +79,7 @@ class AppSidebarControls extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: _SidebarControlButton(
-                  icon: Icons.logout_outlined,
+                  imagePath: context.assets.logOut,
                   label: context.translate(LangKeys.logout),
                   onPressed: () => authCubit.signOut(),
                 ),
@@ -93,32 +94,37 @@ class AppSidebarControls extends StatelessWidget {
 
 class _SidebarControlButton extends StatelessWidget {
   const _SidebarControlButton({
-    required this.icon,
     required this.label,
+    required this.imagePath,
     required this.onPressed,
   });
 
-  final IconData icon;
   final String label;
+  final String imagePath;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.color;
+
     return OutlinedButton.icon(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: BorderSide(color: Colors.white.withOpacity(0.16)),
-        backgroundColor: Colors.white.withOpacity(0.06),
+        foregroundColor: colors.textPrimary,
+        side: BorderSide(color: colors.border),
+        backgroundColor: colors.surface,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       ),
-      icon: Icon(icon, size: 17),
+      icon: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: AppImageAssetPreviewer(imagePath, width: 20, height: 20),
+      ),
       label: TextApp(
         text: label,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        theme: const TextStyle(
-          color: Colors.white,
+        theme: TextStyle(
+          color: colors.textPrimary,
           fontWeight: FontWeight.w700,
           fontSize: 12,
         ),

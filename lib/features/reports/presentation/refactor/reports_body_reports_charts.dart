@@ -65,19 +65,15 @@ class _ReportsCharts extends StatelessWidget {
           );
         }
 
-        return GridView.builder(
-          itemCount: charts.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12.w,
-            mainAxisSpacing: 12.h,
-            childAspectRatio: 1.85,
-          ),
-          itemBuilder: (_, index) {
-            return charts[index];
-          },
+        final itemWidth = (constraints.maxWidth - 12.w) / 2;
+
+        return Wrap(
+          spacing: 12.w,
+          runSpacing: 12.h,
+          children: [
+            for (final chart in charts)
+              SizedBox(width: itemWidth, child: chart),
+          ],
         );
       },
     );

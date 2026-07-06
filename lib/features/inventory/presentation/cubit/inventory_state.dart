@@ -20,6 +20,8 @@ class InventoryState with _$InventoryState {
     @Default('all') String selectedBranchId,
     @Default('all') String selectedStockStatus,
     @Default(false) bool isSubmitting,
+    @Default(false) bool isLoadingMore,
+    @Default(true) bool hasMore,
     @Default(null) String? errorMessage,
   }) = InventoryLoaded;
 

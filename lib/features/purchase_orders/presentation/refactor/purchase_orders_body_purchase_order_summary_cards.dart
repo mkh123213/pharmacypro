@@ -19,32 +19,46 @@ class _PurchaseOrderSummaryCards extends StatelessWidget {
       _PurchaseOrderSummaryCardData(
         title: context.translate(LangKeys.draft),
         value: _countByStatus('draft').toString(),
-        icon: Icons.edit_note,
+        imagePath:
+            getIt<GlobalKey<NavigatorState>>().currentContext!.assets.draft,
       ),
       _PurchaseOrderSummaryCardData(
         title: context.translate(LangKeys.sent),
         value: _countByStatus('sent').toString(),
-        icon: Icons.send_outlined,
+        imagePath: getIt<GlobalKey<NavigatorState>>()
+            .currentState!
+            .context
+            .assets
+            .sent,
       ),
       _PurchaseOrderSummaryCardData(
         title: context.translate(LangKeys.confirmed),
         value: _countByStatus('confirmed').toString(),
-        icon: Icons.verified_outlined,
+        imagePath: getIt<GlobalKey<NavigatorState>>()
+            .currentState!
+            .context
+            .assets
+            .confirmed,
       ),
       _PurchaseOrderSummaryCardData(
         title: context.translate(LangKeys.received),
         value: _countByStatus('received').toString(),
-        icon: Icons.inventory_2_outlined,
+        imagePath:
+            getIt<GlobalKey<NavigatorState>>().currentContext!.assets.received,
       ),
       _PurchaseOrderSummaryCardData(
         title: context.translate(LangKeys.cancelled),
         value: _countByStatus('cancelled').toString(),
-        icon: Icons.cancel_outlined,
+        imagePath:
+            getIt<GlobalKey<NavigatorState>>().currentContext!.assets.cancelled,
       ),
       _PurchaseOrderSummaryCardData(
         title: context.translate(LangKeys.totalValue),
         value: '\$${_totalValue.toStringAsFixed(2)}',
-        icon: Icons.attach_money,
+        imagePath: getIt<GlobalKey<NavigatorState>>()
+            .currentContext!
+            .assets
+            .totalValue,
       ),
     ];
 

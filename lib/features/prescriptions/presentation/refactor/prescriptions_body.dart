@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_search_icon.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_delete_confirmation_dialog.dart';
@@ -20,18 +21,15 @@ import '../widgets/prescriptions_table.dart';
 import 'prescriptions_constants.dart';
 
 part 'prescriptions_body_branch_dropdown.dart';
+part 'prescriptions_body_build_prescription_error_message.dart';
+part 'prescriptions_body_open_form.dart';
 part 'prescriptions_body_prescription_filters.dart';
 part 'prescriptions_body_prescriptions_error_view.dart';
 part 'prescriptions_body_status_dropdown.dart';
-
-part 'prescriptions_body_build_prescription_error_message.dart';
-
 part 'prescriptions_body_update_prescription_status.dart';
-part 'prescriptions_body_open_form.dart';
+
 class PrescriptionsBody extends StatelessWidget {
   const PrescriptionsBody({super.key});
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +80,7 @@ class PrescriptionsBody extends StatelessWidget {
                       onPressed: state.isSubmitting
                           ? null
                           : () {
-                              this._openForm(context, state);
+                              _openForm(context, state);
                             },
                     ),
                   ),
@@ -104,7 +102,7 @@ class PrescriptionsBody extends StatelessWidget {
                           : context.translate(
                               LangKeys.noPrescriptionsMatchYourFilters,
                             ),
-                      icon: Icons.receipt_long_outlined,
+                      imagePath: context.assets.noPrescriptionsFound,
                     )
                   else
                     PrescriptionsTable(
@@ -117,21 +115,21 @@ class PrescriptionsBody extends StatelessWidget {
                         );
                       },
                       onVerify: (prescription) {
-                        this._updatePrescriptionStatus(
+                        _updatePrescriptionStatus(
                           context: context,
                           prescription: prescription,
                           status: 'verified',
                         );
                       },
                       onReject: (prescription) {
-                        this._updatePrescriptionStatus(
+                        _updatePrescriptionStatus(
                           context: context,
                           prescription: prescription,
                           status: 'rejected',
                         );
                       },
                       onDispense: (prescription) {
-                        this._updatePrescriptionStatus(
+                        _updatePrescriptionStatus(
                           context: context,
                           prescription: prescription,
                           status: 'dispensed',
@@ -141,18 +139,24 @@ class PrescriptionsBody extends StatelessWidget {
                         final confirmed = await showDeleteConfirmationDialog(
                           context: context,
                           title: context.translate(LangKeys.deletePrescription),
-                          message: context.translate(LangKeys.deletePrescriptionConfirmation),
+                          message: context.translate(
+                            LangKeys.deletePrescriptionConfirmation,
+                          ),
                         );
 
                         if (confirmed != true || !context.mounted) return;
 
-                        final success = await context.read<PrescriptionsCubit>().deletePrescription(prescription.id);
+                        final success = await context
+                            .read<PrescriptionsCubit>()
+                            .deletePrescription(prescription.id);
 
                         if (!context.mounted) return;
 
                         if (success) {
                           ShowToast.showToastSuccessTop(
-                            message: context.translate(LangKeys.prescriptionDeletedSuccessfully),
+                            message: context.translate(
+                              LangKeys.prescriptionDeletedSuccessfully,
+                            ),
                           );
                         }
                       },

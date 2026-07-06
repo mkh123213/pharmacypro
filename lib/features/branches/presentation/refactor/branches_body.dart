@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_search_icon.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_delete_confirmation_dialog.dart';
@@ -21,13 +22,11 @@ part 'branches_body_branch_status_dropdown.dart';
 part 'branches_body_branches_error_view.dart';
 part 'branches_body_branches_filters.dart';
 part 'branches_body_branches_grid.dart';
-
 part 'branches_body_build_branch_error_message.dart';
-
 part 'branches_body_open_form.dart';
+
 class BranchesBody extends StatelessWidget {
   const BranchesBody({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +79,7 @@ class BranchesBody extends StatelessWidget {
                       onPressed: state.isSubmitting
                           ? null
                           : () {
-                              this._openForm(context, state);
+                              _openForm(context, state);
                             },
                     ),
                   ),
@@ -110,29 +109,38 @@ class BranchesBody extends StatelessWidget {
                               : context.translate(
                                   LangKeys.noBranchesMatchYourFilters,
                                 ),
-                          icon: Icons.store_outlined,
+                          imagePath: context.assets.noBranchesYet,
                         )
                       : _BranchesGrid(
                           branches: state.branches,
                           onEditPressed: (branch) {
-                            this._openForm(context, state, branch: branch);
+                            _openForm(context, state, branch: branch);
                           },
                           onDeletePressed: (branch) async {
-                            final confirmed = await showDeleteConfirmationDialog(
-                              context: context,
-                              title: context.translate(LangKeys.deleteBranch),
-                              message: context.translate(LangKeys.deleteBranchConfirmation),
-                            );
+                            final confirmed =
+                                await showDeleteConfirmationDialog(
+                                  context: context,
+                                  title: context.translate(
+                                    LangKeys.deleteBranch,
+                                  ),
+                                  message: context.translate(
+                                    LangKeys.deleteBranchConfirmation,
+                                  ),
+                                );
 
                             if (confirmed != true || !context.mounted) return;
 
-                            final success = await context.read<BranchesCubit>().deleteBranch(branch.id);
+                            final success = await context
+                                .read<BranchesCubit>()
+                                .deleteBranch(branch.id);
 
                             if (!context.mounted) return;
 
                             if (success) {
                               ShowToast.showToastSuccessTop(
-                                message: context.translate(LangKeys.branchDeletedSuccessfully),
+                                message: context.translate(
+                                  LangKeys.branchDeletedSuccessfully,
+                                ),
                               );
                             }
                           },

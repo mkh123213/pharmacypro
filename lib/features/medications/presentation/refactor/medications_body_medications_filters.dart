@@ -14,7 +14,7 @@ class _MedicationsFilters extends StatelessWidget {
         final search = TextField(
           onChanged: context.read<MedicationsCubit>().updateSearchQuery,
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchMedication),
           ),
         );

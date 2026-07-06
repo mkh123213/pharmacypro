@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pharmacypro/core/di/dependency_injection.dart';
 
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/cubit/auth_state.dart';
@@ -25,6 +25,7 @@ import 'app_routes.dart';
 
 GoRouter createAppRouter(AuthCubit authCubit) {
   return GoRouter(
+    navigatorKey: getIt<GlobalKey<NavigatorState>>(),
     initialLocation: AppRoutes.dashboard,
     refreshListenable: _AuthRefreshListenable(authCubit),
     redirect: (context, state) {

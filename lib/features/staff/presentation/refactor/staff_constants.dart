@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/extensions/context_extension.dart';
-import '../../../../core/language/lang_keys.dart';
 
 import '../../../../core/common/widgets/app_status_chip.dart';
+import '../../../../core/extensions/context_extension.dart';
+import '../../../../core/language/lang_keys.dart';
 
 const allStaffRolesValue = 'all';
 
@@ -43,5 +43,22 @@ AppStatusChipType roleChipType(String role) {
       return AppStatusChipType.error;
     default:
       return AppStatusChipType.neutral;
+  }
+}
+
+String formatStaffImagePath(BuildContext context, String value) {
+  switch (value) {
+    case 'pharmacist':
+      return context.assets.pharmacist;
+    case 'technician':
+      return context.assets.technician;
+    case 'cashier':
+      return context.assets.cashier;
+    case 'manager':
+      return context.assets.manager;
+    case 'admin':
+      return context.assets.admin;
+    default:
+      return context.assets.pharmacist;
   }
 }

@@ -203,6 +203,13 @@ class LangKeys {
   static const String createYourFirstSale = 'create_your_first_sale';
   static const String noSalesMatchYourSearch = 'no_sales_match_your_search';
   static const String couldNotLoadSales = 'could_not_load_sales';
+  static const String couldNotLoadMoreSales = 'could_not_load_more_sales';
+  static const String couldNotLoadMoreInventory =
+      'could_not_load_more_inventory';
+  static const String couldNotLoadMoreCustomerOrders =
+      'could_not_load_more_customer_orders';
+  static const String couldNotLoadMorePurchaseOrders =
+      'could_not_load_more_purchase_orders';
   static const String couldNotCompleteSale = 'could_not_complete_sale';
   static const String saleCompletedSuccessfully = 'sale_completed_successfully';
   static const String pleaseSelectBranch = 'please_select_branch';
@@ -771,36 +778,55 @@ class LangKeys {
   static const String confirmDelete = 'confirm_delete';
   static const String yesDelete = 'yes_delete';
   static const String deleteMedication = 'delete_medication';
-  static const String deleteMedicationConfirmation = 'delete_medication_confirmation';
+  static const String deleteMedicationConfirmation =
+      'delete_medication_confirmation';
   static const String deleteAllMedications = 'delete_all_medications';
-  static const String deleteAllMedicationsConfirmation = 'delete_all_medications_confirmation';
-  static const String medicationDeletedSuccessfully = 'medication_deleted_successfully';
-  static const String allMedicationsDeletedSuccessfully = 'all_medications_deleted_successfully';
+  static const String deleteAllMedicationsConfirmation =
+      'delete_all_medications_confirmation';
+  static const String medicationDeletedSuccessfully =
+      'medication_deleted_successfully';
+  static const String allMedicationsDeletedSuccessfully =
+      'all_medications_deleted_successfully';
   static const String couldNotDeleteMedication = 'could_not_delete_medication';
-  static const String couldNotDeleteAllMedications = 'could_not_delete_all_medications';
+  static const String couldNotDeleteAllMedications =
+      'could_not_delete_all_medications';
   static const String deleteInventoryItem = 'delete_inventory_item';
-  static const String deleteInventoryItemConfirmation = 'delete_inventory_item_confirmation';
-  static const String inventoryItemDeletedSuccessfully = 'inventory_item_deleted_successfully';
-  static const String couldNotDeleteInventoryItem = 'could_not_delete_inventory_item';
+  static const String deleteInventoryItemConfirmation =
+      'delete_inventory_item_confirmation';
+  static const String inventoryItemDeletedSuccessfully =
+      'inventory_item_deleted_successfully';
+  static const String couldNotDeleteInventoryItem =
+      'could_not_delete_inventory_item';
   static const String deleteSale = 'delete_sale';
   static const String deleteSaleConfirmation = 'delete_sale_confirmation';
   static const String saleDeletedSuccessfully = 'sale_deleted_successfully';
   static const String couldNotDeleteSale = 'could_not_delete_sale';
   static const String deletePrescription = 'delete_prescription';
-  static const String deletePrescriptionConfirmation = 'delete_prescription_confirmation';
-  static const String prescriptionDeletedSuccessfully = 'prescription_deleted_successfully';
-  static const String couldNotDeletePrescription = 'could_not_delete_prescription';
+  static const String deletePrescriptionConfirmation =
+      'delete_prescription_confirmation';
+  static const String prescriptionDeletedSuccessfully =
+      'prescription_deleted_successfully';
+  static const String couldNotDeletePrescription =
+      'could_not_delete_prescription';
   static const String deleteCustomerOrder = 'delete_customer_order';
-  static const String deleteCustomerOrderConfirmation = 'delete_customer_order_confirmation';
-  static const String customerOrderDeletedSuccessfully = 'customer_order_deleted_successfully';
-  static const String couldNotDeleteCustomerOrder = 'could_not_delete_customer_order';
+  static const String deleteCustomerOrderConfirmation =
+      'delete_customer_order_confirmation';
+  static const String customerOrderDeletedSuccessfully =
+      'customer_order_deleted_successfully';
+  static const String couldNotDeleteCustomerOrder =
+      'could_not_delete_customer_order';
   static const String deleteSupplier = 'delete_supplier';
-  static const String deleteSupplierConfirmation = 'delete_supplier_confirmation';
-  static const String supplierDeletedSuccessfully = 'supplier_deleted_successfully';
+  static const String deleteSupplierConfirmation =
+      'delete_supplier_confirmation';
+  static const String supplierDeletedSuccessfully =
+      'supplier_deleted_successfully';
   static const String deletePurchaseOrder = 'delete_purchase_order';
-  static const String deletePurchaseOrderConfirmation = 'delete_purchase_order_confirmation';
-  static const String purchaseOrderDeletedSuccessfully = 'purchase_order_deleted_successfully';
-  static const String couldNotDeletePurchaseOrder = 'could_not_delete_purchase_order';
+  static const String deletePurchaseOrderConfirmation =
+      'delete_purchase_order_confirmation';
+  static const String purchaseOrderDeletedSuccessfully =
+      'purchase_order_deleted_successfully';
+  static const String couldNotDeletePurchaseOrder =
+      'could_not_delete_purchase_order';
   static const String deleteStaff = 'delete_staff';
   static const String deleteStaffConfirmation = 'delete_staff_confirmation';
   static const String staffDeletedSuccessfully = 'staff_deleted_successfully';
@@ -832,8 +858,10 @@ class LangKeys {
 
   // Smart barcode
   static const String scanBarcodeToSellOrAdd = 'scan_barcode_to_sell_or_add';
-  static const String medicationFoundStartingSale = 'medication_found_starting_sale';
-  static const String medicationNotFoundAddingNew = 'medication_not_found_adding_new';
+  static const String medicationFoundStartingSale =
+      'medication_found_starting_sale';
+  static const String medicationNotFoundAddingNew =
+      'medication_not_found_adding_new';
   static const String medicationNotInInventory = 'medication_not_in_inventory';
   static const String scanToAddItem = 'scan_to_add_item';
   static const String itemAddedViaScan = 'item_added_via_scan';

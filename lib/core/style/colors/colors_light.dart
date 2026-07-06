@@ -14,7 +14,7 @@ class ColorsLight {
   static const Color border = Color(0xFFE2E8F0);
   static const Color divider = Color(0xFFE2E8F0);
 
-  static const Color sidebarBg = Color(0xFF111827);
+  static const Color sidebarBg = Color(0xFFF1F5F9);
   static const Color sidebarActive = Color(0xFF16A085);
 
   static const Color success = Color(0xFF059669);

@@ -14,7 +14,7 @@ class _PrescriptionFilters extends StatelessWidget {
         final searchField = TextFormField(
           initialValue: state.searchQuery,
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchPrescriptions),
           ),
           onChanged: context.read<PrescriptionsCubit>().updateSearchQuery,

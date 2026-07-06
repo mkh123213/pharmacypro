@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/inventory_alert_model.dart';
 import '../models/stock_movement_model.dart';
 
@@ -12,8 +14,10 @@ class InventoryRepo {
 
   final InventoryRemoteDataSource _remoteDataSource;
 
-  Future<List<InventoryModel>> getInventory() {
-    return _remoteDataSource.getInventory();
+  Future<(List<InventoryModel>, DocumentSnapshot?)> getInventory({
+    DocumentSnapshot? startAfter,
+  }) {
+    return _remoteDataSource.getInventory(startAfter: startAfter);
   }
 
   Future<List<BranchModel>> getBranches() {

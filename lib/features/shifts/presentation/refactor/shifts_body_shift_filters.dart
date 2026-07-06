@@ -14,7 +14,7 @@ class _ShiftFilters extends StatelessWidget {
         final search = TextFormField(
           initialValue: state.searchQuery,
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchShifts),
           ),
           onChanged: context.read<ShiftsCubit>().updateSearchQuery,

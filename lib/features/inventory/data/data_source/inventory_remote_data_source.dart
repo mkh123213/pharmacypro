@@ -248,7 +248,18 @@ class InventoryRemoteDataSource {
   }
 
   Future<List<InventoryAlertModel>> getInventoryAlerts() async {
-    final inventory = await getInventory();
+    // Alerts must consider every inventory item, so page through the
+    // whole collection rather than just the first paginated page.
+    final inventory = <InventoryModel>[];
+    DocumentSnapshot? cursor;
+
+    while (true) {
+      final (page, lastDocument) = await getInventory(startAfter: cursor);
+      inventory.addAll(page);
+
+      if (page.length < pageSize || lastDocument == null) break;
+      cursor = lastDocument;
+    }
 
     final alerts = <InventoryAlertModel>[];
 

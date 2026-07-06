@@ -15,7 +15,7 @@ class _BranchesFilters extends StatelessWidget {
           initialValue: state.searchQuery,
           onChanged: context.read<BranchesCubit>().updateSearchQuery,
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchBranches),
           ),
         );

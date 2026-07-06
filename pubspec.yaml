@@ -76,5 +76,13 @@ flutter:
 
   assets:
     - assets/icons/
+    - assets/images1/
+    - assets/images2/
     - lang/en.json
     - lang/ar.json
+
+
+flutter_assets:
+  assets_path: assets/images2/
+  output_path: lib/constants/
+  filename: assets.dart

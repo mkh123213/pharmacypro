@@ -11,72 +11,72 @@ class _ReportsStatsGrid extends StatelessWidget {
       ReportsStatCard(
         title: context.translate(LangKeys.totalRevenue),
         value: '\$${summary.totalRevenue.toStringAsFixed(2)}',
-        icon: Icons.attach_money,
+        imagePath: context.assets.totalRevenue,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.totalCost),
         value: '\$${summary.totalCost.toStringAsFixed(2)}',
-        icon: Icons.money_off,
+        imagePath: context.assets.totalCost,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.totalProfit),
         value: '\$${summary.totalProfit.toStringAsFixed(2)}',
-        icon: Icons.trending_up,
+        imagePath: context.assets.totalProfit,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.profitMargin),
         value: '${summary.profitMarginPercent.toStringAsFixed(1)}%',
-        icon: Icons.pie_chart,
+        imagePath: context.assets.totalMargin,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.totalSales),
         value: '${summary.totalSalesCount}',
-        icon: Icons.point_of_sale,
+        imagePath: context.assets.totalSales,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.customerOrders),
         value: '${summary.totalOrders}',
-        icon: Icons.shopping_cart,
+        imagePath: context.assets.customerOrders,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.lowStockItems),
         value: '${summary.lowStockItems}',
-        icon: Icons.inventory_2,
+        imagePath: context.assets.lowStockItems,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.expiringSoon),
         value: '${summary.expiringSoonItems}',
-        icon: Icons.schedule,
+        imagePath: context.assets.expiringSoon,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.expiredItems),
         value: '${summary.expiredItems}',
-        icon: Icons.error_outline,
+        imagePath: context.assets.expiredItems,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.healthyStock),
         value: '${summary.healthyStockItems}',
-        icon: Icons.check_circle_outline,
+        imagePath: context.assets.healthyStock,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.prescriptions),
         value: '${summary.prescriptionsCount}',
-        icon: Icons.receipt_long,
+        imagePath: context.assets.prescriptions,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.stockIn),
         value: '${summary.totalStockIn}',
-        icon: Icons.arrow_upward,
+        imagePath: context.assets.stockIn,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.stockOut),
         value: '${summary.totalStockOut}',
-        icon: Icons.arrow_downward,
+        imagePath: context.assets.stockOut,
       ),
       ReportsStatCard(
         title: context.translate(LangKeys.manualAdjustments),
         value: '${summary.manualAdjustmentsCount}',
-        icon: Icons.tune,
+        imagePath: context.assets.manualAdjustment,
       ),
     ];
 

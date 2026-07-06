@@ -85,7 +85,7 @@ class StockMovementsBody extends StatelessWidget {
                         message: context.translate(
                           LangKeys.noStockMovementsMatchYourFilters,
                         ),
-                        icon: Icons.history_outlined,
+                        imagePath: context.assets.noStockMovementsFound,
                       )
                     : LayoutBuilder(
                         builder: (context, constraints) {

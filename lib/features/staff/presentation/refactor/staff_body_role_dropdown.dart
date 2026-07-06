@@ -13,11 +13,20 @@ class _RoleDropdown extends StatelessWidget {
       items: staffRoleOptions.map((role) {
         return DropdownMenuItem<String>(
           value: role,
-          child: TextApp(
-            text: formatStaffRole(context, role),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            theme: context.textStyle,
+          child: Row(
+            children: [
+              AppImageAssetPreviewer(
+                formatStaffImagePath(context, role),
+                width: 20.w,
+                height: 20.h,
+              ),
+              TextApp(
+                text: formatStaffRole(context, role),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                theme: context.textStyle,
+              ),
+            ],
           ),
         );
       }).toList(),

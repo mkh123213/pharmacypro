@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../extensions/context_extension.dart';
 import 'text_app.dart';
@@ -8,14 +9,14 @@ class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
     required this.title,
     required this.message,
-    this.icon,
+    required this.imagePath,
     this.action,
     super.key,
   });
 
   final String title;
   final String message;
-  final IconData? icon;
+  final String imagePath;
   final Widget? action;
 
   @override
@@ -28,19 +29,7 @@ class AppEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 64.w,
-              height: 64.w,
-              decoration: BoxDecoration(
-                color: colors.primary.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              child: Icon(
-                icon ?? Icons.inbox_outlined,
-                size: 30.sp,
-                color: colors.primary,
-              ),
-            ),
+            AppImageAssetPreviewer(imagePath, width: 64.w),
             SizedBox(height: 16.h),
             TextApp(
               text: title,

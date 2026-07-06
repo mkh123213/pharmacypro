@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_search_icon.dart';
 
 import '../../../../core/common/toast/show_toast.dart';
 import '../../../../core/common/widgets/app_delete_confirmation_dialog.dart';
@@ -20,16 +21,15 @@ import 'medication_error_mapper.dart';
 import 'medications_constants.dart';
 
 part 'medications_body_category_dropdown.dart';
+part 'medications_body_empty_state_message.dart';
 part 'medications_body_medication_status_dropdown.dart';
 part 'medications_body_medications_error_view.dart';
 part 'medications_body_medications_filters.dart';
 part 'medications_body_medications_grid.dart';
-
-part 'medications_body_empty_state_message.dart';
 part 'medications_body_open_form.dart';
+
 class MedicationsBody extends StatelessWidget {
   const MedicationsBody({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -86,21 +86,33 @@ class MedicationsBody extends StatelessWidget {
                               onPressed: state.isSubmitting
                                   ? null
                                   : () async {
-                                      final confirmed = await showDeleteConfirmationDialog(
-                                        context: context,
-                                        title: context.translate(LangKeys.deleteAllMedications),
-                                        message: context.translate(LangKeys.deleteAllMedicationsConfirmation),
-                                      );
+                                      final confirmed =
+                                          await showDeleteConfirmationDialog(
+                                            context: context,
+                                            title: context.translate(
+                                              LangKeys.deleteAllMedications,
+                                            ),
+                                            message: context.translate(
+                                              LangKeys
+                                                  .deleteAllMedicationsConfirmation,
+                                            ),
+                                          );
 
-                                      if (confirmed != true || !context.mounted) return;
+                                      if (confirmed != true || !context.mounted)
+                                        return;
 
-                                      final success = await context.read<MedicationsCubit>().deleteAllMedications();
+                                      final success = await context
+                                          .read<MedicationsCubit>()
+                                          .deleteAllMedications();
 
                                       if (!context.mounted) return;
 
                                       if (success) {
                                         ShowToast.showToastSuccessTop(
-                                          message: context.translate(LangKeys.allMedicationsDeletedSuccessfully),
+                                          message: context.translate(
+                                            LangKeys
+                                                .allMedicationsDeletedSuccessfully,
+                                          ),
                                         );
                                       }
                                     },
@@ -112,7 +124,7 @@ class MedicationsBody extends StatelessWidget {
                           onPressed: state.isSubmitting
                               ? null
                               : () {
-                                  this._openForm(context);
+                                  _openForm(context);
                                 },
                         ),
                       ],
@@ -136,31 +148,37 @@ class MedicationsBody extends StatelessWidget {
                   if (state.medications.isEmpty)
                     AppEmptyState(
                       title: context.translate(LangKeys.noMedicationsFound),
-                      message: this._emptyStateMessage(context, state),
-                      icon: Icons.medication_outlined,
+                      message: _emptyStateMessage(context, state),
+                      imagePath: context.assets.noMedicationsFound,
                     )
                   else
                     _MedicationsGrid(
                       medications: state.medications,
                       onEditPressed: (medication) {
-                        this._openForm(context, medication: medication);
+                        _openForm(context, medication: medication);
                       },
                       onDeletePressed: (medication) async {
                         final confirmed = await showDeleteConfirmationDialog(
                           context: context,
                           title: context.translate(LangKeys.deleteMedication),
-                          message: context.translate(LangKeys.deleteMedicationConfirmation),
+                          message: context.translate(
+                            LangKeys.deleteMedicationConfirmation,
+                          ),
                         );
 
                         if (confirmed != true || !context.mounted) return;
 
-                        final success = await context.read<MedicationsCubit>().deleteMedication(medication.id);
+                        final success = await context
+                            .read<MedicationsCubit>()
+                            .deleteMedication(medication.id);
 
                         if (!context.mounted) return;
 
                         if (success) {
                           ShowToast.showToastSuccessTop(
-                            message: context.translate(LangKeys.medicationDeletedSuccessfully),
+                            message: context.translate(
+                              LangKeys.medicationDeletedSuccessfully,
+                            ),
                           );
                         }
                       },
@@ -174,5 +192,4 @@ class MedicationsBody extends StatelessWidget {
       ),
     );
   }
-
 }

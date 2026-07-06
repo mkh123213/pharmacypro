@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../language/app_localizations.dart';
+import '../style/theme/assets_extension.dart';
 import '../style/theme/color_extension.dart';
 
 extension ContextExt on BuildContext {
   MyColors get color => Theme.of(this).extension<MyColors>()!;
+
+  /// Theme-aware image paths — returns the light or dark variant automatically.
+  MyAssets get assets => Theme.of(this).extension<MyAssets>()!;
 
   TextStyle get textStyle {
     return Theme.of(this).textTheme.bodyMedium ?? const TextStyle();

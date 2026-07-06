@@ -29,6 +29,7 @@ class ReportsChartCard extends StatelessWidget {
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 TextApp(
                   text: title,
@@ -47,16 +48,16 @@ class ReportsChartCard extends StatelessWidget {
                     theme: context.textStyle,
                   )
                 else
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: data.length,
-                      physics: const NeverScrollableScrollPhysics(),
-                      separatorBuilder: (_, _) => SizedBox(height: 8.h),
-                      itemBuilder: (context, index) {
-                        final item = data[index];
-                        final progress = max == 0 ? 0.0 : item.value / max;
+                  ListView.separated(
+                    itemCount: data.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    separatorBuilder: (_, _) => SizedBox(height: 8.h),
+                    itemBuilder: (context, index) {
+                      final item = data[index];
+                      final progress = max == 0 ? 0.0 : item.value / max;
 
-                        return Row(
+                      return Row(
                           children: [
                             SizedBox(
                               width: compact ? 72.w : 120.w,
@@ -92,7 +93,6 @@ class ReportsChartCard extends StatelessWidget {
                         );
                       },
                     ),
-                  ),
               ],
             );
           },

@@ -21,12 +21,11 @@ class SmartBarcodeScannerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      tooltip: context.translate(LangKeys.scanBarcodeToSellOrAdd),
-      onPressed: () => _openScanner(context),
-      icon: Icon(
-        Icons.qr_code_scanner,
-        color: context.color.textPrimary,
+    return Tooltip(
+      message: context.translate(LangKeys.scanBarcodeToSellOrAdd),
+      child: GestureDetector(
+        onTap: () => _openScanner(context),
+        child: Icon(Icons.qr_code_scanner, color: context.color.textPrimary),
       ),
     );
   }
@@ -81,8 +80,7 @@ class SmartBarcodeScannerButton extends StatelessWidget {
 
       if (!context.mounted) return;
 
-      final activeMedications =
-          medications.where((m) => m.isActive).toList();
+      final activeMedications = medications.where((m) => m.isActive).toList();
 
       final match = activeMedications.where((m) {
         return m.barcode != null &&

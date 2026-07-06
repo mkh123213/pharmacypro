@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pharmacypro/core/common/widgets/app_image_asset_previewer.dart';
 
 import '../../../../core/common/widgets/text_app.dart';
 import '../../../../core/extensions/context_extension.dart';
@@ -8,7 +9,8 @@ class DashboardStatCard extends StatelessWidget {
   const DashboardStatCard({
     required this.title,
     required this.value,
-    required this.icon,
+
+    this.imagePath,
     this.subtitle,
     this.color,
     this.onTap,
@@ -18,9 +20,30 @@ class DashboardStatCard extends StatelessWidget {
   final String title;
   final String value;
   final String? subtitle;
-  final IconData icon;
+
+  /// Optional illustration shown instead of [icon] when provided.
+  final String? imagePath;
   final Color? color;
   final VoidCallback? onTap;
+
+  Widget _buildLeading(Color cardColor) {
+    final radius = BorderRadius.circular(14.r);
+
+    // These illustrations ship with their own baked-in background, so we clip
+    // them to the rounded box instead of placing them on a tinted container.
+    if (imagePath != null) {
+      return AppImageAssetPreviewer(imagePath!, radius: radius, width: 45.w);
+    }
+
+    return Container(
+      width: 44.w,
+      height: 44.w,
+      decoration: BoxDecoration(
+        color: cardColor.withValues(alpha: 0.10),
+        borderRadius: radius,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,15 +66,7 @@ class DashboardStatCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 44.w,
-                height: 44.w,
-                decoration: BoxDecoration(
-                  color: cardColor.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Icon(icon, color: cardColor, size: 23.sp),
-              ),
+              _buildLeading(cardColor),
               SizedBox(width: 10.w),
               Expanded(
                 child: Column(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pharmacypro/core/style/fonts/font_weight_helper.dart';
 
 import '../../extensions/context_extension.dart';
 import 'app_top_bar_actions.dart';
@@ -24,28 +25,36 @@ class AppTopBar extends StatelessWidget {
             final compact = constraints.maxWidth < 380;
 
             return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
               children: [
                 if (showMenuButton)
-                  IconButton(
-                    onPressed: () => Scaffold.of(context).openDrawer(),
-                    icon: Icon(Icons.menu, color: colors.textPrimary),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 15),
+                    child: GestureDetector(
+                      onTap: () => Scaffold.of(context).openDrawer(),
+                      child: Icon(Icons.menu, color: colors.textPrimary),
+                    ),
                   ),
-                if (!showMenuButton) const SizedBox(width: 8),
+
+                // Expanded(
+                //   child: IconButton(
+                //     onPressed: () =>
+                //     icon: Icon(Icons.menu, color: colors.textPrimary),
+                //   ),
+                // ),
+                if (!showMenuButton) const SizedBox(width: 20),
                 Expanded(
                   child: TextApp(
                     text: 'PharmaChain',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     theme: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
+                      fontWeight: FontWeightHelper.extraBold,
                     ),
                   ),
                 ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: AppTopBarActions(showAvatar: !compact),
-                ),
+                AppTopBarActions(showAvatar: !compact),
               ],
             );
           },

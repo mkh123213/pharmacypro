@@ -13,7 +13,7 @@ class _SalesFilters extends StatelessWidget {
 
         final search = TextField(
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: AppSearchIcon(),
             hintText: context.translate(LangKeys.searchSales),
           ),
           onChanged: context.read<SalesCubit>().updateSearchQuery,

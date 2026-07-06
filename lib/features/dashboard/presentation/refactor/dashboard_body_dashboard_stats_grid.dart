@@ -7,7 +7,7 @@ class _DashboardStatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cards = buildDashboardSummaryCards(summary);
+    final cards = buildDashboardSummaryCards(summary, context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -37,7 +37,8 @@ class _DashboardStatsGrid extends StatelessWidget {
               title: context.translate(card.titleKey),
               value: card.value,
               subtitle: context.translate(card.subtitleKey),
-              icon: card.icon,
+
+              imagePath: card.imagePath,
               onTap: route == null
                   ? null
                   : () {
